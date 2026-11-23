@@ -42,7 +42,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import io.github.bropines.lens.app.data.AppSettings
 import io.github.bropines.lens.app.di.AppGraph
@@ -66,7 +65,6 @@ fun HomeScreen(
 ) {
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     fun openFolder(folder: PlatformFile) = scope.launch {
         graph.services.persistAccess(folder)
@@ -91,12 +89,10 @@ fun HomeScreen(
     }
 
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeFlexibleTopAppBar(
                 title = { Text("Lens") },
                 subtitle = { Text("Перевод с картинок") },
-                scrollBehavior = scrollBehavior,
             )
         },
         snackbarHost = { SnackbarHost(snackbar) },
@@ -106,7 +102,8 @@ fun HomeScreen(
         // it still scrolls when a small screen cannot hold it all.
         BoxWithConstraints(Modifier.fillMaxSize().padding(padding)) {
         Column(
-            Modifier.verticalScroll(rememberScrollState()).heightIn(min = maxHeight).padding(horizontal = 16.dp, vertical = 16.dp),
+            // No overscroll stretch: when everything fits there is nothing to pull.
+            Modifier.verticalScroll(rememberScrollState(), overscrollEffect = null).heightIn(min = maxHeight).padding(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Bottom),
         ) {
             Text(

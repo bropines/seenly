@@ -62,6 +62,7 @@ fun MainScreen(
     onOpenViewer: () -> Unit,
     onOpenCamera: () -> Unit,
     onOpenHistory: (HistoryEntry) -> Unit,
+    onOpenAbout: () -> Unit,
 ) {
     val textVm = viewModel { TextTranslateViewModel(graph.translator, graph.settings, "") }
     Scaffold(
@@ -94,7 +95,7 @@ fun MainScreen(
                     Tab.Images -> HomeScreen(graph, settings, onOpenViewer = onOpenViewer)
                     Tab.History -> HistoryScreen(graph.history, onOpen = onOpenHistory)
                     Tab.Text -> TextTranslateScreen(textVm, graph.services, onBack = null)
-                    Tab.Settings -> SettingsScreen(graph.settings, settings, onBack = null)
+                    Tab.Settings -> SettingsScreen(graph.settings, settings, onBack = null, onAbout = onOpenAbout)
                 }
             }
         }

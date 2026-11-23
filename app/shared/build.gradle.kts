@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.metro)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.aboutlibraries)
 }
 
 kotlin {
@@ -53,6 +54,7 @@ kotlin {
             api(libs.androidx.room.runtime)
             implementation(libs.kotlinx.io.core)
             implementation(libs.androidx.sqlite.bundled)
+            implementation(libs.aboutlibraries.compose.m3)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
@@ -94,4 +96,13 @@ compose.resources {
 
 tasks.withType<Test>().configureEach {
     systemProperty("java.awt.headless", "true")
+}
+
+// Open-source licences shown in "About": collected from the dependency graph into a
+// resource file. Regenerate after changing dependencies:
+//   ./gradlew :app:shared:exportLibraryDefinitions
+aboutLibraries {
+    export {
+        outputFile = file("src/commonMain/composeResources/files/aboutlibraries.json")
+    }
 }

@@ -31,6 +31,7 @@ import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.DocumentScanner
 import androidx.compose.material.icons.rounded.GTranslate
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Translate
@@ -72,7 +73,7 @@ import io.github.bropines.lens.app.ui.components.LanguagePickerSheet
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsScreen(repository: SettingsRepository, settings: AppSettings, onBack: (() -> Unit)?) {
+fun SettingsScreen(repository: SettingsRepository, settings: AppSettings, onBack: (() -> Unit)?, onAbout: () -> Unit = {}) {
     val scope = rememberCoroutineScope()
     fun update(transform: (AppSettings) -> AppSettings) = scope.launch { repository.update(transform) }
     var picker by remember { mutableStateOf<String?>(null) }
@@ -158,6 +159,9 @@ fun SettingsScreen(repository: SettingsRepository, settings: AppSettings, onBack
                 }
                 Choice(icon, label, null, settings.theme == mode) { update { it.copy(theme = mode) } }
             }
+
+            Section("Приложение")
+            Setting(Icons.Rounded.Info, "О приложении", "Версия, конфиденциальность, лицензии", onAbout)
         }
     }
 
