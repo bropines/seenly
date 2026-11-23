@@ -116,6 +116,8 @@ class AndroidPlatformServices(private val context: Context) : PlatformServices {
         const val PARTIAL_TAB_REQUEST = 7101
     }
 
+    override val screenTranslate = io.github.bropines.lens.screen.AndroidScreenTranslate(context) { activity?.get() }
+
     override fun persistAccess(folder: PlatformFile) {
         val uri = (folder.androidFile as? AndroidFile.UriWrapper)?.uri ?: return
         // Without this the "continue last folder" grant dies with the process.

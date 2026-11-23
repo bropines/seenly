@@ -31,7 +31,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.lensProtocol)
             implementation(projects.lensOverlay)
-            implementation(projects.googleTranslate)
+            implementation(projects.translators)
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.ui)

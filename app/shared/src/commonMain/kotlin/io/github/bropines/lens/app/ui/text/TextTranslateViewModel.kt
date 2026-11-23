@@ -3,9 +3,10 @@ package io.github.bropines.lens.app.ui.text
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.bropines.lens.app.data.SettingsRepository
-import io.github.bropines.lens.gtranslate.GoogleTranslateException
-import io.github.bropines.lens.gtranslate.GoogleTranslation
-import io.github.bropines.lens.gtranslate.GoogleTranslator
+import io.github.bropines.lens.app.data.TextTranslator
+import io.github.bropines.lens.translate.ErrorCode
+import io.github.bropines.lens.translate.PipelineResult
+import io.github.bropines.lens.translate.TranslationException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,15 +24,17 @@ data class TextTranslateState(
     val input: String = "",
     val source: String? = null,
     val target: String = "ru",
+    /** The engine picked for this text, or null for the user's order with fail-over. */
+    val engine: String? = null,
     val loading: Boolean = false,
-    val result: GoogleTranslation? = null,
+    val result: PipelineResult? = null,
     val error: String? = null,
 )
 
 /** Translates as you type, after a short pause, and keeps only the latest request. */
 @OptIn(FlowPreview::class)
 class TextTranslateViewModel(
-    private val translator: GoogleTranslator,
+    val translator: TextTranslator,
     private val settings: SettingsRepository,
     initial: String,
 ) : ViewModel() {
@@ -43,33 +46,42 @@ class TextTranslateViewModel(
             val s = settings.settings.first()
             _state.update { it.copy(target = s.targetLanguage, source = s.sourceLanguage) }
             _state
-                .map { Triple(it.input, it.source, it.target) }
+                .map { listOf(it.input, it.source, it.target, it.engine) }
                 .distinctUntilChanged()
                 .debounce(450)
-                .collectLatest { (input, source, target) -> translate(input, source, target) }
+                .collectLatest { translate() }
         }
     }
 
     fun setInput(text: String) = _state.update { it.copy(input = text) }
     fun setSource(code: String?) = _state.update { it.copy(source = code) }
     fun setTarget(code: String) = _state.update { it.copy(target = code) }
+    fun setEngine(id: String?) = _state.update { it.copy(engine = id) }
 
-    private suspend fun translate(input: String, source: String?, target: String) {
-        if (input.isBlank()) {
+    private suspend fun translate() {
+        val s = _state.value
+        if (s.input.isBlank()) {
             _state.update { it.copy(result = null, error = null, loading = false) }
             return
         }
         _state.update { it.copy(loading = true, error = null) }
         try {
-            // A dictionary only for short input: Google returns one just for words and short phrases.
-            val result = translator.translate(input, target, source ?: "auto", uiLanguage = "ru", dictionary = input.length <= 40)
+            // A dictionary only for short input: engines return one just for words and short phrases.
+            val result = translator.translate(s.input, s.target, s.source, s.engine, dictionary = s.input.length <= 40)
             _state.update { it.copy(result = result, loading = false) }
         } catch (e: CancellationException) {
             throw e
-        } catch (e: GoogleTranslateException.RateLimited) {
-            _state.update { it.copy(loading = false, error = "Google просит подождать (${e.retryAfter.inWholeSeconds} с)") }
+        } catch (e: TranslationException) {
+            _state.update { it.copy(loading = false, error = describe(e)) }
         } catch (e: Exception) {
             _state.update { it.copy(loading = false, error = e.message ?: "Ошибка перевода") }
         }
+    }
+
+    private fun describe(e: TranslationException): String = when (e.code) {
+        ErrorCode.SameLanguage -> "Языки совпадают"
+        ErrorCode.MissingCredential -> "${translator.nameOf(e.engineId.orEmpty())}: нужен ключ — задайте его в настройках переводчиков"
+        ErrorCode.RateLimited -> "Сервисы просят подождать. Попробуйте позже или включите другой переводчик"
+        else -> "Не перевелось: ${e.message}"
     }
 }

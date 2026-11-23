@@ -21,6 +21,7 @@ import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.TextFields
+import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -39,6 +40,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -140,6 +143,16 @@ fun HomeScreen(
                         onTarget = { code -> scope.launch { graph.settings.update { it.copy(targetLanguage = code) } } },
                     )
                 }
+            }
+            graph.services.screenTranslate?.let { screen ->
+                val running by screen.running.collectAsState()
+                BigAction(
+                    icon = Icons.Rounded.Translate,
+                    title = if (running) "Остановить перевод экрана" else "Перевод экрана",
+                    subtitle = if (running) "Пузырь поверх приложений включён" else "Пузырь поверх других приложений: экран, авто при прокрутке, область",
+                    primary = false,
+                    onClick = { if (running) screen.stop() else screen.start() },
+                )
             }
             BigAction(
                 icon = Icons.Rounded.FolderOpen,

@@ -9,7 +9,10 @@ import io.github.bropines.lens.app.data.GalleryRepository
 import io.github.bropines.lens.app.data.ScanRepository
 import io.github.bropines.lens.app.data.SettingsRepository
 import io.github.bropines.lens.app.platform.PlatformServices
-import io.github.bropines.lens.gtranslate.GoogleTranslator
+import io.github.bropines.lens.app.data.PreferencesKeyValueStore
+import io.github.bropines.lens.app.data.TextTranslator
+import io.github.bropines.lens.translate.TranslationPipeline
+import io.github.bropines.lens.translate.TranslatorRegistry
 import io.github.bropines.lens.protocol.LensClient
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -21,7 +24,9 @@ interface AppGraph {
     val settings: SettingsRepository
     val gallery: GalleryRepository
     val scans: ScanRepository
-    val translator: GoogleTranslator
+    /** For callers that scan frames rather than gallery files (the screen translator). */
+    val lens: LensClient
+    val translator: TextTranslator
     val history: io.github.bropines.lens.app.data.history.HistoryRepository
 
     /** One HTTP client for the app; the engine (OkHttp) comes from the classpath. */
@@ -30,7 +35,8 @@ interface AppGraph {
     fun httpClient(): HttpClient = HttpClient {
         install(HttpTimeout) {
             connectTimeoutMillis = 15_000
-            requestTimeoutMillis = 60_000
+            // Engines set their own, shorter, timeouts; an LLM may take up to two minutes.
+            requestTimeoutMillis = 130_000
         }
     }
 
@@ -40,7 +46,27 @@ interface AppGraph {
 
     @SingleIn(AppScope::class)
     @Provides
-    fun googleTranslator(http: HttpClient): GoogleTranslator = GoogleTranslator(http)
+    fun translatorRegistry(): TranslatorRegistry = TranslatorRegistry()
+
+    @SingleIn(AppScope::class)
+    @Provides
+    fun textTranslator(
+        registry: TranslatorRegistry,
+        http: HttpClient,
+        settings: SettingsRepository,
+        services: PlatformServices,
+    ): TextTranslator = TextTranslator(
+        pipeline = TranslationPipeline(
+            registry = registry,
+            http = http,
+            settings = { settings.current.value.translators.toSettings() },
+            store = PreferencesKeyValueStore(services),
+            uiLanguage = { "ru" },
+        ),
+        registry = registry,
+        settings = settings,
+        http = http,
+    )
 
     @DependencyGraph.Factory
     fun interface Factory {

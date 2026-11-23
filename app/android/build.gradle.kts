@@ -69,4 +69,12 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.filekit.dialogs.compose)
     implementation(libs.androidx.browser)
+    // The screen translator scans and renders frames itself, and draws its menu with Compose.
+    implementation(projects.lensProtocol)
+    implementation(projects.lensOverlay)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.compose.runtime)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.ui)
+    implementation(libs.compose.material3)
 }

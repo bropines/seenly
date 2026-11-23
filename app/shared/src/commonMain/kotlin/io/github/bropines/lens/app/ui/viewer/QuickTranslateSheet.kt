@@ -26,13 +26,13 @@ import androidx.compose.ui.unit.dp
 import io.github.bropines.lens.app.data.usefulSourceRomanisation
 import io.github.bropines.lens.app.data.usefulTargetRomanisation
 import io.github.bropines.lens.app.platform.PlatformServices
-import io.github.bropines.lens.gtranslate.GoogleTranslation
-import io.github.bropines.lens.gtranslate.GoogleTranslator
+import io.github.bropines.lens.app.data.TextTranslator
+import io.github.bropines.lens.translate.PipelineResult
 import kotlinx.coroutines.CancellationException
 
 private sealed interface Quick {
     data object Loading : Quick
-    data class Done(val translation: GoogleTranslation) : Quick
+    data class Done(val result: PipelineResult) : Quick { val translation get() = result.translation }
     data class Failed(val message: String) : Quick
 }
 
@@ -41,14 +41,14 @@ private sealed interface Quick {
 fun QuickTranslateSheet(
     text: String,
     target: String,
-    translator: GoogleTranslator,
+    translator: TextTranslator,
     services: PlatformServices,
     onDismiss: () -> Unit,
     onOpenFull: () -> Unit,
 ) {
     val state by produceState<Quick>(Quick.Loading, text, target) {
         value = try {
-            Quick.Done(translator.translate(text, target, uiLanguage = "ru", dictionary = text.length <= 40))
+            Quick.Done(translator.translate(text, target, dictionary = text.length <= 40))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -72,9 +72,10 @@ fun QuickTranslateSheet(
                     s.translation.usefulTargetRomanisation(target)?.let {
                         Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
+                    Text(translator.nameOf(s.result.engineId), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                     s.translation.dictionary.take(3).forEach { entry ->
                         Text(
-                            "${entry.partOfSpeech}: ${entry.terms.take(6).joinToString(", ")}",
+                            "${entry.partOfSpeech}: ${entry.terms.take(6).joinToString(", ") { it.text }}",
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     }

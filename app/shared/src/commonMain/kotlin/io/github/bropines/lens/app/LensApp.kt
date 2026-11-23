@@ -36,6 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import io.github.bropines.lens.app.data.GalleryItem
 import io.github.bropines.lens.app.ui.camera.CameraScreen
 import io.github.bropines.lens.app.ui.about.AboutScreen
+import io.github.bropines.lens.app.ui.settings.TranslatorsScreen
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import io.github.vinceglb.filekit.dialogs.FileKitMode
@@ -51,6 +52,7 @@ sealed interface Route {
     data object Viewer : Route
     data object Camera : Route
     data object About : Route
+    data object Translators : Route
     data class TextTranslate(val initial: String) : Route
 }
 
@@ -104,6 +106,7 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
                         onOpenViewer = { backStack.add(Route.Viewer) },
                         onOpenCamera = { backStack.add(Route.Camera) },
                         onOpenAbout = { backStack.add(Route.About) },
+                        onOpenTranslators = { backStack.add(Route.Translators) },
                         onOpenHistory = { entry ->
                             scope.launch {
                                 val item = GalleryItem(PlatformFile(entry.imagePath), entry.title)
@@ -118,6 +121,7 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
                     )
                 }
                 entry<Route.About> { AboutScreen(graph.services, onBack = ::pop) }
+                entry<Route.Translators> { TranslatorsScreen(graph.settings, settings, graph.translator, onBack = ::pop) }
                 entry<Route.Camera> {
                     val pick = rememberFilePickerLauncher(type = FileKitType.Image, mode = FileKitMode.Multiple()) { files ->
                         if (!files.isNullOrEmpty()) {

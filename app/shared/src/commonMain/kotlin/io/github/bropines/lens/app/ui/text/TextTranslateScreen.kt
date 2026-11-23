@@ -2,6 +2,8 @@ package io.github.bropines.lens.app.ui.text
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.material3.FilterChip
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -67,11 +69,19 @@ fun TextTranslateScreen(vm: TextTranslateViewModel, services: PlatformServices, 
                 modifier = Modifier.fillMaxWidth().heightIn(min = 140.dp),
                 shape = MaterialTheme.shapes.large,
             )
+            // Which engine: the user's order (with fail-over) or one picked for this text.
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(selected = state.engine == null, onClick = { vm.setEngine(null) }, label = { Text("Авто") })
+                vm.translator.enabled().forEach { engine ->
+                    FilterChip(selected = state.engine == engine.id, onClick = { vm.setEngine(engine.id) }, label = { Text(engine.name) })
+                }
+            }
             if (state.loading) LinearWavyProgressIndicator(Modifier.fillMaxWidth())
             state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
 
-            val result = state.result
-            if (result != null && state.input.isNotBlank()) {
+            val pipeline = state.result
+            if (pipeline != null && state.input.isNotBlank()) {
+                val result = pipeline.translation
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                     shape = MaterialTheme.shapes.extraLarge,
@@ -81,7 +91,14 @@ fun TextTranslateScreen(vm: TextTranslateViewModel, services: PlatformServices, 
                         result.usefulTargetRomanisation(state.target)?.let {
                             Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
                         }
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                vm.translator.nameOf(pipeline.engineId) +
+                                    if (pipeline.failures.any { !it.skipped }) " · другие не ответили" else "",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                                modifier = Modifier.weight(1f),
+                            )
                             IconButton(onClick = { services.copyText(result.text) }) { Icon(Icons.Rounded.ContentCopy, "Копировать") }
                             IconButton(onClick = { services.shareText(result.text) }) { Icon(Icons.Rounded.Share, "Поделиться") }
                         }
@@ -91,12 +108,19 @@ fun TextTranslateScreen(vm: TextTranslateViewModel, services: PlatformServices, 
                 result.usefulSourceRomanisation()?.let {
                     Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                result.alternatives.takeIf { it.isNotEmpty() }?.let { alts ->
+                    Text("Ещё варианты: ${alts.take(4).joinToString(" · ")}", style = MaterialTheme.typography.bodyMedium)
+                }
                 result.dictionary.forEach { entry ->
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(entry.partOfSpeech, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                        entry.backTranslations.ifEmpty { entry.terms.map { it to emptyList() } }.forEach { (term, back) ->
+                        Text(
+                            listOfNotNull(entry.partOfSpeech, entry.transcription?.let { "[$it]" }).joinToString(" "),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        entry.terms.forEach { term ->
                             Text(
-                                if (back.isEmpty()) term else "$term — ${back.joinToString(", ")}",
+                                if (term.meanings.isEmpty()) term.text else "${term.text} — ${term.meanings.joinToString(", ")}",
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                         }

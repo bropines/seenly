@@ -11,7 +11,16 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.bropines.lens.app.platform.PlatformServices
+import io.github.bropines.lens.translate.TranslatorSettings
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.coroutines.flow.map
 import okio.Path.Companion.toPath
 
@@ -32,7 +41,22 @@ data class AppSettings(
     /** The last folder opened, as FileKit's serialised PlatformFile, so it can be reopened. */
     val lastFolder: String? = null,
     val overlay: OverlayPrefs = OverlayPrefs(),
+    val translators: TranslatorPrefs = TranslatorPrefs(),
 )
+
+/**
+ * The text translators: which engines are on, in what order, and their keys
+ * and options. Images always go through Lens; this is for typed, copied and
+ * selected text.
+ */
+@Serializable
+data class TranslatorPrefs(
+    val enabled: List<String> = listOf("google", "bing", "yandex"),
+    val failOver: Boolean = true,
+    val options: Map<String, Map<String, String>> = emptyMap(),
+) {
+    fun toSettings() = TranslatorSettings(enabled = enabled, options = options, failOver = failOver)
+}
 
 /**
  * How the translation is drawn. Each `Auto` keeps what the chosen layout's
@@ -75,6 +99,12 @@ class SettingsRepository(services: PlatformServices) {
 
     val settings: Flow<AppSettings> = store.data.map { it.toSettings() }
 
+    private val json = Json { ignoreUnknownKeys = true }
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /** The latest settings, for code that cannot suspend (the translation pipeline reads its engines here). */
+    val current: StateFlow<AppSettings> = settings.stateIn(scope, SharingStarted.Eagerly, AppSettings())
+
     suspend fun update(transform: (AppSettings) -> AppSettings) {
         store.edit { p ->
             val next = transform(p.toSettings())
@@ -91,6 +121,7 @@ class SettingsRepository(services: PlatformServices) {
             p[MIN_FONT] = next.overlay.minFontSp
             p[FONT] = next.overlay.font.name
             p[VERTICAL] = next.overlay.vertical.name
+            p[TRANSLATORS] = json.encodeToString(TranslatorPrefs.serializer(), next.translators)
         }
     }
 
@@ -110,6 +141,9 @@ class SettingsRepository(services: PlatformServices) {
             font = this[FONT].toEnum(FontChoice.System),
             vertical = this[VERTICAL].toEnum(VerticalChoice.Auto),
         ),
+        translators = this[TRANSLATORS]
+            ?.let { runCatching { json.decodeFromString(TranslatorPrefs.serializer(), it) }.getOrNull() }
+            ?: TranslatorPrefs(),
     )
 
     private inline fun <reified E : Enum<E>> String?.toEnum(default: E): E =
@@ -128,6 +162,7 @@ class SettingsRepository(services: PlatformServices) {
         val TEXT_SCALE = floatPreferencesKey("overlay_text_scale")
         val MIN_FONT = intPreferencesKey("overlay_min_font")
         val FONT = stringPreferencesKey("overlay_font")
+        val TRANSLATORS = stringPreferencesKey("translators")
         val VERTICAL = stringPreferencesKey("overlay_vertical")
     }
 }

@@ -75,7 +75,7 @@ import io.github.bropines.lens.app.data.ReadingLayout
 import io.github.bropines.lens.app.platform.PlatformServices
 import io.github.bropines.lens.app.platform.encodePng
 import io.github.bropines.lens.app.ui.components.LanguageBar
-import io.github.bropines.lens.gtranslate.GoogleTranslator
+import io.github.bropines.lens.app.data.TextTranslator
 import io.github.bropines.lens.overlay.OverlayMode
 import io.github.bropines.lens.overlay.OverlayStyle
 import io.github.bropines.lens.overlay.rememberTextSelectionState
@@ -94,7 +94,7 @@ private val FastOut = fadeOut(tween(90))
 fun ViewerScreen(
     vm: ViewerViewModel,
     services: PlatformServices,
-    translator: GoogleTranslator,
+    translator: TextTranslator,
     onBack: () -> Unit,
     onTranslateText: (String) -> Unit,
 ) {

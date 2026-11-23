@@ -28,6 +28,9 @@ interface PlatformServices {
 
     /** Keeps read access to a picked folder across restarts (Android's persistable URI grant). */
     fun persistAccess(folder: PlatformFile) {}
+
+    /** The floating screen translator, where the platform has one (Android). */
+    val screenTranslate: io.github.bropines.lens.app.screen.ScreenTranslate? get() = null
 }
 
 /** PNG bytes of the bitmap, for exporting a translated page. */

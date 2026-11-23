@@ -73,7 +73,14 @@ import io.github.bropines.lens.app.ui.components.LanguagePickerSheet
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsScreen(repository: SettingsRepository, settings: AppSettings, onBack: (() -> Unit)?, onAbout: () -> Unit = {}) {
+fun SettingsScreen(
+    repository: SettingsRepository,
+    settings: AppSettings,
+    onBack: (() -> Unit)?,
+    onAbout: () -> Unit = {},
+    onTranslators: () -> Unit = {},
+    translatorsSummary: String = "",
+) {
     val scope = rememberCoroutineScope()
     fun update(transform: (AppSettings) -> AppSettings) = scope.launch { repository.update(transform) }
     var picker by remember { mutableStateOf<String?>(null) }
@@ -141,9 +148,7 @@ fun SettingsScreen(repository: SettingsRepository, settings: AppSettings, onBack
             ) { v -> overlay { it.copy(minFontSp = v.roundToInt()) } }
 
             Section("Перевод текста")
-            Choice(Icons.Rounded.GTranslate, "Google Переводчик", "Словарь, транслитерация, длинные тексты", settings.textEngine == TextEngine.Google) {
-                update { it.copy(textEngine = TextEngine.Google) }
-            }
+            Setting(Icons.Rounded.GTranslate, "Переводчики", translatorsSummary, onTranslators)
 
             Section("Оформление")
             ThemeMode.entries.forEach { mode ->
