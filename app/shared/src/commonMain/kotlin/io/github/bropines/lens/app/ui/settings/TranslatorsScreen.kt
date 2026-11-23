@@ -128,6 +128,23 @@ fun TranslatorsScreen(repository: SettingsRepository, settings: AppSettings, tra
 
 private fun List<String>.move(from: Int, to: Int): List<String> = toMutableList().apply { add(to, removeAt(from)) }
 
+/** One line per engine in the app's language; the providers' own descriptions are English. */
+private val DESCRIPTIONS = mapOf(
+    "google" to "Без ключа. Словарь и транслитерация",
+    "bing" to "Без ключа. Microsoft, до 1000 символов за раз",
+    "yandex" to "Без ключа. Словарь для слов и коротких фраз",
+    "deepl-web" to "Без ключа, как приложение DeepL. Доступен не во всех странах",
+    "lara" to "Без ключа. Нейросетевой перевод Translated",
+    "modernmt" to "Без ключа. Адаптивный перевод Translated",
+    "mymemory" to "Без ключа, 5000 символов в день. Нужен язык оригинала",
+    "lingva" to "Без ключа. Зеркало Google через публичный сервер",
+    "deepl" to "Официальный API DeepL, нужен ключ (бесплатный тоже подходит)",
+    "deeplx" to "Ваш сервер DeepLX",
+    "yandex-cloud" to "Yandex Cloud Translate, нужен API-ключ",
+    "libretranslate" to "Свой или публичный сервер LibreTranslate",
+    "openai" to "Любая модель с OpenAI-совместимым API: ключ, адрес, модель",
+)
+
 @Composable
 private fun SectionTitle(text: String) {
     Text(
@@ -154,6 +171,7 @@ private fun EngineRow(
             Text(
                 when {
                     needsSetup -> "Нужен ключ или адрес — нажмите, чтобы задать"
+                    DESCRIPTIONS[provider.id] != null -> DESCRIPTIONS.getValue(provider.id)
                     provider.description.isNotBlank() -> provider.description
                     provider.needsCredentials -> "С ключом"
                     else -> "Без ключа"
