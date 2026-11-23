@@ -13,6 +13,7 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.init
 import kotlinx.coroutines.flow.MutableSharedFlow
+import java.io.File
 
 class MainActivity : ComponentActivity() {
     /** Images shared or opened into the app. Replays one, so a share that starts the app is not lost before composition. */
@@ -39,8 +40,18 @@ class MainActivity : ComponentActivity() {
             Intent.ACTION_SEND_MULTIPLE ->
                 IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, Uri::class.java).orEmpty()
             Intent.ACTION_VIEW -> listOfNotNull(intent.data)
+            ACTION_ASSIST_CAPTURE -> {
+                // A screenshot from the assistant session, already in our cache dir.
+                intent.getStringExtra(EXTRA_CAPTURE_PATH)?.let { incoming.tryEmit(listOf(PlatformFile(File(it)))) }
+                return
+            }
             else -> emptyList()
         }
         if (uris.isNotEmpty()) incoming.tryEmit(uris.map { PlatformFile(it) })
+    }
+
+    companion object {
+        const val ACTION_ASSIST_CAPTURE = "io.github.bropines.lens.ASSIST_CAPTURE"
+        const val EXTRA_CAPTURE_PATH = "capture_path"
     }
 }

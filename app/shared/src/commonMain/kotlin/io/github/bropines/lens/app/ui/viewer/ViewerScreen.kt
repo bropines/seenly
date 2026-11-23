@@ -50,9 +50,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import io.github.bropines.lens.app.data.Languages
+import io.github.bropines.lens.app.data.ReadingLayout
 import io.github.bropines.lens.app.platform.PlatformServices
+import io.github.bropines.lens.app.platform.encodePng
 import io.github.bropines.lens.overlay.OverlayMode
+import io.github.bropines.lens.overlay.OverlayStyle
+import io.github.bropines.lens.overlay.renderTranslatedBitmap
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun ViewerScreen(
@@ -69,8 +79,16 @@ fun ViewerScreen(
     var mode by rememberSaveable { mutableStateOf(OverlayMode.Translated) }
     var chrome by rememberSaveable { mutableStateOf(true) }
     var showText by rememberSaveable { mutableStateOf(false) }
+    var tappedParagraph by remember { mutableStateOf<Int?>(null) }
+    var zoomed by remember { mutableStateOf(false) }
+    val renders = remember { mutableStateMapOf<Int, PageRender>() }
+    val scope = rememberCoroutineScope()
+    val style = when (settings.readingLayout) {
+        ReadingLayout.InPlace -> OverlayStyle.Chromium
+        ReadingLayout.Reflow -> OverlayStyle.Manga
+    }
 
-    LaunchedEffect(pager) { snapshotFlow { pager.currentPage }.collect(vm::onPageVisible) }
+    LaunchedEffect(pager) { snapshotFlow { pager.currentPage }.collect { zoomed = false; vm.onPageVisible(it) } }
 
     val current = pages[pager.currentPage]
     val result = (current as? PageState.Ready)?.result
@@ -80,13 +98,19 @@ fun ViewerScreen(
             state = pager,
             beyondViewportPageCount = 1,
             key = { items[it].key },
+            // A zoomed page pans with one finger; it must not turn the page.
+            userScrollEnabled = !zoomed,
             modifier = Modifier.fillMaxSize(),
         ) { index ->
             PageView(
                 item = items[index],
                 state = pages[index],
                 mode = mode,
+                style = style,
                 onTap = { chrome = !chrome },
+                onParagraphTap = { if (index == pager.currentPage) tappedParagraph = it },
+                onZoomed = { if (index == pager.currentPage) zoomed = it },
+                onRender = { render -> if (render == null) renders.remove(index) else renders[index] = render },
             )
         }
 
@@ -153,8 +177,32 @@ fun ViewerScreen(
                 onCopyOriginal = { result?.let { services.copyText(it.text) } },
                 onCopyTranslation = { result?.translation?.let(services::copyText) },
                 onShareText = { result?.let { services.shareText(shareableText(it)) } },
+                canExportImage = result != null && renders[pager.currentPage]?.overlay != null,
+                onExportImage = {
+                    val render = renders[pager.currentPage]
+                    val overlay = render?.overlay
+                    if (render != null && overlay != null && result != null) {
+                        val name = items[pager.currentPage].name.substringBeforeLast('.') + "-translated.png"
+                        scope.launch {
+                            val png = withContext(Dispatchers.Default) {
+                                renderTranslatedBitmap(render.bitmap, result, style, overlay).encodePng()
+                            }
+                            services.shareImage(png, name)
+                        }
+                    }
+                },
             )
         }
+    }
+
+    val paragraph = tappedParagraph?.let { result?.paragraphs?.getOrNull(it) }
+    if (paragraph != null) {
+        ParagraphSheet(
+            paragraph = paragraph,
+            services = services,
+            onDismiss = { tappedParagraph = null },
+            onTranslateWithGoogle = { tappedParagraph = null; onTranslateText(it) },
+        )
     }
 
     if (showText && result != null) {
@@ -177,8 +225,11 @@ private fun ViewerToolbar(
     onCopyOriginal: () -> Unit,
     onCopyTranslation: () -> Unit,
     onShareText: () -> Unit,
+    canExportImage: Boolean,
+    onExportImage: () -> Unit,
 ) {
     var copyMenu by rememberSaveable { mutableStateOf(false) }
+    var shareMenu by rememberSaveable { mutableStateOf(false) }
     HorizontalFloatingToolbar(
         expanded = true,
         colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
@@ -201,7 +252,17 @@ private fun ViewerToolbar(
                 )
             }
         }
-        IconButton(onClick = onShareText, enabled = hasText) { Icon(Icons.Rounded.Share, contentDescription = "Поделиться") }
+        Box {
+            IconButton(onClick = { shareMenu = true }, enabled = hasText) { Icon(Icons.Rounded.Share, contentDescription = "Поделиться") }
+            DropdownMenu(expanded = shareMenu, onDismissRequest = { shareMenu = false }) {
+                DropdownMenuItem(
+                    text = { Text("Картинка с переводом") },
+                    enabled = canExportImage,
+                    onClick = { shareMenu = false; onExportImage() },
+                )
+                DropdownMenuItem(text = { Text("Текст: оригинал и перевод") }, onClick = { shareMenu = false; onShareText() })
+            }
+        }
     }
 }
 

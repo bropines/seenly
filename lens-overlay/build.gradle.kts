@@ -28,6 +28,16 @@ kotlin {
             implementation(kotlin("test"))
             implementation(libs.kotest.assertions)
         }
+        jvmTest.dependencies {
+            // Skia's native library for this machine: the JVM tests decode
+            // patches and paint whole overlays, which needs a real backend.
+            implementation(compose.desktop.currentOs)
+        }
+        named("androidHostTest").dependencies {
+            // Android's real Bitmap, Canvas and text layout on the host, so
+            // the Android side of the renderer is tested by running it.
+            implementation("org.robolectric:robolectric:4.16")
+        }
     }
 }
 

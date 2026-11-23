@@ -21,6 +21,9 @@ interface PlatformServices {
     fun persistAccess(folder: PlatformFile) {}
 }
 
+/** PNG bytes of the bitmap, for exporting a translated page. */
+expect fun androidx.compose.ui.graphics.ImageBitmap.encodePng(): ByteArray
+
 /** The wallpaper-based scheme where the platform has one (Android 12+), else null. */
 @Composable
 expect fun platformDynamicColorScheme(dark: Boolean): ColorScheme?
