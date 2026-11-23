@@ -34,12 +34,14 @@ class LensCommand : SuspendingCliktCommand(name = "lens") {
     private val ocrLanguage by option("-l", "--ocr-language", help = "OCR language hint").default("")
     private val json by option("--json", help = "print the full result as JSON").flag()
     private val verbose by option("-v", "--verbose", help = "log the request").flag()
+    private val tiled by option("--tiled", help = "scan a tall image in full-resolution bands").flag()
 
     override suspend fun run() {
         Logger.setMinSeverity(if (verbose) Severity.Debug else Severity.Warn)
         val options = ScanOptions(ocrLanguage = ocrLanguage, targetLanguage = target, sourceLanguage = source)
         val result = try {
-            LensClient.create().scan(image.readBytes(), options)
+            val client = LensClient.create()
+            if (tiled) client.scanTiled(image.readBytes(), options) else client.scan(image.readBytes(), options)
         } catch (e: LensException) {
             System.err.println("lens: ${e.message}")
             throw com.github.ajalt.clikt.core.ProgramResult(1)
