@@ -157,10 +157,18 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
             )
         }
 
+        // Bottom right, mirroring the gallery button: both within the thumb's reach beside the shutter.
         IconButton(
             onClick = { torch = !torch },
-            modifier = Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(8.dp),
-        ) { Icon(if (torch) Icons.Rounded.FlashOn else Icons.Rounded.FlashOff, contentDescription = "Вспышка", tint = Color.White) }
+            modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = 32.dp, bottom = 44.dp)
+                .size(56.dp).background(Color.White.copy(alpha = if (torch) 0.9f else 0.18f), CircleShape),
+        ) {
+            Icon(
+                if (torch) Icons.Rounded.FlashOn else Icons.Rounded.FlashOff,
+                contentDescription = "Вспышка",
+                tint = if (torch) Color.Black else Color.White,
+            )
+        }
 
         Column(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding().padding(bottom = 24.dp),

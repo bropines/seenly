@@ -220,13 +220,7 @@ fun ViewerScreen(
             ViewerTopBar(
                 title = items[pager.currentPage].name,
                 counter = if (items.size > 1) "${pager.currentPage + 1} / ${items.size}" else null,
-                source = settings.sourceLanguage,
-                target = settings.targetLanguage,
-                onSource = vm::setSource,
-                onTarget = vm::setTarget,
                 onBack = onBack,
-                overlayHidden = overlayHidden,
-                onToggleOverlay = { overlayHidden = !overlayHidden; selection.clear() },
             )
         }
 
@@ -241,6 +235,29 @@ fun ViewerScreen(
             )
             SearchStatus(searching, searchError, onDismiss = vm::dismissSearchError)
             AnimatedVisibility(chrome, enter = FastIn + slideInVertically(tween(160)) { it / 3 }, exit = FastOut + slideOutVertically(tween(120)) { it / 3 }) {
+                Column {
+                // Thumb row: language pair on the left, the eye on the right, right above the panel.
+                Row(
+                    Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    LanguageBar(
+                        settings.sourceLanguage, settings.targetLanguage, vm::setSource, vm::setTarget,
+                        modifier = Modifier.weight(1f).background(Scrim, MaterialTheme.shapes.extraLarge).padding(horizontal = 8.dp),
+                        onDark = true,
+                    )
+                    FilledTonalIconToggleButton(
+                        checked = overlayHidden,
+                        onCheckedChange = { overlayHidden = !overlayHidden; selection.clear() },
+                        modifier = Modifier.padding(start = 12.dp).size(56.dp),
+                    ) {
+                        Icon(
+                            if (overlayHidden) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
+                            contentDescription = if (overlayHidden) "Показать перевод" else "Скрыть перевод",
+                            modifier = Modifier.size(28.dp),
+                        )
+                    }
+                }
                 ViewerBottomPanel(
                     mode = mode,
                     onMode = { mode = it; searchMode = false },
@@ -257,6 +274,7 @@ fun ViewerScreen(
                     onExportImage = ::exportImage,
                     onSelectAll = { result?.let(selection::selectAll) },
                 )
+                }
             }
         }
     }
@@ -306,13 +324,7 @@ fun ViewerScreen(
 private fun ViewerTopBar(
     title: String,
     counter: String?,
-    source: String?,
-    target: String,
-    onSource: (String?) -> Unit,
-    onTarget: (String) -> Unit,
     onBack: () -> Unit,
-    overlayHidden: Boolean,
-    onToggleOverlay: () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth().background(Scrim).statusBarsPadding().padding(bottom = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -321,15 +333,7 @@ private fun ViewerTopBar(
                 Text(title, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
                 counter?.let { Text(it, color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelMedium) }
             }
-            // The eye: the picture as it is, without the translation over it.
-            FilledTonalIconToggleButton(checked = overlayHidden, onCheckedChange = { onToggleOverlay() }, modifier = Modifier.padding(end = 8.dp)) {
-                Icon(
-                    if (overlayHidden) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
-                    contentDescription = if (overlayHidden) "Показать перевод" else "Скрыть перевод",
-                )
-            }
         }
-        LanguageBar(source, target, onSource, onTarget, modifier = Modifier.padding(start = 16.dp), onDark = true)
     }
 }
 

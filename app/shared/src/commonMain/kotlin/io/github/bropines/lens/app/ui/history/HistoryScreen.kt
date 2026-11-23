@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -78,15 +79,7 @@ fun HistoryScreen(history: HistoryRepository, onOpen: (HistoryEntry) -> Unit) {
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
-                leadingIcon = { Icon(Icons.Rounded.Search, null) },
-                placeholder = { Text("Поиск по тексту и переводу") },
-                singleLine = true,
-                shape = MaterialTheme.shapes.extraLarge,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-            )
+            Box(Modifier.weight(1f)) {
             if (entries.isEmpty()) {
                 Column(
                     Modifier.fillMaxSize().padding(32.dp),
@@ -109,6 +102,17 @@ fun HistoryScreen(history: HistoryRepository, onOpen: (HistoryEntry) -> Unit) {
                     }
                 }
             }
+            }
+            // Search at the bottom, by the dock, where the thumb already is.
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                leadingIcon = { Icon(Icons.Rounded.Search, null) },
+                placeholder = { Text("Поиск по тексту и переводу") },
+                singleLine = true,
+                shape = MaterialTheme.shapes.extraLarge,
+                modifier = Modifier.fillMaxWidth().imePadding().padding(horizontal = 16.dp, vertical = 8.dp),
+            )
         }
     }
 

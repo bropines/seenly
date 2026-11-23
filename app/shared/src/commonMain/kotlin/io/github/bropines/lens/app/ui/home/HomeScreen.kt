@@ -1,6 +1,7 @@
 package io.github.bropines.lens.app.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -101,41 +102,18 @@ fun HomeScreen(
         snackbarHost = { SnackbarHost(snackbar) },
         contentWindowInsets = WindowInsets(0),
     ) { padding ->
+        // Everything sits at the bottom, nearest the thumb, the main action lowest;
+        // it still scrolls when a small screen cannot hold it all.
+        BoxWithConstraints(Modifier.fillMaxSize().padding(padding)) {
         Column(
-            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            Modifier.verticalScroll(rememberScrollState()).heightIn(min = maxHeight).padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Bottom),
         ) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-                shape = MaterialTheme.shapes.extraLarge,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Переводить", style = MaterialTheme.typography.titleMedium)
-                    LanguageBar(
-                        source = settings.sourceLanguage,
-                        target = settings.targetLanguage,
-                        onSource = { code -> scope.launch { graph.settings.update { it.copy(sourceLanguage = code) } } },
-                        onTarget = { code -> scope.launch { graph.settings.update { it.copy(targetLanguage = code) } } },
-                    )
-                }
-            }
-
-            BigAction(
-                icon = Icons.Rounded.Image,
-                title = "Открыть картинки",
-                subtitle = "Одну или несколько из галереи",
-                primary = true,
-                onClick = { pickImages.launch() },
+            Text(
+                "Поделитесь картинкой из любого приложения — она откроется здесь сразу с переводом.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            BigAction(
-                icon = Icons.Rounded.FolderOpen,
-                title = "Открыть папку",
-                subtitle = "Листать все картинки папки свайпом — для глав манги",
-                primary = false,
-                onClick = { pickFolder.launch() },
-            )
-
             if (lastFolder != null) {
                 Card(
                     onClick = { openFolder(lastFolder) },
@@ -151,12 +129,36 @@ fun HomeScreen(
                 }
             }
 
-            Text(
-                "Поделитесь картинкой из любого приложения — она откроется здесь сразу с переводом.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+                shape = MaterialTheme.shapes.extraLarge,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Переводить", style = MaterialTheme.typography.titleMedium)
+                    LanguageBar(
+                        source = settings.sourceLanguage,
+                        target = settings.targetLanguage,
+                        onSource = { code -> scope.launch { graph.settings.update { it.copy(sourceLanguage = code) } } },
+                        onTarget = { code -> scope.launch { graph.settings.update { it.copy(targetLanguage = code) } } },
+                    )
+                }
+            }
+            BigAction(
+                icon = Icons.Rounded.FolderOpen,
+                title = "Открыть папку",
+                subtitle = "Листать все картинки папки свайпом — для глав манги",
+                primary = false,
+                onClick = { pickFolder.launch() },
             )
-            Spacer(Modifier.height(24.dp))
+            BigAction(
+                icon = Icons.Rounded.Image,
+                title = "Открыть картинки",
+                subtitle = "Одну или несколько из галереи",
+                primary = true,
+                onClick = { pickImages.launch() },
+            )
+        }
         }
     }
 }
