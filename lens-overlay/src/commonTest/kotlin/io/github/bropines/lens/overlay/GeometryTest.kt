@@ -187,6 +187,43 @@ class GeometryTest {
         roomFor(own, listOf(Rect(150f, 150f, 400f, 400f)), 1.5f, 1000f, 1000f) shouldBe Rect(75f, 75f, 225f, 225f)
     }
 
+    @Test
+    fun `room stops at a neighbour off its corner`() {
+        // Not beside the box on either axis, but squarely in the way of its growth.
+        val own = Rect(100f, 100f, 200f, 200f)
+        val diagonal = Rect(210f, 210f, 300f, 300f)
+        val room = roomFor(own, listOf(diagonal), growth = 2f, imageWidth = 1000f, imageHeight = 1000f)
+        room.overlaps(diagonal) shouldBe false
+        // One side gave way, the other three kept their growth.
+        room shouldBe Rect(50f, 50f, 208f, 250f)
+    }
+
+    @Test
+    fun `room gives way to a neighbour that overlaps the box's edge`() {
+        // Lens's boxes for adjacent columns often overlap by a few pixels.
+        val own = Rect(100f, 100f, 200f, 300f)
+        val column = Rect(195f, 120f, 230f, 180f)
+        val room = roomFor(own, listOf(column), growth = 1.45f, imageWidth = 1000f, imageHeight = 1000f)
+        room.overlaps(column) shouldBe false
+        room.right shouldBe 193f
+        // The same holds with no growth asked for at all.
+        roomFor(own, listOf(column), growth = 1f, imageWidth = 1000f, imageHeight = 1000f) shouldBe
+            Rect(100f, 100f, 193f, 300f)
+    }
+
+    @Test
+    fun `room clears every neighbour at once`() {
+        val own = Rect(400f, 400f, 600f, 600f)
+        val others = listOf(
+            Rect(620f, 300f, 700f, 500f),
+            Rect(300f, 610f, 500f, 700f),
+            Rect(250f, 250f, 395f, 395f),
+        )
+        val room = roomFor(own, others, growth = 3f, imageWidth = 1000f, imageHeight = 1000f)
+        others.none { room.overlaps(it) } shouldBe true
+        (room.left <= own.left && room.top <= own.top && room.right >= own.right && room.bottom >= own.bottom) shouldBe true
+    }
+
     // ---- view ----------------------------------------------------------------
 
     @Test

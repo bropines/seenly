@@ -12,6 +12,8 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -37,12 +39,17 @@ fun LanguageBar(
     onSource: (String?) -> Unit,
     onTarget: (String) -> Unit,
     modifier: Modifier = Modifier,
+    /** Over a dark image rather than the theme's surface. */
+    onDark: Boolean = false,
 ) {
     var picking by remember { mutableStateOf<Side?>(null) }
+    val content = if (onDark) Color.White else MaterialTheme.colorScheme.onSurface
+    val colors = AssistChipDefaults.assistChipColors(labelColor = content)
+    val border = AssistChipDefaults.assistChipBorder(enabled = true, borderColor = content.copy(alpha = 0.4f))
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        AssistChip(onClick = { picking = Side.Source }, label = { Text(Languages.nameOf(source)) })
-        Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        AssistChip(onClick = { picking = Side.Target }, label = { Text(Languages.nameOf(target)) })
+        AssistChip(onClick = { picking = Side.Source }, label = { Text(Languages.nameOf(source)) }, colors = colors, border = border)
+        Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = content.copy(alpha = 0.7f))
+        AssistChip(onClick = { picking = Side.Target }, label = { Text(Languages.nameOf(target)) }, colors = colors, border = border)
     }
     when (picking) {
         Side.Source -> LanguagePickerSheet(source, allowAuto = true, onDismiss = { picking = null }) { onSource(it); picking = null }

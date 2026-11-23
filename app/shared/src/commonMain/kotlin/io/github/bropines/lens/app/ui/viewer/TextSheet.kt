@@ -69,7 +69,7 @@ fun TextSheet(
             IconButton(onClick = {
                 services.copyText(
                     when (view) {
-                        TextView.Original -> result.text
+                        TextView.Original -> result.readableText()
                         TextView.Translation -> result.translation.orEmpty()
                         TextView.Both -> shareableText(result)
                     },
@@ -94,7 +94,7 @@ fun TextSheet(
                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 if (view != TextView.Translation) {
                                     Text(
-                                        paragraph.text,
+                                        paragraph.readableText(),
                                         style = if (view == TextView.Original) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.bodyMedium,
                                         color = if (view == TextView.Original) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
@@ -109,7 +109,7 @@ fun TextSheet(
                             IconButton(onClick = {
                                 services.copyText(if (view == TextView.Translation) paragraph.translation?.text ?: paragraph.text else paragraph.text)
                             }) { Icon(Icons.Rounded.ContentCopy, contentDescription = "Копировать абзац") }
-                            IconButton(onClick = { onTranslateWithGoogle(paragraph.text) }) {
+                            IconButton(onClick = { onTranslateWithGoogle(paragraph.readableText()) }) {
                                 Icon(Icons.Rounded.GTranslate, contentDescription = "Открыть в переводчике")
                             }
                         }

@@ -20,6 +20,7 @@ import io.github.bropines.lens.app.data.GalleryItem
 import io.github.bropines.lens.overlay.OverlayMode
 import io.github.bropines.lens.overlay.OverlayState
 import io.github.bropines.lens.overlay.OverlayStyle
+import io.github.bropines.lens.overlay.TextSelectionState
 import io.github.bropines.lens.overlay.TranslatedImage
 import io.github.bropines.lens.overlay.rememberOverlayState
 import io.github.bropines.lens.overlay.rememberZoomState
@@ -42,6 +43,8 @@ fun PageView(
     onParagraphTap: (Int) -> Unit,
     onZoomed: (Boolean) -> Unit,
     onRender: (PageRender?) -> Unit,
+    /** Text selection, for the visible page only. */
+    selection: TextSelectionState? = null,
 ) {
     val image by rememberImage(item.file)
     val result = (state as? PageState.Ready)?.result
@@ -65,6 +68,7 @@ fun PageView(
             onParagraphTap = onParagraphTap,
             onBackgroundTap = onTap,
             zoomState = zoom,
+            selection = selection,
         )
     }
 }

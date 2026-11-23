@@ -24,7 +24,7 @@ data class AppSettings(
     val sourceLanguage: String? = null,
     /** Lens OCR hint; empty = not stated, which is what Chromium sends. */
     val ocrLanguage: String = "",
-    val readingLayout: ReadingLayout = ReadingLayout.InPlace,
+    val readingLayout: ReadingLayout = ReadingLayout.Auto,
     val textEngine: TextEngine = TextEngine.Google,
     val theme: ThemeMode = ThemeMode.System,
     /** The last folder opened, as FileKit's serialised PlatformFile, so it can be reopened. */
@@ -33,6 +33,9 @@ data class AppSettings(
 
 /** How translated text is laid over the image. */
 enum class ReadingLayout {
+    /** Reflow when the page has vertical (manga-style) text, in place otherwise. */
+    Auto,
+
     /** Line by line in the source's place, like Chromium. Right for signs and screenshots. */
     InPlace,
 
@@ -66,7 +69,7 @@ class SettingsRepository(services: PlatformServices) {
         targetLanguage = this[TARGET] ?: "ru",
         sourceLanguage = this[SOURCE]?.ifEmpty { null },
         ocrLanguage = this[OCR] ?: "",
-        readingLayout = this[LAYOUT].toEnum(ReadingLayout.InPlace),
+        readingLayout = this[LAYOUT].toEnum(ReadingLayout.Auto),
         textEngine = this[ENGINE].toEnum(TextEngine.Google),
         theme = this[THEME].toEnum(ThemeMode.System),
         lastFolder = this[LAST_FOLDER],

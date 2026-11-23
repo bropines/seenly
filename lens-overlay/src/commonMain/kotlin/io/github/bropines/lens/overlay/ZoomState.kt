@@ -2,7 +2,7 @@ package io.github.bropines.lens.overlay
 
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.animate
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculateCentroidSize
@@ -88,7 +88,7 @@ public class ZoomState(
     public suspend fun animateTo(
         scale: Float,
         focus: Offset = viewport.center(),
-        animationSpec: AnimationSpec<Float> = spring(),
+        animationSpec: AnimationSpec<Float> = tween(ZOOM_ANIMATION_MS),
     ) {
         val startScale = this.scale
         val startOffset = offset
@@ -113,6 +113,9 @@ public class ZoomState(
 
     private companion object {
         const val DOUBLE_TAP_SCALE = 2.5f
+
+        /** Short, and a tween rather than a spring: no tail to wait out after a double tap. */
+        const val ZOOM_ANIMATION_MS = 150
     }
 }
 

@@ -13,7 +13,11 @@ public enum class OverlayMode {
     /** Translations painted over the source text, the way Chromium does. */
     Translated,
 
-    /** The recognised text boxes highlighted, for selecting and copying. */
+    /**
+     * The text mode: the picture dimmed around the recognised text, every line
+     * softly highlighted, and (with a [TextSelectionState]) words that can be
+     * selected to copy or translate, as in Google Lens.
+     */
     TextBoxes,
 }
 
@@ -104,7 +108,11 @@ public data class OverlayStyle(
     val reflowGrowth: Float = 1f,
     /** [EraseMode.Fill] only: how far the fill reaches past the text, in line thicknesses. */
     val fillPadding: Float = 0.3f,
-    /** The colour of the boxes in [OverlayMode.TextBoxes]. */
+    /**
+     * The colour of text mode ([OverlayMode.TextBoxes]): a faint tint on every
+     * line, a stronger one on the selection, and the selection handles at full
+     * strength. Pass the theme's primary colour.
+     */
     val highlightColor: Color = Color(0xFF4285F4),
 ) {
     public companion object {

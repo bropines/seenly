@@ -21,6 +21,18 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/** A message a person can act on, instead of an exception's text. */
+internal fun friendlyError(e: Throwable): String {
+    val name = e::class.simpleName.orEmpty()
+    return when {
+        "Security" in name || "Permission" in name -> "Нет доступа к файлу. Откройте его через «Поделиться» ещё раз."
+        "UnknownHost" in name || "Connect" in name || "Socket" in name -> "Нет связи с Google. Проверьте интернет."
+        "Timeout" in name -> "Google отвечает слишком долго. Повторите."
+        "FileNotFound" in name || "NoSuch" in name -> "Файл не найден."
+        else -> "Не получилось: ${e.message ?: name}"
+    }
+}
+
 sealed interface PageState {
     data object Loading : PageState
     data class Ready(val result: ScanResult) : PageState
@@ -87,7 +99,7 @@ class ViewerViewModel(
             } catch (e: LensException) {
                 PageState.Failed(e.message ?: "Ошибка Lens")
             } catch (e: Exception) {
-                PageState.Failed("Нет связи: ${e.message ?: e::class.simpleName}")
+                PageState.Failed(friendlyError(e))
             }
             _pages.update { it + (index to next) }
         }

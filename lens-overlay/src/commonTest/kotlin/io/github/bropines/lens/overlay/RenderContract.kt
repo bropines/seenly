@@ -1,6 +1,7 @@
 package io.github.bropines.lens.overlay
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
@@ -20,6 +21,7 @@ import io.github.bropines.lens.protocol.ParagraphTranslation
 import io.github.bropines.lens.protocol.PatchFormat
 import io.github.bropines.lens.protocol.ScanResult
 import io.github.bropines.lens.protocol.TextAlignment
+import io.github.bropines.lens.protocol.Word
 import io.github.bropines.lens.protocol.WritingDirection
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeLessThan
@@ -72,8 +74,8 @@ abstract class RenderContract {
         horizontalPadding = horizontalPadding,
     )
 
-    private fun line(box: Box, translation: String?, style: LineStyle?) =
-        Line(text = "原文", words = emptyList(), box = box, translation = translation, translationStyle = style)
+    private fun line(box: Box, translation: String?, style: LineStyle?, words: List<Word> = emptyList()) =
+        Line(text = "原文", words = words, box = box, translation = translation, translationStyle = style)
 
     private fun paragraph(
         box: Box?,
@@ -357,6 +359,60 @@ abstract class RenderContract {
         texts.filter { !it.quarterTurn }.all { it.topLeft.y >= 0f && it.topLeft.y + it.fill.size.height <= 200f } shouldBe true
     }
 
+    /**
+     * A bubble's main text (two columns, translated) with a short column Lens
+     * left untranslated right beside it, its box even overlapping by a few pixels.
+     */
+    private fun bubbleWithUntranslatedNeighbour(): ScanResult {
+        val vertical = WritingDirection.TopToBottom
+        val columns = listOf(0.45f, 0.35f).map { Box(it, 0.5f, 0.08f, 0.5f, 0f) }
+        val lines = columns.zip(listOf("I never thought ", "we would get this far")) { box, text ->
+            line(box, text, LineStyle(black, white, null))
+        }
+        // x 120..196, y 100..300 in a 400x400 image.
+        val translated = paragraph(Box(0.395f, 0.5f, 0.19f, 0.5f, 0f), lines, source = vertical, direction = vertical)
+        // x 192..228, y 110..170.
+        val leftAlone = paragraph(
+            Box(0.525f, 0.35f, 0.09f, 0.15f, 0f),
+            listOf(line(Box(0.525f, 0.35f, 0.09f, 0.15f, 0f), null, null)),
+            source = vertical,
+        ).copy(translation = null)
+        return ScanResult(listOf(translated, leftAlone), "ja", 400, 400)
+    }
+
+    @Test
+    fun `reflowed text never grows over an untranslated neighbour`() {
+        if (!hasFonts) return
+        val neighbour = Box(0.525f, 0.35f, 0.09f, 0.15f, 0f).toPixels(400f, 400f).bounds()
+        for (style in listOf(OverlayStyle.Manga, OverlayStyle(layout = TranslationLayout.Reflow), OverlayStyle())) {
+            val scene = scene(bubbleWithUntranslatedNeighbour(), style)
+            val block = scene.texts.single()
+            block.paragraph shouldBe 0
+            val text = Rect(block.topLeft, Size(block.fill.size.width.toFloat(), block.fill.size.height.toFloat()))
+            text.overlaps(neighbour) shouldBe false
+        }
+        // It still grows where there is room: to the left, away from the neighbour.
+        val grown = scene(bubbleWithUntranslatedNeighbour(), OverlayStyle.Manga).texts.single()
+        (grown.topLeft.x < 120f) shouldBe true
+    }
+
+    @Test
+    fun `an untranslated paragraph is neither erased nor redrawn`() {
+        val result = bubbleWithUntranslatedNeighbour()
+        val neighbour = Box(0.525f, 0.35f, 0.09f, 0.15f, 0f).toPixels(400f, 400f).bounds()
+        // A page with something to lose where the untranslated column stands.
+        val page = imageBitmapFromArgb(
+            IntArray(400 * 400) { i -> if (neighbour.contains(Offset((i % 400).toFloat(), (i / 400).toFloat()))) red else white },
+            400, 400,
+        )
+        for (style in listOf(OverlayStyle.Manga, OverlayStyle())) {
+            val out = render(page, result, style.copy(minFontSp = 0f))
+            // Sampled well inside the column: every pixel is still the original.
+            val untouched = (200 until 226 step 3).all { x -> (114 until 168 step 3).all { y -> out.pixel(x, y) == red } }
+            untouched shouldBe true
+        }
+    }
+
     // ---- gallery -------------------------------------------------------------
 
     /**
@@ -426,7 +482,9 @@ abstract class RenderContract {
             return Box((l + r) / 2, (t + b) / 2, r - l, b - t, 0f)
         }
         fun lines(items: List<Pair<Box, String>>, text: Int, background: Int, patch: Int?) = items.map { (box, s) ->
-            line(box, s, LineStyle(text, background, patch?.let { pngPatch(it, horizontalPadding = 0.4f, verticalPadding = 0.2f) }))
+            // Words without boxes of their own, so the sheet also shows the line being split among them.
+            val words = s.trim().split(" ").map { Word(it, " ", null) }
+            line(box, s, LineStyle(text, background, patch?.let { pngPatch(it, horizontalPadding = 0.4f, verticalPadding = 0.2f) }), words)
         }
 
         val result = ScanResult(
@@ -464,7 +522,9 @@ abstract class RenderContract {
         val boxes = ImageBitmap(width, height)
         CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(boxes), Size(width.toFloat(), height.toFloat())) {
             drawImage(page)
-            drawTextBoxes(result, width.toFloat(), height.toFloat(), OverlayStyle().highlightColor, 2f)
+            // The sign's second line from its third word on, and all of its third line.
+            val selected = WordLayout(result, width.toFloat(), height.toFloat()).lineSelections(WordRange(4, 13))
+            drawTextMode(result, width.toFloat(), height.toFloat(), OverlayStyle().highlightColor, dp = 1f, selection = selected)
         }
         saveSheet("5-text-boxes", boxes.encode(TestFormat.Png))
     }

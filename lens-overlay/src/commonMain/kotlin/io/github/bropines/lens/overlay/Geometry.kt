@@ -117,11 +117,21 @@ internal fun convexHull(points: List<Offset>): List<Offset> {
 /** Never let two paragraphs share an edge; a pixel of daylight reads as one. */
 private const val NEIGHBOUR_GAP = 2f
 
+/** How far a neighbour may push a side back into the paragraph's own box, as a share of that box. */
+private const val MAX_GIVE = 0.25f
+
 /**
  * How much room a reflowed paragraph has: [own] grown by [growth] about its
- * centre, stopped by the image's edges and by any neighbour that sits beside
- * it. A neighbour that already overlaps [own] is ignored, so the result never
- * comes out smaller than [own] itself.
+ * centre, stopped by the image's edges and by every one of [others].
+ *
+ * The result never intersects a neighbour, wherever that neighbour lies:
+ * beside the box, diagonally off a corner, or slightly overlapping it, as
+ * Lens's boxes for adjacent columns often do. For each neighbour in the way,
+ * the side that gives up the least area is pulled back to it. A side may even
+ * retreat a little into [own] (by up to a quarter of its size) to clear a
+ * neighbour that overlaps its edge: text that is a bit narrower beats text
+ * drawn over another paragraph. Only a neighbour that reaches deeper into
+ * [own] than that cannot be avoided, and is ignored.
  */
 internal fun roomFor(own: Rect, others: List<Rect>, growth: Float, imageWidth: Float, imageHeight: Float): Rect {
     val growX = own.width * (growth - 1f) / 2
@@ -131,17 +141,42 @@ internal fun roomFor(own: Rect, others: List<Rect>, growth: Float, imageWidth: F
     var top = max(0f, own.top - growY)
     var bottom = min(imageHeight, own.bottom + growY)
 
-    for (other in others) {
-        if (other.bottom > own.top && other.top < own.bottom) {
-            if (other.right <= own.left) left = max(left, other.right + NEIGHBOUR_GAP)
-            if (other.left >= own.right) right = min(right, other.left - NEIGHBOUR_GAP)
+    val giveX = own.width * MAX_GIVE
+    val giveY = own.height * MAX_GIVE
+    // Each cut only ever shrinks the room, so this settles; the bound is a safeguard.
+    repeat(others.size + 1) {
+        var changed = false
+        for (other in others) {
+            if (other.left >= right || other.right <= left || other.top >= bottom || other.bottom <= top) continue
+            // The four ways to clear this neighbour, with the area each costs.
+            val toRight = other.left - NEIGHBOUR_GAP
+            val toLeft = other.right + NEIGHBOUR_GAP
+            val toBottom = other.top - NEIGHBOUR_GAP
+            val toTop = other.bottom + NEIGHBOUR_GAP
+            var bestLoss = Float.MAX_VALUE
+            var side = -1
+            fun consider(candidate: Int, allowed: Boolean, loss: Float) {
+                if (allowed && loss < bestLoss) {
+                    bestLoss = loss
+                    side = candidate
+                }
+            }
+            consider(0, toRight >= own.right - giveX, (right - toRight) * (bottom - top))
+            consider(1, toLeft <= own.left + giveX, (toLeft - left) * (bottom - top))
+            consider(2, toBottom >= own.bottom - giveY, (bottom - toBottom) * (right - left))
+            consider(3, toTop <= own.top + giveY, (toTop - top) * (right - left))
+            when (side) {
+                0 -> right = toRight
+                1 -> left = toLeft
+                2 -> bottom = toBottom
+                3 -> top = toTop
+                else -> continue
+            }
+            changed = true
         }
-        if (other.right > own.left && other.left < own.right) {
-            if (other.bottom <= own.top) top = max(top, other.bottom + NEIGHBOUR_GAP)
-            if (other.top >= own.bottom) bottom = min(bottom, other.top - NEIGHBOUR_GAP)
-        }
+        if (!changed) return Rect(left, top, right, bottom)
     }
-    return Rect(min(left, own.left), min(top, own.top), max(right, own.right), max(bottom, own.bottom))
+    return Rect(left, top, right, bottom)
 }
 
 /** The boxes that make a paragraph tappable: its own box and every line's. */

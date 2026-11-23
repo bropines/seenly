@@ -2,6 +2,7 @@ package io.github.bropines.lens.app.ui.viewer
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -44,7 +45,7 @@ fun ParagraphSheet(
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
-            SelectionContainer { Text(paragraph.text, style = MaterialTheme.typography.bodyLarge) }
+            SelectionContainer { Text(paragraph.readableText(), style = MaterialTheme.typography.bodyLarge) }
             if (translation != null) {
                 HorizontalDivider()
                 Text(
@@ -54,19 +55,21 @@ fun ParagraphSheet(
                 )
                 SelectionContainer { Text(translation.text, style = MaterialTheme.typography.titleMedium) }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 8.dp)) {
-                FilledTonalButton(onClick = { services.copyText(paragraph.text) }) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                val compact = PaddingValues(horizontal = 10.dp)
+                FilledTonalButton(onClick = { services.copyText(paragraph.readableText()) }, contentPadding = compact, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Rounded.ContentCopy, null, Modifier.padding(end = 6.dp))
-                    Text("Оригинал")
+                    Text("Оригинал", maxLines = 1)
                 }
                 if (translation != null) {
-                    FilledTonalButton(onClick = { services.copyText(translation.text) }) {
+                    FilledTonalButton(onClick = { services.copyText(translation.text) }, contentPadding = compact, modifier = Modifier.weight(1f)) {
                         Icon(Icons.Rounded.ContentCopy, null, Modifier.padding(end = 6.dp))
-                        Text("Перевод")
+                        Text("Перевод", maxLines = 1)
                     }
                 }
-                OutlinedButton(onClick = { onTranslateWithGoogle(paragraph.text) }) {
-                    Icon(Icons.Rounded.GTranslate, contentDescription = "Открыть в переводчике")
+                OutlinedButton(onClick = { onTranslateWithGoogle(paragraph.readableText()) }, contentPadding = compact, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Rounded.GTranslate, contentDescription = null, modifier = Modifier.padding(end = 6.dp))
+                    Text("Google", maxLines = 1)
                 }
             }
         }

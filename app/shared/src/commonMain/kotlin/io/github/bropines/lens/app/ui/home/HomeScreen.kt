@@ -1,8 +1,12 @@
 package io.github.bropines.lens.app.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Image
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -24,7 +27,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -60,8 +62,6 @@ fun HomeScreen(
     graph: AppGraph,
     settings: AppSettings,
     onOpenViewer: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onTranslateText: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
@@ -95,13 +95,11 @@ fun HomeScreen(
             LargeFlexibleTopAppBar(
                 title = { Text("Lens") },
                 subtitle = { Text("Перевод с картинок") },
-                actions = {
-                    IconButton(onClick = onOpenSettings) { Icon(Icons.Rounded.Settings, contentDescription = "Настройки") }
-                },
                 scrollBehavior = scrollBehavior,
             )
         },
         snackbarHost = { SnackbarHost(snackbar) },
+        contentWindowInsets = WindowInsets(0),
     ) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
@@ -110,9 +108,10 @@ fun HomeScreen(
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
                 shape = MaterialTheme.shapes.extraLarge,
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text("Язык перевода", style = MaterialTheme.typography.titleMedium)
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Переводить", style = MaterialTheme.typography.titleMedium)
                     LanguageBar(
                         source = settings.sourceLanguage,
                         target = settings.targetLanguage,
@@ -122,33 +121,20 @@ fun HomeScreen(
                 }
             }
 
-            Button(
+            BigAction(
+                icon = Icons.Rounded.Image,
+                title = "Открыть картинки",
+                subtitle = "Одну или несколько из галереи",
+                primary = true,
                 onClick = { pickImages.launch() },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp),
-                shape = MaterialTheme.shapes.extraLarge,
-                contentPadding = ButtonDefaults.contentPaddingFor(ButtonDefaults.LargeContainerHeight),
-            ) {
-                Icon(Icons.Rounded.Image, contentDescription = null, modifier = Modifier.padding(end = 12.dp))
-                Text("Открыть картинки", style = MaterialTheme.typography.titleMedium)
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                FilledTonalButton(
-                    onClick = { pickFolder.launch() },
-                    modifier = Modifier.weight(1f).heightIn(min = 64.dp),
-                    shape = MaterialTheme.shapes.extraLarge,
-                ) {
-                    Icon(Icons.Rounded.FolderOpen, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                    Text("Папка")
-                }
-                OutlinedButton(
-                    onClick = onTranslateText,
-                    modifier = Modifier.weight(1f).heightIn(min = 64.dp),
-                    shape = MaterialTheme.shapes.extraLarge,
-                ) {
-                    Icon(Icons.Rounded.TextFields, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                    Text("Текст")
-                }
-            }
+            )
+            BigAction(
+                icon = Icons.Rounded.FolderOpen,
+                title = "Открыть папку",
+                subtitle = "Листать все картинки папки свайпом — для глав манги",
+                primary = false,
+                onClick = { pickFolder.launch() },
+            )
 
             if (lastFolder != null) {
                 Card(
@@ -171,6 +157,27 @@ fun HomeScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+/** A large, self-explaining action: icon, what it does, and when to use it. */
+@Composable
+private fun BigAction(icon: ImageVector, title: String, subtitle: String, primary: Boolean, onClick: () -> Unit) {
+    val container = if (primary) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer
+    val content = if (primary) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer
+    Card(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(containerColor = container, contentColor = content),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(Modifier.padding(horizontal = 20.dp, vertical = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(32.dp))
+            Column(Modifier.padding(start = 16.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = content.copy(alpha = 0.8f))
+            }
         }
     }
 }

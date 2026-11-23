@@ -24,7 +24,8 @@ fun LensTheme(mode: ThemeMode, content: @Composable () -> Unit) {
         ?: rememberDynamicColorScheme(seedColor = Seed, isDark = dark, style = PaletteStyle.Expressive)
     MaterialExpressiveTheme(
         colorScheme = scheme,
-        motionScheme = MotionScheme.expressive(),
+        // Standard, not expressive: the expressive springs overshoot and read as slow here.
+        motionScheme = MotionScheme.standard(),
         content = content,
     )
 }

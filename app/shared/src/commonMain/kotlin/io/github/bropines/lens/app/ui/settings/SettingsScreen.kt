@@ -1,6 +1,7 @@
 package io.github.bropines.lens.app.ui.settings
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -34,16 +36,17 @@ import io.github.bropines.lens.app.ui.components.LanguagePickerSheet
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsScreen(repository: SettingsRepository, settings: AppSettings, onBack: () -> Unit) {
+fun SettingsScreen(repository: SettingsRepository, settings: AppSettings, onBack: (() -> Unit)?) {
     val scope = rememberCoroutineScope()
     fun update(transform: (AppSettings) -> AppSettings) = scope.launch { repository.update(transform) }
     var picker by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
+        contentWindowInsets = if (onBack == null) WindowInsets(0) else ScaffoldDefaults.contentWindowInsets,
         topBar = {
             TopAppBar(
                 title = { Text("Настройки") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Назад") } },
+                navigationIcon = { if (onBack != null) IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Назад") } },
             )
         },
     ) { padding ->
@@ -57,6 +60,9 @@ fun SettingsScreen(repository: SettingsRepository, settings: AppSettings, onBack
             ) { picker = "ocr" }
 
             Section("Наложение перевода")
+            Choice("Автоматически", "Манга — по абзацам, остальное — строка в строку", settings.readingLayout == ReadingLayout.Auto) {
+                update { it.copy(readingLayout = ReadingLayout.Auto) }
+            }
             Choice("Строка в строку", "Как в Chrome: для вывесок и скриншотов", settings.readingLayout == ReadingLayout.InPlace) {
                 update { it.copy(readingLayout = ReadingLayout.InPlace) }
             }

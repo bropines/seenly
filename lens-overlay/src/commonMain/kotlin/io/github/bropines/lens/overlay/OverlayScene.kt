@@ -1,8 +1,8 @@
 package io.github.bropines.lens.overlay
 
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.TextLayoutResult
@@ -52,8 +53,12 @@ internal class PatchOp(val box: OrientedBox, val image: ImageBitmap) : EraseOp
 /** A flat colour over [box], for a line that has no usable patch. */
 internal class RectFillOp(val box: OrientedBox, val color: Color) : EraseOp
 
-/** A flat colour over a paragraph's hull, grown by [padding] pixels with round corners. */
-internal class HullFillOp(val path: Path, val color: Color, val padding: Float) : EraseOp
+/**
+ * A flat colour over a paragraph's hull, grown by [padding] pixels with round
+ * corners. Nothing is painted inside [keepOut]: the padding reaches past the
+ * text, and what lies there may be a paragraph that was not translated.
+ */
+internal class HullFillOp(val path: Path, val color: Color, val padding: Float, val keepOut: List<Rect>) : EraseOp
 
 /**
  * One piece of laid-out text.
@@ -149,8 +154,19 @@ private class SceneBuilder(
     private val erases = ArrayList<EraseOp>()
     private val texts = ArrayList<TextOp>()
 
-    private val paragraphBounds: List<Rect?> =
-        result.paragraphs.map { it.box?.toPixels(width, height)?.bounds() }
+    /**
+     * What each paragraph occupies, translated or not: its box, or its lines'
+     * boxes when it has none. Reflowed text must not grow over any of them. An
+     * untranslated paragraph in particular is still the original, on the page.
+     */
+    private val paragraphObstacles: List<List<Rect>> = result.paragraphs.map { paragraph ->
+        paragraph.box?.let { listOf(it.toPixels(width, height).bounds()) }
+            ?: paragraph.lines.mapNotNull { it.box?.toPixels(width, height)?.bounds() }
+    }
+
+    /** Where the paragraphs Lens did not translate stand. They stay exactly as they are. */
+    private val untranslated: List<Rect> =
+        paragraphObstacles.filterIndexed { i, _ -> result.paragraphs[i].translation == null }.flatten()
 
     /** Only made when a colour has to be sampled; on Android it may copy the image. */
     private val readable: ImageBitmap by lazy { image.forSoftwareCanvas() }
@@ -200,7 +216,11 @@ private class SceneBuilder(
             paragraph.lines[line].translationStyle?.backgroundColor?.let(::opaque) ?: paragraphBackground
 
         when (style.erase) {
-            EraseMode.Fill -> eraseHull(lineBoxes.filterNotNull().ifEmpty { listOfNotNull(paragraphBox) }, paragraphBackground)
+            EraseMode.Fill -> eraseHull(
+                lineBoxes.filterNotNull().ifEmpty { listOfNotNull(paragraphBox) },
+                paragraphBackground,
+                keepOut = untranslated,
+            )
             EraseMode.ServerPatch -> paragraph.lines.forEachIndexed { l, line ->
                 val box = lineBoxes[l] ?: return@forEachIndexed
                 val patch = line.translationStyle?.background
@@ -238,7 +258,7 @@ private class SceneBuilder(
 
     // ---- erasing -----------------------------------------------------------
 
-    private fun eraseHull(boxes: List<OrientedBox>, color: Int) {
+    private fun eraseHull(boxes: List<OrientedBox>, color: Int, keepOut: List<Rect>) {
         val hull = convexHull(boxes.flatMap { it.corners() })
         if (hull.size < 3) return
         val thinnest = boxes.minOf { min(it.width, it.height) }
@@ -247,7 +267,9 @@ private class SceneBuilder(
             for (i in 1 until hull.size) lineTo(hull[i].x, hull[i].y)
             close()
         }
-        erases += HullFillOp(path, Color(color), max(0f, thinnest * style.fillPadding))
+        val padding = max(0f, thinnest * style.fillPadding)
+        val reach = path.getBounds().inflate(padding)
+        erases += HullFillOp(path, Color(color), padding, keepOut.filter { it.overlaps(reach) })
     }
 
     /** The median colour just outside [box], or null when the image cannot be read. */
@@ -419,8 +441,9 @@ private class SceneBuilder(
         // Grow only as far as the text needs: a paragraph that already reads
         // at the source's size stays exactly where the source was.
         val growth = style.reflowGrowth
-        var area = box
-        var fitted = fit(box)
+        // Even ungrown, the area gives way to a neighbour that overlaps the box's edge.
+        var area = reflowArea(paragraph, box, 1f)
+        var fitted = fit(area)
         if (growth > 1f) {
             for (step in listOf(1f + (growth - 1f) / 2, growth)) {
                 if (fitted >= sizeCap * 0.9f) break
@@ -450,9 +473,9 @@ private class SceneBuilder(
      * alone, since room is measured along the image's axes.
      */
     private fun reflowArea(paragraph: Int, box: OrientedBox, growth: Float): OrientedBox {
-        if (growth <= 1f || abs(box.rotation) > 0.05f) return box
+        if (abs(box.rotation) > 0.05f) return box
         val own = box.frame
-        val others = paragraphBounds.filterIndexed { i, rect -> i != paragraph && rect != null }.filterNotNull()
+        val others = paragraphObstacles.filterIndexed { i, _ -> i != paragraph }.flatten()
         val room = roomFor(own, others, growth, width, height)
         val growY = own.height * (min(growth, 1.2f) - 1f) / 2
         val top = max(room.top, own.top - growY)
@@ -563,13 +586,16 @@ internal fun DrawScope.drawOverlayScene(scene: OverlayScene) {
                 drawRect(op.color, op.box.frame.topLeft, op.box.frame.size)
             }
 
-            is HullFillOp -> {
+            is HullFillOp -> drawIntoCanvas { canvas ->
+                canvas.save()
+                for (rect in op.keepOut) canvas.clipRect(rect, ClipOp.Difference)
                 drawPath(op.path, op.color)
                 if (op.padding > 0f) {
                     // A round-jointed stroke grows the shape by the padding in
                     // every direction and rounds its corners in one step.
                     drawPath(op.path, op.color, style = Stroke(op.padding * 2, join = StrokeJoin.Round))
                 }
+                canvas.restore()
             }
         }
     }
@@ -585,35 +611,4 @@ internal fun DrawScope.drawOverlayScene(scene: OverlayScene) {
 private fun DrawScope.drawTextOp(op: TextOp) {
     op.outline?.let { drawText(it, topLeft = op.topLeft) }
     drawText(op.fill, topLeft = op.topLeft)
-}
-
-/**
- * Draws [OverlayMode.TextBoxes]: a tinted, outlined box per paragraph and a
- * lighter tint per line. The scope's coordinates must be the image's pixels;
- * [strokeWidth] is in those pixels too, so pass one that undoes the zoom.
- */
-internal fun DrawScope.drawTextBoxes(
-    result: ScanResult,
-    imageWidth: Float,
-    imageHeight: Float,
-    color: Color,
-    strokeWidth: Float,
-    alpha: Float = 1f,
-) {
-    for (paragraph in result.paragraphs) {
-        paragraph.box?.toPixels(imageWidth, imageHeight)?.let { box ->
-            val frame = box.frame.inflate(strokeWidth * 2)
-            val radius = CornerRadius(min(strokeWidth * 4, min(frame.width, frame.height) / 4))
-            rotate(box.rotationDegrees, box.center) {
-                drawRoundRect(color, frame.topLeft, frame.size, radius, alpha = 0.10f * alpha)
-                drawRoundRect(color, frame.topLeft, frame.size, radius, alpha = 0.85f * alpha, style = Stroke(strokeWidth))
-            }
-        }
-        for (line in paragraph.lines) {
-            val box = line.box?.toPixels(imageWidth, imageHeight) ?: continue
-            rotate(box.rotationDegrees, box.center) {
-                drawRect(color, box.frame.topLeft, box.frame.size, alpha = 0.18f * alpha)
-            }
-        }
-    }
 }

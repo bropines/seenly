@@ -1,8 +1,10 @@
 package io.github.bropines.lens.overlay
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,10 +24,12 @@ import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -42,9 +46,10 @@ import kotlin.math.roundToInt
  * Shows [image] fitted to the available space with Lens's [result] over it.
  *
  * In [OverlayMode.Translated] the source text is erased and the translation
- * drawn in its place, as [style] says; in [OverlayMode.TextBoxes] the
- * recognised paragraphs and lines are highlighted; [OverlayMode.Original] shows
- * the bare image. The overlay shares the image's transform, so it stays put
+ * drawn in its place, as [style] says; [OverlayMode.TextBoxes] is the text
+ * mode, with the picture dimmed around the text, every line tinted and, given
+ * a [selection], text the user can select; [OverlayMode.Original] shows the
+ * bare image. The overlay shares the image's transform, so it stays put
  * while the user pinches to zoom, drags to pan or double-taps.
  *
  * [result]'s patches are decoded off the main thread; until that is done the
@@ -57,6 +62,11 @@ import kotlin.math.roundToInt
  * @param onBackgroundTap called for a single tap that hits no paragraph (or
  *   any single tap when [onParagraphTap] is null), e.g. to toggle the app's chrome.
  * @param zoomState the zoom and pan; hoist it to read or drive them.
+ * @param selection turns on text selection in [OverlayMode.TextBoxes]: a tap
+ *   selects the paragraph under it (and one on empty space clears the selection
+ *   and calls [onBackgroundTap]), a long press selects a word and dragging on
+ *   extends it, and two handles move the ends. [onParagraphTap] is not called
+ *   in that mode then. Null leaves text mode a plain highlight.
  */
 @Composable
 public fun TranslatedImage(
@@ -68,8 +78,11 @@ public fun TranslatedImage(
     onParagraphTap: ((Int) -> Unit)? = null,
     onBackgroundTap: (() -> Unit)? = null,
     zoomState: ZoomState = rememberZoomState(),
+    selection: TextSelectionState? = null,
 ) {
-    TranslatedImageImpl(image, result, rememberOverlayState(result), mode, style, modifier, onParagraphTap, onBackgroundTap, zoomState)
+    TranslatedImageImpl(
+        image, result, rememberOverlayState(result), mode, style, modifier, onParagraphTap, onBackgroundTap, zoomState, selection,
+    )
 }
 
 /**
@@ -88,8 +101,9 @@ public fun TranslatedImage(
     onParagraphTap: ((Int) -> Unit)? = null,
     onBackgroundTap: (() -> Unit)? = null,
     zoomState: ZoomState = rememberZoomState(),
+    selection: TextSelectionState? = null,
 ) {
-    TranslatedImageImpl(image, state?.result, state, mode, style, modifier, onParagraphTap, onBackgroundTap, zoomState)
+    TranslatedImageImpl(image, state?.result, state, mode, style, modifier, onParagraphTap, onBackgroundTap, zoomState, selection)
 }
 
 /** Where an image of [imageWidth] x [imageHeight] sits when fitted, centred, into [viewport]. */
@@ -132,6 +146,9 @@ internal fun measureImage(imageWidth: Int, imageHeight: Int, constraints: Constr
     )
 }
 
+/** How long a change of [OverlayMode] takes to fade. */
+private const val MODE_FADE_MS = 120
+
 /** How close, on screen, a tap has to come to a paragraph to count. */
 private val TapSlop = 12.dp
 
@@ -146,6 +163,7 @@ private fun TranslatedImageImpl(
     onParagraphTap: ((Int) -> Unit)?,
     onBackgroundTap: (() -> Unit)?,
     zoomState: ZoomState,
+    selection: TextSelectionState?,
 ) {
     val density = LocalDensity.current
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
@@ -173,8 +191,22 @@ private fun TranslatedImageImpl(
     // belongs to another result or another image: then nothing beats wrong.
     val scene = latestScene?.takeIf { it.source === state && it.imageWidth == image.width && it.imageHeight == image.height }
 
-    val translatedAlpha by animateFloatAsState(if (mode == OverlayMode.Translated) 1f else 0f)
-    val boxesAlpha by animateFloatAsState(if (mode == OverlayMode.TextBoxes) 1f else 0f)
+    // Short and without a spring's tail: switching modes should feel immediate.
+    val translatedAlpha by animateFloatAsState(if (mode == OverlayMode.Translated) 1f else 0f, tween(MODE_FADE_MS))
+    val boxesAlpha by animateFloatAsState(if (mode == OverlayMode.TextBoxes) 1f else 0f, tween(MODE_FADE_MS))
+
+    // Selection lives in text mode only. The word boxes are worked out once
+    // per result and image size; the state is told what is on screen so it
+    // can hit-test and report where the selection is.
+    val selecting = selection != null && mode == OverlayMode.TextBoxes
+    val wordLayout = remember(result, image.width, image.height, selecting) {
+        if (selecting && result != null) WordLayout(result, image.width.toFloat(), image.height.toFloat()) else null
+    }
+    if (selection != null) {
+        SideEffect { selection.bind(wordLayout, image.width.toFloat(), fit, zoomState) }
+        LaunchedEffect(selection, selecting) { if (!selecting) selection.clear() }
+    }
+    val haptics = LocalHapticFeedback.current
 
     val scope = rememberCoroutineScope()
     val currentTap by rememberUpdatedState(onParagraphTap)
@@ -182,6 +214,7 @@ private fun TranslatedImageImpl(
     val currentResult by rememberUpdatedState(result)
     val currentFit by rememberUpdatedState(fit)
     val currentImage by rememberUpdatedState(image)
+    val currentSelection by rememberUpdatedState(if (selecting) selection else null)
 
     Layout(
         modifier = modifier
@@ -203,10 +236,34 @@ private fun TranslatedImageImpl(
                             val slop = TapSlop.toPx() / (scale * zoomState.scale)
                             hit = scan.paragraphAt(inImage, imageSize, slop)
                         }
-                        if (hit != null && tap != null) tap(hit) else currentBackgroundTap?.invoke()
+                        val selectionState = currentSelection
+                        when {
+                            selectionState != null ->
+                                if (hit == null || !selectionState.selectParagraph(hit)) {
+                                    selectionState.clear()
+                                    currentBackgroundTap?.invoke()
+                                }
+                            hit != null && tap != null -> tap(hit)
+                            else -> currentBackgroundTap?.invoke()
+                        }
                     },
                 )
             }
+            // After the tap detector, so it sees each event first: a release
+            // that ends a selection drag is consumed before it can count as a tap.
+            .then(
+                if (selecting && selection != null) {
+                    Modifier.pointerInput(selection) {
+                        detectSelectionGestures(
+                            state = selection,
+                            onLongPress = { haptics.performHapticFeedback(HapticFeedbackType.LongPress) },
+                            onStep = { haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
+                        )
+                    }
+                } else {
+                    Modifier
+                },
+            )
             .drawBehind {
                 if (fit.isEmpty) return@drawBehind
                 val zoom = zoomState.scale
@@ -219,9 +276,12 @@ private fun TranslatedImageImpl(
                     val bounds = Rect(0f, 0f, image.width.toFloat(), image.height.toFloat())
                     if (scene != null) withAlpha(translatedAlpha, bounds) { drawOverlayScene(scene) }
                     if (result != null && boxesAlpha > 0.004f) {
-                        // A constant width on screen, whatever the zoom.
-                        val stroke = 1.5.dp.toPx() / (zoom * fitScale)
-                        drawTextBoxes(result, bounds.width, bounds.height, style.highlightColor, stroke, boxesAlpha)
+                        // One dp in image pixels: sizes stay constant on screen, whatever the zoom.
+                        val dp = 1.dp.toPx() / (zoom * fitScale)
+                        // Read here, in the draw phase: a new selection is on screen the next frame,
+                        // without recomposing and without any animation in between.
+                        val selected = selection?.selection?.let { wordLayout?.lineSelections(it) }.orEmpty()
+                        drawTextMode(result, bounds.width, bounds.height, style.highlightColor, dp, boxesAlpha, selected)
                     }
                 }
             },
