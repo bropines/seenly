@@ -26,7 +26,35 @@ class ScreenPermissionActivity : ComponentActivity() {
     private var overlayAsked = false
     private var notificationsAsked = false
 
-    private val overlaySettings = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { next() }
+    /** Sent to the overlay Settings page and not back with an answer yet. */
+    private var awaitingOverlay = false
+    private var leftForSettings = false
+
+    // HyperOS/MIUI open that page in a task of their own and report RESULT_CANCELED at
+    // once, before the user has touched the switch; so the answer is read in onResume.
+    private val overlaySettings = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
+
+    override fun onPause() {
+        super.onPause()
+        if (awaitingOverlay) leftForSettings = true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!awaitingOverlay || !leftForSettings) return
+        // canDrawOverlays can lag the switch by a moment on some builds.
+        window.decorView.postDelayed({
+            if (isFinishing || !awaitingOverlay) return@postDelayed
+            awaitingOverlay = false
+            leftForSettings = false
+            if (Settings.canDrawOverlays(this)) {
+                next()
+            } else {
+                toast("Нужно разрешение «Поверх других приложений»")
+                finish()
+            }
+        }, 400)
+    }
 
     private val notifications = registerForActivityResult(ActivityResultContracts.RequestPermission()) { next() }
 
@@ -67,6 +95,7 @@ class ScreenPermissionActivity : ComponentActivity() {
                     return
                 }
                 overlayAsked = true
+                awaitingOverlay = true
                 toast("Разрешите Lens показывать окна поверх других приложений")
                 val page = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
                 runCatching { overlaySettings.launch(page) }.onFailure {
