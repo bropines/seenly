@@ -1,9 +1,11 @@
 package io.github.bropines.lens.protocol
 
 import lens.CoordinateType
+import lens.DeepGleamData
 import lens.Geometry
 import lens.LensOverlayServerError
 import lens.LensOverlayServerResponse
+import lens.Text
 import lens.TextLayout
 import lens.TranslationData
 
@@ -35,8 +37,46 @@ public object LensResponses {
             ?: throw LensException.MalformedResponse("neither an objects response nor an error")
 
         val scale = Scale(imageWidth.toFloat(), imageHeight.toFloat())
-        val layout = objects.text?.text_layout
-        val translations = objects.deep_gleams.map { gleam -> gleam.translation?.takeIf { it.succeeded() } }
+        return textResult(objects.text, objects.deep_gleams, imageWidth, imageHeight).copy(
+            // An object without an id cannot be searched, and one without a box cannot be drawn.
+            objects = objects.overlay_objects.mapNotNull { found ->
+                val box = boxOf(found.geometry, scale)
+                if (found.id.isEmpty() || box == null) null else DetectedObject(found.id, box)
+            },
+        )
+    }
+
+    /**
+     * Decodes the reply to an interaction request. Its text, when there is
+     * any, is the selected region read again from the crop that was sent. The
+     * boxes are placed in the image the crop was cut from, so [imageWidth] and
+     * [imageHeight] are that image's size, as for [parse]. Null when Lens sent
+     * no text.
+     */
+    public fun parseInteraction(body: ByteArray, imageWidth: Int, imageHeight: Int): ScanResult? {
+        val response = checkError(body)
+        val text = response.interaction_response?.text ?: return null
+        return textResult(text, emptyList(), imageWidth, imageHeight).takeIf { it.paragraphs.isNotEmpty() }
+    }
+
+    /** Decodes [body] and throws if it carries a real error. */
+    internal fun checkError(body: ByteArray): LensOverlayServerResponse {
+        val response = try {
+            LensOverlayServerResponse.ADAPTER.decode(body)
+        } catch (e: Exception) {
+            throw LensException.MalformedResponse("not a LensOverlayServerResponse", e)
+        }
+        val error = response.error
+        if (error != null && error.error_type != LensOverlayServerError.ErrorType.UNKNOWN_TYPE) {
+            throw LensException.ServerError(error.error_type.name)
+        }
+        return response
+    }
+
+    private fun textResult(text: Text?, gleams: List<DeepGleamData>, imageWidth: Int, imageHeight: Int): ScanResult {
+        val scale = Scale(imageWidth.toFloat(), imageHeight.toFloat())
+        val layout = text?.text_layout
+        val translations = gleams.map { gleam -> gleam.translation?.takeIf { it.succeeded() } }
 
         // By index, not by position among the successes: a gleam's place in
         // deep_gleams is its paragraph's index, so a failure leaves a hole.
@@ -46,7 +86,7 @@ public object LensResponses {
         }
         return ScanResult(
             paragraphs = paragraphs,
-            language = objects.text?.content_language?.ifEmpty { null },
+            language = text?.content_language?.ifEmpty { null },
             imageWidth = imageWidth,
             imageHeight = imageHeight,
         )

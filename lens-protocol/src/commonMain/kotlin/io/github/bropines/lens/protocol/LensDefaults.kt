@@ -9,6 +9,18 @@ package io.github.bropines.lens.protocol
 public object LensDefaults {
     public const val CRUPLOAD_ENDPOINT: String = "https://lensfrontend-pa.googleapis.com/v1/crupload"
 
+    /** Opens a search session: the ids that tie an upload to a results page. */
+    public const val CLUSTER_INFO_ENDPOINT: String = "https://lensfrontend-pa.googleapis.com/v1/gsessionid"
+
+    /** The results page. Everything a user calls "search" is HTML there, not in any response. */
+    public const val RESULTS_URL: String = "https://www.google.com/search"
+
+    /** Chromium's `cluster-info-lifetime-seconds`; past it the session ids stop resolving. */
+    public const val SESSION_LIFETIME_SECONDS: Long = 1800
+
+    /** A session this close to its end is reopened, so a URL is never minted from one about to expire. */
+    public const val SESSION_MARGIN_SECONDS: Long = 60
+
     /** The API key Chromium ships with for the Lens overlay. */
     public const val API_KEY: String = "AIzaSyDr2UxVnv_U85AbhhY8XSHSIavUW0DC-sY"
 

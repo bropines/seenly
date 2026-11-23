@@ -1,6 +1,23 @@
 package io.github.bropines.lens.app.ui.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.BrightnessAuto
+import androidx.compose.material.icons.rounded.ChatBubbleOutline
+import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.DocumentScanner
+import androidx.compose.material.icons.rounded.GTranslate
+import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.LightMode
+import androidx.compose.material.icons.rounded.Translate
+import androidx.compose.material.icons.rounded.ViewHeadline
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -52,26 +69,27 @@ fun SettingsScreen(repository: SettingsRepository, settings: AppSettings, onBack
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
             Section("Перевод")
-            Setting("Переводить на", Languages.nameOf(settings.targetLanguage)) { picker = "target" }
-            Setting("Язык оригинала", Languages.nameOf(settings.sourceLanguage)) { picker = "source" }
+            Setting(Icons.Rounded.Translate, "Переводить на", Languages.nameOf(settings.targetLanguage)) { picker = "target" }
+            Setting(Icons.Rounded.Language, "Язык оригинала", Languages.nameOf(settings.sourceLanguage)) { picker = "source" }
             Setting(
+                Icons.Rounded.DocumentScanner,
                 "Подсказка для распознавания",
                 if (settings.ocrLanguage.isEmpty()) "Не указана — Lens определит сам" else Languages.nameOf(settings.ocrLanguage),
             ) { picker = "ocr" }
 
             Section("Наложение перевода")
-            Choice("Автоматически", "Манга — по абзацам, остальное — строка в строку", settings.readingLayout == ReadingLayout.Auto) {
+            Choice(Icons.Rounded.AutoAwesome, "Автоматически", "Манга — по абзацам, остальное — строка в строку", settings.readingLayout == ReadingLayout.Auto) {
                 update { it.copy(readingLayout = ReadingLayout.Auto) }
             }
-            Choice("Строка в строку", "Как в Chrome: для вывесок и скриншотов", settings.readingLayout == ReadingLayout.InPlace) {
+            Choice(Icons.Rounded.ViewHeadline, "Строка в строку", "Как в Chrome: для вывесок и скриншотов", settings.readingLayout == ReadingLayout.InPlace) {
                 update { it.copy(readingLayout = ReadingLayout.InPlace) }
             }
-            Choice("По абзацам", "Текст перетекает внутри пузыря: для манги и комиксов", settings.readingLayout == ReadingLayout.Reflow) {
+            Choice(Icons.Rounded.ChatBubbleOutline, "По абзацам", "Текст перетекает внутри пузыря: для манги и комиксов", settings.readingLayout == ReadingLayout.Reflow) {
                 update { it.copy(readingLayout = ReadingLayout.Reflow) }
             }
 
             Section("Перевод текста")
-            Choice("Google Переводчик", "Словарь, транслитерация, длинные тексты", settings.textEngine == TextEngine.Google) {
+            Choice(Icons.Rounded.GTranslate, "Google Переводчик", "Словарь, транслитерация, длинные тексты", settings.textEngine == TextEngine.Google) {
                 update { it.copy(textEngine = TextEngine.Google) }
             }
 
@@ -82,7 +100,12 @@ fun SettingsScreen(repository: SettingsRepository, settings: AppSettings, onBack
                     ThemeMode.Light -> "Светлая"
                     ThemeMode.Dark -> "Тёмная"
                 }
-                Choice(label, null, settings.theme == mode) { update { it.copy(theme = mode) } }
+                val icon = when (mode) {
+                    ThemeMode.System -> Icons.Rounded.BrightnessAuto
+                    ThemeMode.Light -> Icons.Rounded.LightMode
+                    ThemeMode.Dark -> Icons.Rounded.DarkMode
+                }
+                Choice(icon, label, null, settings.theme == mode) { update { it.copy(theme = mode) } }
             }
         }
     }
@@ -114,20 +137,31 @@ private fun Section(title: String) {
 }
 
 @Composable
-private fun Setting(title: String, value: String, onClick: () -> Unit) {
+private fun SettingIcon(icon: ImageVector) {
+    Box(
+        Modifier.size(40.dp).background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(22.dp)) }
+}
+
+@Composable
+private fun Setting(icon: ImageVector, title: String, value: String, onClick: () -> Unit) {
     ListItem(
         headlineContent = { Text(title) },
         supportingContent = { Text(value) },
+        leadingContent = { SettingIcon(icon) },
+        trailingContent = { Icon(Icons.Rounded.ChevronRight, contentDescription = null) },
         modifier = Modifier.clickable(onClick = onClick),
     )
 }
 
 @Composable
-private fun Choice(title: String, subtitle: String?, selected: Boolean, onClick: () -> Unit) {
+private fun Choice(icon: ImageVector, title: String, subtitle: String?, selected: Boolean, onClick: () -> Unit) {
     ListItem(
         headlineContent = { Text(title) },
         supportingContent = subtitle?.let { { Text(it) } },
-        leadingContent = { RadioButton(selected = selected, onClick = null) },
+        leadingContent = { SettingIcon(icon) },
+        trailingContent = { RadioButton(selected = selected, onClick = null) },
         modifier = Modifier.clickable(onClick = onClick),
     )
 }

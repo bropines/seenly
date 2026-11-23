@@ -13,6 +13,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.GTranslate
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.TextFields
+import androidx.compose.material.icons.rounded.Translate
+import androidx.compose.material.icons.rounded.ViewAgenda
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -51,7 +55,12 @@ fun TextSheet(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
         ) {
-            val options = listOf(TextView.Both to "Оба", TextView.Original to "Оригинал", TextView.Translation to "Перевод")
+            val options = listOf(
+                TextView.Both to "Оба",
+                TextView.Original to "Оригинал",
+                TextView.Translation to "Перевод",
+            )
+            val icons = mapOf(TextView.Both to Icons.Rounded.ViewAgenda, TextView.Original to Icons.Rounded.TextFields, TextView.Translation to Icons.Rounded.Translate)
             options.forEachIndexed { index, (option, label) ->
                 ToggleButton(
                     checked = view == option,
@@ -62,7 +71,10 @@ fun TextSheet(
                         else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                     },
                     modifier = Modifier.weight(1f),
-                ) { Text(label) }
+                ) {
+                    Icon(icons.getValue(option), contentDescription = null, modifier = Modifier.size(18.dp))
+                    Text(label, modifier = Modifier.padding(start = 6.dp), maxLines = 1)
+                }
             }
         }
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.End) {

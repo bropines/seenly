@@ -11,6 +11,9 @@ import io.ktor.http.isSuccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
+import kotlin.random.Random
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 /**
  * Sends scans to Lens.
@@ -24,6 +27,7 @@ public class LensClient(
     private val http: HttpClient,
     private val apiKey: String = LensDefaults.API_KEY,
     private val endpoint: String = LensDefaults.CRUPLOAD_ENDPOINT,
+    private val clusterInfoEndpoint: String = LensDefaults.CLUSTER_INFO_ENDPOINT,
 ) {
     private val log = Logger.withTag("LensClient")
 
@@ -34,21 +38,50 @@ public class LensClient(
         return scan(prepared, options)
     }
 
+    /**
+     * One stateless request: nothing can be searched afterwards. Use
+     * [searchSession] when the image may also be searched; its
+     * [LensSearchSession.scan] returns the same result from the same upload.
+     */
     public suspend fun scan(image: PreparedImage, options: ScanOptions = ScanOptions()): ScanResult {
         val body = withContext(Dispatchers.Default) { LensRequests.encode(image, options) }
-        log.d { "POST ${body.size} bytes, image ${image.width}x${image.height}, target=${options.targetLanguage}" }
+        log.d { "image ${image.width}x${image.height}, target=${options.targetLanguage}" }
+        val bytes = post(endpoint, body)
+        return withContext(Dispatchers.Default) { LensResponses.parse(bytes, image.width, image.height) }
+    }
 
+    /**
+     * A session for one image: scan it, then search it, on a single upload.
+     * It makes no request until its first [LensSearchSession.scan].
+     */
+    @OptIn(ExperimentalTime::class)
+    public fun searchSession(page: SearchPageOptions = SearchPageOptions()): LensSearchSession =
+        searchSession(page, Random.Default, { Clock.System.now().toEpochMilliseconds() })
+
+    /** The same with its randomness, clock and codec chosen, so tests can say what goes on the wire. */
+    internal fun searchSession(
+        page: SearchPageOptions,
+        random: Random,
+        nowMillis: () -> Long,
+        codec: ImageCodec = ImageCodec.Platform,
+    ): LensSearchSession =
+        LensSearchSession(LensTransport(::post, endpoint, clusterInfoEndpoint), page, random, nowMillis, codec)
+
+    private suspend fun post(url: String, body: ByteArray): ByteArray {
+        // The query string is the session id: the path is enough to tell requests apart.
+        val path = url.substringBefore('?')
+        log.d { "POST $path, ${body.size} bytes" }
         val response = withContext(Dispatchers.IO) {
-            http.post(endpoint) {
+            http.post(url) {
                 headers { LensRequests.headers(apiKey).forEach { (name, value) -> append(name, value) } }
                 setBody(body)
             }
         }
+        log.d { "HTTP ${response.status.value} from $path" }
         if (!response.status.isSuccess()) {
             throw LensException.Http(response.status.value, runCatching { response.bodyAsText() }.getOrDefault(""))
         }
-        val bytes = response.bodyAsBytes()
-        return withContext(Dispatchers.Default) { LensResponses.parse(bytes, image.width, image.height) }
+        return response.bodyAsBytes()
     }
 
     public companion object {
@@ -56,5 +89,12 @@ public class LensClient(
         public fun create(apiKey: String = LensDefaults.API_KEY): LensClient = LensClient(defaultHttpClient(), apiKey)
     }
 }
+
+/** What a session needs from a [LensClient]: a way to POST a protobuf, and where to. */
+internal class LensTransport(
+    val post: suspend (url: String, body: ByteArray) -> ByteArray,
+    val cruploadEndpoint: String,
+    val clusterInfoEndpoint: String,
+)
 
 internal expect fun defaultHttpClient(): HttpClient

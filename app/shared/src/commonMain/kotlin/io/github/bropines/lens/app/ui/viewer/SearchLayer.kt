@@ -31,6 +31,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import io.github.bropines.lens.protocol.Box as LensBox
 
 /** A detected object to tap: Lens's id and its normalised box. */
@@ -104,9 +105,9 @@ fun SearchLayer(
             if (!drawing) {
                 objects.forEach { obj ->
                     val c = Offset(fit.left + obj.box.centerX * fit.width, fit.top + obj.box.centerY * fit.height)
-                    drawCircle(Color.White.copy(alpha = 0.35f * pulse), radius = 26f * pulse, center = c)
-                    drawCircle(Color.White, radius = 11f, center = c)
-                    drawCircle(accent, radius = 7f, center = c)
+                    drawCircle(Color.White.copy(alpha = 0.35f * pulse), radius = 18.dp.toPx() * pulse, center = c)
+                    drawCircle(Color.White, radius = 9.dp.toPx(), center = c)
+                    drawCircle(accent, radius = 6.dp.toPx(), center = c)
                 }
             }
             if (stroke.size > 1) {
@@ -114,8 +115,8 @@ fun SearchLayer(
                     moveTo(stroke.first().x, stroke.first().y)
                     stroke.drop(1).forEach { lineTo(it.x, it.y) }
                 }
-                drawPath(path, Color.White.copy(alpha = 0.9f), style = Stroke(width = 14f, cap = StrokeCap.Round, join = StrokeJoin.Round))
-                drawPath(path, accent, style = Stroke(width = 7f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawPath(path, Color.White.copy(alpha = 0.9f), style = Stroke(width = 6.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawPath(path, accent, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
             }
         }
     }

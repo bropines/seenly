@@ -24,6 +24,11 @@ public data class ScanResult(
     /** The size of the image as uploaded. */
     val imageWidth: Int,
     val imageHeight: Int,
+    /**
+     * The things Lens singled out in the image: what Chrome draws as tappable
+     * dots. Each can be searched with [LensSearchSession.searchObjectUrl].
+     */
+    val objects: List<DetectedObject> = emptyList(),
 ) {
     /** Every paragraph's text, joined with newlines. */
     val text: String get() = paragraphs.joinToString("\n") { it.text }.trim()
@@ -32,6 +37,10 @@ public data class ScanResult(
     val translation: String?
         get() = paragraphs.mapNotNull { it.translation?.text }.takeIf { it.isNotEmpty() }?.joinToString("\n")
 }
+
+/** Something Lens detected in the image. [id] means something only to the upload it came from. */
+@Serializable
+public data class DetectedObject(val id: String, val box: Box)
 
 @Serializable
 public data class Paragraph(

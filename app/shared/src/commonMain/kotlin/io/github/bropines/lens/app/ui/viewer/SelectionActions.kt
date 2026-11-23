@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ContentCopy
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.SelectAll
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Translate
@@ -34,6 +35,7 @@ fun SelectionActions(
     onTranslate: () -> Unit,
     onSelectAll: () -> Unit,
     onShare: () -> Unit,
+    onSearch: () -> Unit,
 ) {
     Layout(
         content = {
@@ -45,6 +47,7 @@ fun SelectionActions(
                 Row(Modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     Action(Icons.Rounded.ContentCopy, "Копировать", onCopy)
                     Action(Icons.Rounded.Translate, "Перевести", onTranslate)
+                    IconAction(Icons.Rounded.Search, "Найти в Google", onSearch)
                     IconAction(Icons.Rounded.SelectAll, "Выделить всё", onSelectAll)
                     IconAction(Icons.Rounded.Share, "Поделиться", onShare)
                 }

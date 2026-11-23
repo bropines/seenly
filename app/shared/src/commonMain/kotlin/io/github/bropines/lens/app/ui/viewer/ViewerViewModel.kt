@@ -6,7 +6,9 @@ import io.github.bropines.lens.app.data.AppSettings
 import io.github.bropines.lens.app.data.Gallery
 import io.github.bropines.lens.app.data.ScanRepository
 import io.github.bropines.lens.app.data.SettingsRepository
+import io.github.bropines.lens.protocol.DetectedObject
 import io.github.bropines.lens.protocol.LensException
+import io.github.bropines.lens.protocol.LensSearchSession
 import io.github.bropines.lens.protocol.ScanResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -80,6 +82,53 @@ class ViewerViewModel(
         _pages.update { it - index }
         ensure(index)
     }
+
+    private val _searching = MutableStateFlow(false)
+    /** A visual search is being prepared (upload, session, interaction). */
+    val searching: StateFlow<Boolean> = _searching.asStateFlow()
+    private val _searchError = MutableStateFlow<String?>(null)
+    val searchError: StateFlow<String?> = _searchError.asStateFlow()
+
+    /**
+     * Runs a visual search on page [index] and hands the results URL to
+     * [open] (the user's browser). [build] picks what to search: the whole
+     * image, a region, an object, or a question for AI Mode.
+     */
+    private val _objects = MutableStateFlow<Map<Int, List<DetectedObject>>>(emptyMap())
+    /** Objects Lens found per page, for the tappable dots in search mode. */
+    val objects: StateFlow<Map<Int, List<DetectedObject>>> = _objects.asStateFlow()
+
+    /** Uploads page [index] for search in the background, so its dots appear and a search starts fast. */
+    fun prepareSearch(index: Int) {
+        if (_objects.value.containsKey(index)) return
+        viewModelScope.launch {
+            runCatching { scans.searchSession(gallery.items[index], settings.value) }
+                .onSuccess { target -> _objects.update { it + (index to target.objects) } }
+        }
+    }
+
+    fun visualSearch(index: Int, open: (String) -> Unit, build: suspend (LensSearchSession) -> String) {
+        if (_searching.value) return
+        viewModelScope.launch {
+            _searching.value = true
+            _searchError.value = null
+            try {
+                val target = scans.searchSession(gallery.items[index], settings.value)
+                _objects.update { it + (index to target.objects) }
+                open(build(target.session))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _searchError.value = if (e is LensException) e.message ?: "Ошибка Lens" else friendlyError(e)
+            } finally {
+                _searching.value = false
+            }
+        }
+    }
+
+    fun dismissSearchError() { _searchError.value = null }
+
+    fun searchTextUrl(text: String): String = scans.searchTextUrl(text)
 
     fun setTarget(code: String) = viewModelScope.launch { settingsRepository.update { it.copy(targetLanguage = code) } }
 

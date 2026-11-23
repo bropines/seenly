@@ -21,6 +21,21 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.ImageSearch
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import io.github.bropines.lens.protocol.Region
+import androidx.compose.material.icons.rounded.AddPhotoAlternate
+import androidx.compose.material.icons.rounded.ContentCopy
+import androidx.compose.material.icons.rounded.Notes
+import androidx.compose.material.icons.rounded.SelectAll
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.TextFields
@@ -89,6 +104,12 @@ fun ViewerScreen(
     var tappedParagraph by remember { mutableStateOf<Int?>(null) }
     var quickTranslate by remember { mutableStateOf<String?>(null) }
     var zoomed by remember { mutableStateOf(false) }
+    var searchMode by rememberSaveable { mutableStateOf(false) }
+    var askAi by remember { mutableStateOf(false) }
+    var lastRegion by remember { mutableStateOf<Region?>(null) }
+    val searching by vm.searching.collectAsState()
+    val searchError by vm.searchError.collectAsState()
+    val objects by vm.objects.collectAsState()
     val renders = remember { mutableStateMapOf<Int, PageRender>() }
     val scope = rememberCoroutineScope()
     val highlight = MaterialTheme.colorScheme.primary
@@ -115,6 +136,9 @@ fun ViewerScreen(
         }
     }
 
+    // In search mode, upload the visible page for search right away so its object dots show up.
+    LaunchedEffect(searchMode, pager.currentPage) { if (searchMode) vm.prepareSearch(pager.currentPage) }
+
     val current = pages[pager.currentPage]
     val result = (current as? PageState.Ready)?.result
     val style = styleFor(result)
@@ -135,21 +159,36 @@ fun ViewerScreen(
             state = pager,
             beyondViewportPageCount = 1,
             key = { items[it].key },
-            // A zoomed page pans with one finger; it must not turn the page.
-            userScrollEnabled = !zoomed,
+            // A zoomed page pans with one finger, and in search mode a finger draws; neither turns the page.
+            userScrollEnabled = !zoomed && !searchMode,
             modifier = Modifier.fillMaxSize(),
         ) { index ->
-            PageView(
-                item = items[index],
-                state = pages[index],
-                mode = mode,
-                style = styleFor((pages[index] as? PageState.Ready)?.result),
-                onTap = { chrome = !chrome },
-                onParagraphTap = { if (index == pager.currentPage) tappedParagraph = it },
-                onZoomed = { if (index == pager.currentPage) zoomed = it },
-                onRender = { render -> if (render == null) renders.remove(index) else renders[index] = render },
-                selection = if (index == pager.currentPage) selection else null,
-            )
+            Box(Modifier.fillMaxSize()) {
+                PageView(
+                    item = items[index],
+                    state = pages[index],
+                    mode = mode,
+                    style = styleFor((pages[index] as? PageState.Ready)?.result),
+                    onTap = { chrome = !chrome },
+                    onParagraphTap = { if (index == pager.currentPage) tappedParagraph = it },
+                    onZoomed = { if (index == pager.currentPage) zoomed = it },
+                    onRender = { render -> if (render == null) renders.remove(index) else renders[index] = render },
+                    selection = if (index == pager.currentPage) selection else null,
+                )
+                val render = renders[index]
+                if (searchMode && index == pager.currentPage && render != null) {
+                    SearchLayer(
+                        image = render.bitmap,
+                        objects = objects[index].orEmpty().map { Tappable(it.id, it.box) },
+                        onRegion = { rect ->
+                            val region = Region(rect.left, rect.top, rect.width, rect.height)
+                            lastRegion = region
+                            vm.visualSearch(index, services::openUrl) { it.searchRegionUrl(region) }
+                        },
+                        onObject = { obj -> vm.visualSearch(index, services::openUrl) { it.searchObjectUrl(obj.id) } },
+                    )
+                }
+            }
         }
 
         // Lens-style actions right above the selected text.
@@ -162,6 +201,7 @@ fun ViewerScreen(
                 onTranslate = { quickTranslate = selectedText },
                 onSelectAll = { result?.let(selection::selectAll) },
                 onShare = { services.shareText(selectedText) },
+                onSearch = { services.openUrl(vm.searchTextUrl(selectedText)) },
             )
         }
 
@@ -187,10 +227,15 @@ fun ViewerScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             ScanStatus(current, onRetry = { vm.retry(pager.currentPage) })
+            SearchStatus(searching, searchError, onDismiss = vm::dismissSearchError)
             AnimatedVisibility(chrome, enter = FastIn + slideInVertically(tween(160)) { it / 3 }, exit = FastOut + slideOutVertically(tween(120)) { it / 3 }) {
                 ViewerBottomPanel(
                     mode = mode,
-                    onMode = { mode = it },
+                    onMode = { mode = it; searchMode = false },
+                    searchMode = searchMode,
+                    onSearchMode = { searchMode = true; selection.clear() },
+                    onSearchWhole = { vm.visualSearch(pager.currentPage, services::openUrl) { it.searchImageUrl() } },
+                    onAskAi = { askAi = true },
                     result = result,
                     canExportImage = result != null && renders[pager.currentPage]?.overlay != null,
                     onCopyOriginal = { result?.let { services.copyText(it.readableText()) } },
@@ -202,6 +247,18 @@ fun ViewerScreen(
                 )
             }
         }
+    }
+
+    if (askAi) {
+        AskAiDialog(
+            hasRegion = lastRegion != null,
+            onDismiss = { askAi = false },
+            onAsk = { question, useRegion ->
+                askAi = false
+                val region = if (useRegion) lastRegion else null
+                vm.visualSearch(pager.currentPage, services::openUrl) { it.askAiUrl(question, region) }
+            },
+        )
     }
 
     val paragraph = tappedParagraph?.let { result?.paragraphs?.getOrNull(it) }
@@ -289,6 +346,10 @@ private fun ViewerBottomPanel(
     onShareText: () -> Unit,
     onExportImage: () -> Unit,
     onSelectAll: () -> Unit,
+    searchMode: Boolean,
+    onSearchMode: () -> Unit,
+    onSearchWhole: () -> Unit,
+    onAskAi: () -> Unit,
 ) {
     val hasText = result != null && result.paragraphs.isNotEmpty()
     val hasTranslation = result?.translation != null
@@ -309,31 +370,57 @@ private fun ViewerBottomPanel(
                     ModeButton(
                         label = label,
                         icon = icon,
-                        checked = mode == value,
+                        checked = !searchMode && mode == value,
                         onClick = { onMode(value) },
                         position = index,
-                        count = modes.size,
+                        count = modes.size + 1,
                         modifier = Modifier.weight(1f),
                     )
                 }
+                ModeButton(
+                    label = "Поиск",
+                    icon = Icons.Rounded.ImageSearch,
+                    checked = searchMode,
+                    onClick = onSearchMode,
+                    position = modes.size,
+                    count = modes.size + 1,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            if (searchMode) {
+                Text(
+                    "Обведите что-нибудь пальцем или нажмите на точку — откроется поиск Google",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                )
             }
             // What can be done with it, spelled out.
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                val cell = Modifier.weight(1f)
+                if (searchMode) {
+                    ActionChip(Icons.Rounded.ImageSearch, "Вся картинка", true, onSearchWhole, cell)
+                    ActionChip(Icons.Rounded.AutoAwesome, "Спросить ИИ", true, onAskAi, cell)
+                    ActionChip(Icons.Rounded.Notes, "Весь текст", hasText, onShowText, cell)
+                    return@Row
+                }
                 when (mode) {
                     OverlayMode.Translated -> {
-                        ActionChip("Копировать перевод", enabled = hasTranslation, onClick = onCopyTranslation, modifier = Modifier.weight(1.4f))
-                        ActionChip("Картинкой", enabled = canExportImage, onClick = onExportImage, modifier = Modifier.weight(1f))
+                        ActionChip(Icons.Rounded.ContentCopy, "Копировать", hasTranslation, onCopyTranslation, cell)
+                        ActionChip(Icons.Rounded.AddPhotoAlternate, "Картинкой", canExportImage, onExportImage, cell)
+                        ActionChip(Icons.Rounded.Share, "Поделиться", hasText, onShareText, cell)
                     }
                     OverlayMode.TextBoxes -> {
-                        ActionChip("Выделить всё", enabled = hasText, onClick = onSelectAll, modifier = Modifier.weight(1.2f))
-                        ActionChip("Копировать всё", enabled = hasText, onClick = onCopyOriginal, modifier = Modifier.weight(1.2f))
+                        ActionChip(Icons.Rounded.SelectAll, "Выделить всё", hasText, onSelectAll, cell)
+                        ActionChip(Icons.Rounded.ContentCopy, "Копировать", hasText, onCopyOriginal, cell)
+                        ActionChip(Icons.Rounded.Share, "Поделиться", hasText, onShareText, cell)
                     }
                     OverlayMode.Original -> {
-                        ActionChip("Копировать оригинал", enabled = hasText, onClick = onCopyOriginal, modifier = Modifier.weight(1.4f))
-                        ActionChip("Поделиться", enabled = hasText, onClick = onShareText, modifier = Modifier.weight(1f))
+                        ActionChip(Icons.Rounded.ContentCopy, "Копировать", hasText, onCopyOriginal, cell)
+                        ActionChip(Icons.Rounded.Share, "Поделиться", hasText, onShareText, cell)
                     }
                 }
-                ActionChip("Весь текст", enabled = hasText, onClick = onShowText, modifier = Modifier.weight(1f))
+                ActionChip(Icons.Rounded.Notes, "Весь текст", hasText, onShowText, cell)
             }
         }
     }
@@ -358,20 +445,102 @@ private fun ModeButton(
             else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
         },
         modifier = modifier,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp, vertical = 8.dp),
     ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(ToggleButtonDefaults.IconSize))
-        Text(label, modifier = Modifier.padding(start = 6.dp), maxLines = 1)
+        // Icon over label: four modes fit a phone's width without truncating.
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(ToggleButtonDefaults.IconSize))
+            Text(label, maxLines = 1, style = MaterialTheme.typography.labelMedium)
+        }
     }
 }
 
+/** A visual search on its way to the browser, or why it did not get there. */
 @Composable
-private fun ActionChip(label: String, enabled: Boolean, onClick: () -> Unit, modifier: Modifier) {
-    androidx.compose.material3.FilledTonalButton(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = modifier,
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp),
-    ) { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge) }
+private fun SearchStatus(searching: Boolean, error: String?, onDismiss: () -> Unit) {
+    AnimatedVisibility(searching || error != null, enter = FastIn, exit = FastOut) {
+        Surface(
+            shape = MaterialTheme.shapes.extraLarge,
+            color = if (error != null) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+            modifier = Modifier.padding(12.dp),
+        ) {
+            Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (error != null) {
+                    Icon(Icons.Rounded.ErrorOutline, contentDescription = null)
+                    Text(error, Modifier.padding(start = 8.dp).weight(1f, fill = false), maxLines = 2)
+                    IconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, contentDescription = "Скрыть") }
+                } else {
+                    LoadingIndicator(Modifier.size(28.dp))
+                    Text("Ищу в Google…", Modifier.padding(start = 8.dp))
+                }
+            }
+        }
+    }
+}
+
+/** A question for Google's AI Mode about the picture, or about the area drawn last. */
+@Composable
+private fun AskAiDialog(hasRegion: Boolean, onDismiss: () -> Unit, onAsk: (String, Boolean) -> Unit) {
+    var question by remember { mutableStateOf("") }
+    var useRegion by remember { mutableStateOf(hasRegion) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Rounded.AutoAwesome, contentDescription = null) },
+        title = { Text("Спросить ИИ о картинке") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = question,
+                    onValueChange = { question = it },
+                    placeholder = { Text("Например: что это за манга?") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (hasRegion) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = useRegion, onCheckedChange = { useRegion = it })
+                        Text("Только про обведённую область")
+                    }
+                }
+                Text(
+                    "Откроется Google AI Mode в браузере.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onAsk(question.ifBlank { "Что на этой картинке?" }, useRegion) }) { Text("Спросить") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
+    )
+}
+
+/** An action as Lens shows them: an icon in a tonal pill with a short label underneath. */
+@Composable
+private fun ActionChip(icon: ImageVector, label: String, enabled: Boolean, onClick: () -> Unit, modifier: Modifier) {
+    val content = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = if (enabled) 1f else 0.38f)
+    Column(
+        modifier
+            .clip(MaterialTheme.shapes.large)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Box(
+            Modifier
+                .size(width = 56.dp, height = 36.dp)
+                .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = if (enabled) 1f else 0.5f), MaterialTheme.shapes.extraLarge),
+            contentAlignment = Alignment.Center,
+        ) { Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(22.dp)) }
+        Text(
+            label,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f),
+        )
+    }
 }
 
 /** Original and translation, paragraph by paragraph: what "share" and "export text" produce. */

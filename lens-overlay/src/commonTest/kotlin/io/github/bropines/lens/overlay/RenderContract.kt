@@ -359,6 +359,69 @@ abstract class RenderContract {
         texts.filter { !it.quarterTurn }.all { it.topLeft.y >= 0f && it.topLeft.y + it.fill.size.height <= 200f } shouldBe true
     }
 
+    /** One paragraph of [text] in a [width] x 240 px box, in a 400x400 image. */
+    private fun narrow(text: String, width: Float): ScanResult {
+        val box = Box(0.5f, 0.5f, width / 400f, 0.6f, 0f)
+        return ScanResult(listOf(paragraph(box, listOf(line(box, text, LineStyle(black, white, null))))), "ja", 400, 400)
+    }
+
+    private fun TextOp.lines(): List<String> {
+        val text = fill.layoutInput.text.text
+        return (0 until fill.lineCount).map { text.substring(fill.getLineStart(it), fill.getLineEnd(it)).trim() }
+    }
+
+    private val reflow = OverlayStyle(layout = TranslationLayout.Reflow)
+
+    @Test
+    fun `reflow wraps a long word whole, shrinking the text until it fits`() {
+        if (!hasFonts) return
+        val text = "Он порекомендовал достопримечательности"
+        val block = scene(narrow(text, width = 90f), reflow).texts.single()
+        // Each line is one or more whole words: nothing torn, nothing hyphenated.
+        block.lines().flatMap { it.split(" ") } shouldBe text.split(" ")
+        (block.fill.lineCount >= 2) shouldBe true
+        // The longest word fits the 90px box, which is what set the size.
+        (block.fill.size.width <= 90) shouldBe true
+        (block.fontSize < 12f) shouldBe true
+    }
+
+    @Test
+    fun `the readable floor gives way before a word is torn`() {
+        if (!hasFonts) return
+        val text = "Он порекомендовал достопримечательности"
+        // A floor of 30px would need some 500px for the longest word; the box has 90.
+        val block = scene(narrow(text, width = 90f), reflow, minFontPx = 30f).texts.single()
+        block.lines().flatMap { it.split(" ") } shouldBe text.split(" ")
+        (block.fontSize < 30f) shouldBe true
+        // Where the words do fit, the floor holds.
+        (scene(narrow("да и нет но да", width = 90f), reflow, minFontPx = 30f).texts.single().fontSize >= 30f) shouldBe true
+    }
+
+    @Test
+    fun `a word too wide at any size is broken with hyphens`() {
+        if (!hasFonts) return
+        val word = "достопримечательности"
+        // 12px of width: not even the 3px minimum gets 21 letters across.
+        val block = scene(narrow(word, width = 12f), reflow).texts.single()
+        block.fontSize shouldBe MIN_FONT_PX
+        val lines = block.lines()
+        (lines.size >= 2) shouldBe true
+        lines.dropLast(1).all { it.endsWith("-") } shouldBe true
+        lines.last().endsWith("-") shouldBe false
+        // Nothing was lost or added but the hyphens.
+        lines.joinToString("") { it.removeSuffix("-") } shouldBe word
+    }
+
+    @Test
+    fun `text without spaces between words wraps anywhere, unhyphenated`() {
+        if (!hasFonts) return
+        val text = "ここまで来られるとは思わなかった"
+        val horizontal = OverlayStyle(layout = TranslationLayout.Reflow, verticalText = VerticalTextPolicy.Horizontal)
+        val block = scene(narrow(text, width = 90f), horizontal).texts.single()
+        (block.fill.lineCount >= 2) shouldBe true
+        block.lines().joinToString("") shouldBe text
+    }
+
     /**
      * A bubble's main text (two columns, translated) with a short column Lens
      * left untranslated right beside it, its box even overlapping by a few pixels.

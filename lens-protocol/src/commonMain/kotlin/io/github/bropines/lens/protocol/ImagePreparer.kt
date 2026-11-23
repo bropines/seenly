@@ -32,27 +32,34 @@ public object ImagePreparer {
         return maxOf(1, (width * scale).toInt()) to maxOf(1, (height * scale).toInt())
     }
 
-    public fun prepare(bytes: ByteArray, alphaMode: AlphaMode = AlphaMode.Contrast): PreparedImage {
-        val raster = try {
-            PlatformImages.decode(bytes)
-        } catch (e: LensException) {
-            throw e
-        } catch (e: Exception) {
-            throw LensException.UnreadableImage(e.message ?: e::class.simpleName.orEmpty(), e)
-        }
-        return prepare(raster, alphaMode)
+    public fun prepare(bytes: ByteArray, alphaMode: AlphaMode = AlphaMode.Contrast): PreparedImage =
+        prepare(decode(bytes), alphaMode)
+
+    internal fun decode(bytes: ByteArray): Raster = try {
+        PlatformImages.decode(bytes)
+    } catch (e: LensException) {
+        throw e
+    } catch (e: Exception) {
+        throw LensException.UnreadableImage(e.message ?: e::class.simpleName.orEmpty(), e)
     }
 
-    public fun prepare(raster: Raster, alphaMode: AlphaMode = AlphaMode.Contrast): PreparedImage {
+    public fun prepare(raster: Raster, alphaMode: AlphaMode = AlphaMode.Contrast): PreparedImage =
+        encode(uploadRaster(raster, alphaMode))
+
+    /** The pixels that get uploaded: downscaled if need be, and opaque. */
+    internal fun uploadRaster(raster: Raster, alphaMode: AlphaMode): Raster {
         val scaled = if (shouldDownscale(raster.width, raster.height)) {
             val (w, h) = preferredSize(raster.width, raster.height)
             PlatformImages.scale(raster, w, h)
         } else {
             raster
         }
-        val opaque = flatten(scaled, alphaMode)
-        return PreparedImage(PlatformImages.encodeJpeg(opaque, LensDefaults.JPEG_QUALITY), opaque.width, opaque.height)
+        return flatten(scaled, alphaMode)
     }
+
+    /** [opaque] as the JPEG Chromium would upload. */
+    internal fun encode(opaque: Raster): PreparedImage =
+        PreparedImage(PlatformImages.encodeJpeg(opaque, LensDefaults.JPEG_QUALITY), opaque.width, opaque.height)
 
     /** The raster unchanged if nothing is transparent, else composited onto a solid background. */
     internal fun flatten(raster: Raster, mode: AlphaMode): Raster {

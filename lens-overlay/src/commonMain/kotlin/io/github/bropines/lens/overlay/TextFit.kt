@@ -67,6 +67,38 @@ internal fun keepsVertical(policy: VerticalTextPolicy, targetLanguage: String?):
     VerticalTextPolicy.Auto -> isCjkLanguage(targetLanguage)
 }
 
+// Scripts written without spaces between words, where a line may break
+// between any two characters: Thai, Lao, Myanmar, Khmer. CJK is covered by
+// the upright ranges.
+private val UNSPACED_RANGES = arrayOf(0x0E00..0x0EFF, 0x1000..0x109F, 0x1780..0x17FF)
+
+/** Whether a line break next to [char] would be a break inside a word. */
+private fun isWordChar(char: Char): Boolean =
+    char.isLetterOrDigit() && !isUpright(char.code) && UNSPACED_RANGES.none { char.code in it }
+
+/**
+ * The first offset in [lineStarts] at which a line break tears a word in two,
+ * or null when every break falls at a word boundary.
+ *
+ * [lineStarts] are the offsets in [text] at which the second and later lines
+ * of a wrapped layout begin. A break is inside a word when a letter or digit
+ * stands on both sides of it; breaks between CJK characters, and in the other
+ * scripts written without spaces, are ordinary.
+ */
+internal fun splitWordAt(text: String, lineStarts: List<Int>): Int? =
+    lineStarts.firstOrNull { it in 1 until text.length && isWordChar(text[it - 1]) && isWordChar(text[it]) }
+
+/**
+ * Breaks the word that a line break at [offset] tears, properly: with a hyphen
+ * and a line break. The hyphen needs room on the line, so it takes the place
+ * of the line's last letter, which moves down, unless that would leave a
+ * single letter (or nothing) of the word behind.
+ */
+internal fun hyphenateAt(text: String, offset: Int): String {
+    val at = if (offset >= 3 && isWordChar(text[offset - 2]) && isWordChar(text[offset - 3])) offset - 1 else offset
+    return text.substring(0, at) + "-\n" + text.substring(at)
+}
+
 /** A stretch of a vertical column: [upright] glyphs stack, the rest lies on its side. */
 internal data class VerticalRun(val upright: Boolean, val text: String)
 

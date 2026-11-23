@@ -5,7 +5,10 @@ import dev.zacsweers.metro.AppScope
 import io.github.bropines.lens.app.data.history.HistoryRepository
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import io.github.bropines.lens.protocol.DetectedObject
 import io.github.bropines.lens.protocol.LensClient
+import io.github.bropines.lens.protocol.LensSearchSession
+import io.github.bropines.lens.protocol.SearchPageOptions
 import io.github.bropines.lens.protocol.ScanOptions
 import io.github.bropines.lens.protocol.ScanResult
 import io.github.vinceglb.filekit.readBytes
@@ -25,6 +28,9 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
     /** Insertion-ordered; a hit is moved to the end, so the first key is the least recently used. */
     private val cache = LinkedHashMap<String, ScanResult>()
     private val inFlight = mutableMapOf<String, CompletableDeferred<ScanResult>>()
+    /** The last few pages' sessions; each holds an upload that searches can refer to for ~30 minutes. */
+    private val sessions = LinkedHashMap<String, LensSearchSession>()
+    private val searchTargets = LinkedHashMap<String, SearchTarget>()
 
     suspend fun scan(item: GalleryItem, settings: AppSettings): ScanResult {
         val key = cacheKey(item, settings)
@@ -39,8 +45,14 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
         if (!owner) return deferred.await()
         try {
             val bytes = item.file.readBytes()
-            val result = lens.scan(bytes, settings.toScanOptions())
+            // Scan inside a search session, so searching this page later reuses the same upload.
+            val session = lens.searchSession(PAGE)
+            val result = session.scan(bytes, settings.toScanOptions())
             put(key, result)
+            lock.withLock {
+                sessions[key] = session
+                if (sessions.size > SESSIONS) sessions.remove(sessions.keys.first())
+            }
             deferred.complete(result)
             // History is a convenience: a failure to save it must not fail the scan.
             runCatching { history.record(item, bytes, settings, result) }.onFailure { log.w(it) { "history not saved" } }
@@ -52,6 +64,30 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
             lock.withLock { inFlight.remove(key) }
         }
     }
+
+    /**
+     * The search session holding [item]'s upload, for visual search. A page
+     * scanned earlier in this run already has one; a page from history or an
+     * expired one is uploaded again first.
+     */
+    suspend fun searchSession(item: GalleryItem, settings: AppSettings): SearchTarget {
+        // Lens lists the objects in a picture only for a plain request: with the
+        // TRANSLATE filter overlay_objects comes back empty. Search therefore has
+        // its own session and upload, without translation.
+        val key = cacheKey(item, settings) + "|search"
+        lock.withLock { searchTargets[key] }?.let { return it }
+        val session = lens.searchSession(PAGE)
+        val options = settings.toScanOptions().copy(targetLanguage = null, sourceLanguage = null)
+        val target = SearchTarget(session, session.scan(item.file.readBytes(), options).objects)
+        lock.withLock {
+            searchTargets[key] = target
+            if (searchTargets.size > SESSIONS) searchTargets.remove(searchTargets.keys.first())
+        }
+        return target
+    }
+
+    /** A text-only Google search: no upload. */
+    fun searchTextUrl(text: String): String = lens.searchSession(PAGE).searchTextUrl(text)
 
     /** Seeds the cache with a result already known, e.g. from history, so opening it costs no request. */
     suspend fun prime(item: GalleryItem, settings: AppSettings, result: ScanResult) = put(cacheKey(item, settings), result)
@@ -66,8 +102,14 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
 
     private companion object {
         const val CACHE_SIZE = 200
+        const val SESSIONS = 12
+        /** The results page in the app's language. */
+        val PAGE = SearchPageOptions(uiLanguage = "ru")
     }
 }
+
+/** A page uploaded for search: the session to search through and the objects Lens found on it. */
+class SearchTarget(val session: LensSearchSession, val objects: List<DetectedObject>)
 
 fun AppSettings.toScanOptions() = ScanOptions(
     ocrLanguage = ocrLanguage,

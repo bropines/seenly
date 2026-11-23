@@ -10,6 +10,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.Translate
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -47,9 +50,21 @@ fun LanguageBar(
     val colors = AssistChipDefaults.assistChipColors(labelColor = content)
     val border = AssistChipDefaults.assistChipBorder(enabled = true, borderColor = content.copy(alpha = 0.4f))
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        AssistChip(onClick = { picking = Side.Source }, label = { Text(Languages.nameOf(source)) }, colors = colors, border = border)
+        AssistChip(
+            onClick = { picking = Side.Source },
+            label = { Text(Languages.nameOf(source)) },
+            leadingIcon = { Icon(Icons.Rounded.Language, contentDescription = null, tint = content, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
+            colors = colors,
+            border = border,
+        )
         Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = content.copy(alpha = 0.7f))
-        AssistChip(onClick = { picking = Side.Target }, label = { Text(Languages.nameOf(target)) }, colors = colors, border = border)
+        AssistChip(
+            onClick = { picking = Side.Target },
+            label = { Text(Languages.nameOf(target)) },
+            leadingIcon = { Icon(Icons.Rounded.Translate, contentDescription = null, tint = content, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
+            colors = colors,
+            border = border,
+        )
     }
     when (picking) {
         Side.Source -> LanguagePickerSheet(source, allowAuto = true, onDismiss = { picking = null }) { onSource(it); picking = null }

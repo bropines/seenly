@@ -97,6 +97,13 @@ private const val OUTLINE_RATIO = 0.02f
 /** An upright glyph's cell in a vertical column, in font sizes. */
 private const val VERTICAL_CELL = 1.05f
 
+/** How many forced breaks one paragraph may get a hyphen for, before the rest is left as laid out. */
+private const val MAX_HYPHENS = 64
+
+/** Where [layout], a wrapped layout of [text], breaks a line inside a word, if it does. */
+private fun splitWordAt(text: String, layout: TextLayoutResult): Int? =
+    splitWordAt(text, (1 until layout.lineCount).map { layout.getLineStart(it) })
+
 /** A font's size as a fraction of the thickness of a line set in it. */
 private const val SOURCE_SIZE_RATIO = 0.9f
 
@@ -434,8 +441,11 @@ private class SceneBuilder(
             fitFontSize(MIN_FONT_PX, max(MIN_FONT_PX, min(area.height, sizeCap))) { size ->
                 val probe = measure(text, size, rtl, wrapWidth = area.width, align = align)
                 // The widest unbreakable word has to fit as well: text is shrunk
-                // before a word is ever split across lines.
-                probe.size.height <= area.height && probe.multiParagraph.minIntrinsicWidth <= area.width + 0.5f
+                // before a word is ever split across lines. The layout itself is
+                // asked too, since it is what will be drawn.
+                probe.size.height <= area.height &&
+                    probe.multiParagraph.minIntrinsicWidth <= area.width + 0.5f &&
+                    splitWordAt(text, probe) == null
             }
 
         // Grow only as far as the text needs: a paragraph that already reads
@@ -455,13 +465,29 @@ private class SceneBuilder(
                 }
             }
         }
-        val size = finalFontSize(fitted, style.textScale, minFontPx)
-        val probe = measure(text, size, rtl, wrapWidth = area.width, align = align)
+        var size = finalFontSize(fitted, style.textScale, minFontPx)
+        fun splitsWord(at: Float): Boolean =
+            splitWordAt(text, measure(text, at, rtl, wrapWidth = area.width, align = align)) != null
+        // The readable-size floor and the text scale can ask for more than the
+        // box holds. Overflowing its height is their business; tearing a word
+        // in two is not, so they give way until the longest word fits a line.
+        if (size > MIN_FONT_PX && splitsWord(size)) {
+            size = fitFontSize(MIN_FONT_PX, size) { !splitsWord(it) }
+        }
+        // A word wider than the box even at the smallest size has to be broken
+        // after all. It is then broken properly, with a hyphen.
+        var shown = text
+        var guard = 0
+        while (guard++ < MAX_HYPHENS) {
+            val split = splitWordAt(shown, measure(shown, size, rtl, wrapWidth = area.width, align = align)) ?: break
+            shown = hyphenateAt(shown, split)
+        }
+        val probe = measure(shown, size, rtl, wrapWidth = area.width, align = align)
         val x = area.centerX - probe.size.width / 2f
         var y = area.centerY - probe.size.height / 2f
         if (area.upright && probe.size.height <= height) y = y.coerceIn(0f, height - probe.size.height)
         add(paragraph, area, Offset(x, y), size, ink) { color, outline ->
-            measure(text, size, rtl, color, wrapWidth = area.width, align = align, outlineWidth = outline)
+            measure(shown, size, rtl, color, wrapWidth = area.width, align = align, outlineWidth = outline)
         }
     }
 

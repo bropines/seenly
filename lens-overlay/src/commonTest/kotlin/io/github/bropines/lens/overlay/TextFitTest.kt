@@ -95,6 +95,41 @@ class TextFitTest {
     }
 
     @Test
+    fun `a break between two letters is a break inside a word`() {
+        val text = "он порекомендовал это"
+        // Lines starting at "порекомендовал" and at "это": both at word boundaries.
+        splitWordAt(text, listOf(3, 18)) shouldBe null
+        // "пор" / "екомендовал".
+        splitWordAt(text, listOf(3, 6, 18)) shouldBe 6
+        splitWordAt(text, emptyList()) shouldBe null
+        // After a hyphen, or after punctuation, a break is fine.
+        splitWordAt("сине-зелёный", listOf(5)) shouldBe null
+        splitWordAt("да,нет", listOf(3)) shouldBe null
+        splitWordAt("room 101", listOf(6)) shouldBe 6
+    }
+
+    @Test
+    fun `scripts without spaces may break between any two characters`() {
+        splitWordAt("日本語の文章です", listOf(2, 5)) shouldBe null
+        splitWordAt("한국어문장", listOf(2)) shouldBe null
+        splitWordAt("ภาษาไทย", listOf(4)) shouldBe null
+        // A Latin word inside CJK text is still a word.
+        splitWordAt("日本語Hello", listOf(3)) shouldBe null
+        splitWordAt("日本語Hello", listOf(5)) shouldBe 5
+    }
+
+    @Test
+    fun `a forced break gets a hyphen that takes the last letter's place`() {
+        // The line held "пореко"; the hyphen needs that last letter's room.
+        hyphenateAt("порекомендовал", 6) shouldBe "порек-\nомендовал"
+        // Too close to the word's start to give a letter up: break where the layout did.
+        hyphenateAt("порекомендовал", 2) shouldBe "по-\nрекомендовал"
+        hyphenateAt("он порекомендовал", 5) shouldBe "он по-\nрекомендовал"
+        // The hyphenated text no longer has a break inside a word there.
+        splitWordAt("порек-\nомендовал", listOf(7)) shouldBe null
+    }
+
+    @Test
     fun `surrogate pairs stay whole`() {
         // U+20BB7, a CJK Extension B ideograph, is two UTF-16 units.
         val rare = "𠮷"
