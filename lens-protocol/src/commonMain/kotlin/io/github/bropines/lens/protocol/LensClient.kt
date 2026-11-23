@@ -39,6 +39,18 @@ public class LensClient(
     }
 
     /**
+     * Like [scan], but a tall image (a phone screenshot, a webtoon strip) goes
+     * up in full-resolution bands rather than shrunk to 1600 px; see [Tiling].
+     * The result covers the whole image either way.
+     */
+    public suspend fun scanTiled(image: ByteArray, options: ScanOptions = ScanOptions()): ScanResult {
+        val raster = withContext(Dispatchers.Default) { ImagePreparer.decode(image) }
+        return Tiling.scan(raster) { band ->
+            scan(withContext(Dispatchers.Default) { ImagePreparer.prepare(band, options.alphaMode) }, options)
+        }
+    }
+
+    /**
      * One stateless request: nothing can be searched afterwards. Use
      * [searchSession] when the image may also be searched; its
      * [LensSearchSession.scan] returns the same result from the same upload.

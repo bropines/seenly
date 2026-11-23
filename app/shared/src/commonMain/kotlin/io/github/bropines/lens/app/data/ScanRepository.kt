@@ -28,8 +28,7 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
     /** Insertion-ordered; a hit is moved to the end, so the first key is the least recently used. */
     private val cache = LinkedHashMap<String, ScanResult>()
     private val inFlight = mutableMapOf<String, CompletableDeferred<ScanResult>>()
-    /** The last few pages' sessions; each holds an upload that searches can refer to for ~30 minutes. */
-    private val sessions = LinkedHashMap<String, LensSearchSession>()
+    /** The last few pages uploaded for search; each session's upload stays searchable for ~30 minutes. */
     private val searchTargets = LinkedHashMap<String, SearchTarget>()
 
     suspend fun scan(item: GalleryItem, settings: AppSettings): ScanResult {
@@ -45,14 +44,10 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
         if (!owner) return deferred.await()
         try {
             val bytes = item.file.readBytes()
-            // Scan inside a search session, so searching this page later reuses the same upload.
-            val session = lens.searchSession(PAGE)
-            val result = session.scan(bytes, settings.toScanOptions())
+            // Tall pages (screenshots, webtoon strips) go up in full-resolution bands. Search
+            // makes its own untranslated upload (searchSession), so this needs no session.
+            val result = lens.scanTiled(bytes, settings.toScanOptions())
             put(key, result)
-            lock.withLock {
-                sessions[key] = session
-                if (sessions.size > SESSIONS) sessions.remove(sessions.keys.first())
-            }
             deferred.complete(result)
             // History is a convenience: a failure to save it must not fail the scan.
             runCatching { history.record(item, bytes, settings, result) }.onFailure { log.w(it) { "history not saved" } }

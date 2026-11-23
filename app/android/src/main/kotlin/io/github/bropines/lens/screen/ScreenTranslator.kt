@@ -22,6 +22,7 @@ import io.github.bropines.lens.overlay.OverlayStyle
 import io.github.bropines.lens.overlay.decodeOverlay
 import io.github.bropines.lens.overlay.renderTranslatedBitmap
 import io.github.bropines.lens.protocol.ImagePreparer
+import io.github.bropines.lens.protocol.Tiling
 import io.github.bropines.lens.protocol.Raster
 import io.github.bropines.lens.protocol.ScanResult
 import io.github.bropines.lens.protocol.WritingDirection
@@ -455,12 +456,16 @@ internal class ScreenTranslator(
      * everything else on screen stays live underneath.
      */
     private suspend fun translate(frame: Bitmap, rect: Rect, settings: AppSettings): Layer {
-        val prepared = withContext(Dispatchers.Default) {
+        // In bands, so a tall screen reaches Lens at full resolution rather than shrunk to 1600 px.
+        val raster = withContext(Dispatchers.Default) {
             val pixels = IntArray(frame.width * frame.height)
             frame.getPixels(pixels, 0, frame.width, 0, 0, frame.width, frame.height)
-            ImagePreparer.prepare(Raster(frame.width, frame.height, pixels))
+            Raster(frame.width, frame.height, pixels)
         }
-        val result = graph.lens.scan(prepared, settings.toScanOptions())
+        val result = Tiling.scan(raster) { band ->
+            val prepared = withContext(Dispatchers.Default) { ImagePreparer.prepare(band) }
+            graph.lens.scan(prepared, settings.toScanOptions())
+        }
         if (result.paragraphs.none { it.translation != null }) return Layer(null, rect)
         val decoded = decodeOverlay(result, fonts)
         return withContext(Dispatchers.Default) {
