@@ -17,6 +17,15 @@ interface PlatformServices {
     /** Shares an exported image file. */
     fun shareImage(bytes: ByteArray, fileName: String)
 
+    /**
+     * Opens [url] in the user's own browser. Lens results pages must open
+     * there: a WebView or a fresh profile gets Google's captcha.
+     */
+    fun openUrl(url: String)
+
+    /** Room's builder for the app database (Android needs a Context, the desktop a path). */
+    fun databaseBuilder(): androidx.room.RoomDatabase.Builder<io.github.bropines.lens.app.data.history.LensDatabase>
+
     /** Keeps read access to a picked folder across restarts (Android's persistable URI grant). */
     fun persistAccess(folder: PlatformFile) {}
 }

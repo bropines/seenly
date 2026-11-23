@@ -1,6 +1,8 @@
 package io.github.bropines.lens.app.data
 
+import co.touchlab.kermit.Logger
 import dev.zacsweers.metro.AppScope
+import io.github.bropines.lens.app.data.history.HistoryRepository
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import io.github.bropines.lens.protocol.LensClient
@@ -17,7 +19,8 @@ import kotlinx.coroutines.sync.withLock
  */
 @SingleIn(AppScope::class)
 @Inject
-class ScanRepository(private val lens: LensClient) {
+class ScanRepository(private val lens: LensClient, private val history: HistoryRepository) {
+    private val log = Logger.withTag("ScanRepository")
     private val lock = Mutex()
     /** Insertion-ordered; a hit is moved to the end, so the first key is the least recently used. */
     private val cache = LinkedHashMap<String, ScanResult>()
@@ -35,12 +38,12 @@ class ScanRepository(private val lens: LensClient) {
         }
         if (!owner) return deferred.await()
         try {
-            val result = lens.scan(item.file.readBytes(), settings.toScanOptions())
-            lock.withLock {
-                cache[key] = result
-                if (cache.size > CACHE_SIZE) cache.remove(cache.keys.first())
-            }
+            val bytes = item.file.readBytes()
+            val result = lens.scan(bytes, settings.toScanOptions())
+            put(key, result)
             deferred.complete(result)
+            // History is a convenience: a failure to save it must not fail the scan.
+            runCatching { history.record(item, bytes, settings, result) }.onFailure { log.w(it) { "history not saved" } }
             return result
         } catch (e: Throwable) {
             deferred.completeExceptionally(e)
@@ -48,6 +51,14 @@ class ScanRepository(private val lens: LensClient) {
         } finally {
             lock.withLock { inFlight.remove(key) }
         }
+    }
+
+    /** Seeds the cache with a result already known, e.g. from history, so opening it costs no request. */
+    suspend fun prime(item: GalleryItem, settings: AppSettings, result: ScanResult) = put(cacheKey(item, settings), result)
+
+    private suspend fun put(key: String, result: ScanResult) = lock.withLock {
+        cache[key] = result
+        if (cache.size > CACHE_SIZE) cache.remove(cache.keys.first())
     }
 
     private fun cacheKey(item: GalleryItem, s: AppSettings) =

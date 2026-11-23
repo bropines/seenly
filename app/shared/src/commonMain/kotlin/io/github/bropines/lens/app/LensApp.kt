@@ -32,8 +32,15 @@ import io.github.bropines.lens.app.ui.text.TextTranslateViewModel
 import io.github.bropines.lens.app.ui.theme.LensTheme
 import io.github.bropines.lens.app.ui.viewer.ViewerScreen
 import io.github.bropines.lens.app.ui.viewer.ViewerViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import io.github.bropines.lens.app.data.GalleryItem
+import io.github.bropines.lens.app.ui.camera.CameraScreen
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.coil.addPlatformFileSupport
+import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
@@ -41,6 +48,7 @@ sealed interface Route {
     /** The tabs with the dock. */
     data object Main : Route
     data object Viewer : Route
+    data object Camera : Route
     data class TextTranslate(val initial: String) : Route
 }
 
@@ -57,6 +65,7 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
     val settings by graph.settings.settings.collectAsState(AppSettings())
     val backStack = remember { mutableStateListOf<Route>(Route.Main) }
     var tab by rememberSaveable { mutableStateOf(Tab.Images) }
+    val scope = rememberCoroutineScope()
     fun pop() { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) }
 
     LaunchedEffect(incoming) {
@@ -91,6 +100,36 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
                         tab = tab,
                         onTab = { tab = it },
                         onOpenViewer = { backStack.add(Route.Viewer) },
+                        onOpenCamera = { backStack.add(Route.Camera) },
+                        onOpenHistory = { entry ->
+                            scope.launch {
+                                val item = GalleryItem(PlatformFile(entry.imagePath), entry.title)
+                                // Opening an old scan costs no request when the language still matches.
+                                if (entry.targetLanguage == settings.targetLanguage) {
+                                    graph.history.load(entry)?.let { graph.scans.prime(item, settings, it) }
+                                }
+                                graph.gallery.openItems(listOf(item), entry.title)
+                                backStack.add(Route.Viewer)
+                            }
+                        },
+                    )
+                }
+                entry<Route.Camera> {
+                    val pick = rememberFilePickerLauncher(type = FileKitType.Image, mode = FileKitMode.Multiple()) { files ->
+                        if (!files.isNullOrEmpty()) {
+                            graph.gallery.openFiles(files)
+                            backStack[backStack.lastIndex] = Route.Viewer
+                        }
+                    }
+                    CameraScreen(
+                        services = graph.services,
+                        onCaptured = { file ->
+                            graph.gallery.openItems(listOf(GalleryItem(file, "Снимок")), "Снимок")
+                            // Replace the camera: back from the photo goes home, like Lens.
+                            backStack[backStack.lastIndex] = Route.Viewer
+                        },
+                        onPickImages = { pick.launch() },
+                        onBack = ::pop,
                     )
                 }
                 entry<Route.Viewer> {

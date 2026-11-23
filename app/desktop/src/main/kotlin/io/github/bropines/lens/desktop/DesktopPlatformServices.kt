@@ -25,6 +25,13 @@ class DesktopPlatformServices : PlatformServices {
     /** The desktop has no share sheet; the clipboard is the closest thing. */
     override fun shareText(text: String) = copyText(text)
 
+    override fun databaseBuilder(): androidx.room.RoomDatabase.Builder<io.github.bropines.lens.app.data.history.LensDatabase> =
+        androidx.room.Room.databaseBuilder(name = File(dataDir, "lens.db").absolutePath)
+
+    override fun openUrl(url: String) {
+        java.awt.Desktop.getDesktop().browse(java.net.URI(url))
+    }
+
     override fun shareImage(bytes: ByteArray, fileName: String) {
         val chooser = JFileChooser().apply { selectedFile = File(fileName) }
         if (chooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) chooser.selectedFile.writeBytes(bytes)

@@ -22,6 +22,7 @@ interface AppGraph {
     val gallery: GalleryRepository
     val scans: ScanRepository
     val translator: GoogleTranslator
+    val history: io.github.bropines.lens.app.data.history.HistoryRepository
 
     /** One HTTP client for the app; the engine (OkHttp) comes from the classpath. */
     @SingleIn(AppScope::class)

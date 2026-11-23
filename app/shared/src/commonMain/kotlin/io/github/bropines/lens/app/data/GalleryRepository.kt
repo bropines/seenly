@@ -16,9 +16,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 
 /** One image the viewer can page to. [key] identifies it in caches across sessions. */
-class GalleryItem(val file: PlatformFile) {
+class GalleryItem(val file: PlatformFile, private val displayName: String? = null) {
     val key: String = file.toString()
-    val name: String get() = file.name
+    val name: String get() = displayName ?: file.name
 }
 
 /** What the viewer pages through: some shared or picked files, or a whole folder. */
@@ -37,7 +37,11 @@ class GalleryRepository {
 
     fun openFiles(files: List<PlatformFile>, title: String? = null) {
         if (files.isEmpty()) return
-        _current.value = Gallery(title ?: files.first().name, files.map(::GalleryItem))
+        openItems(files.map { GalleryItem(it) }, title ?: files.first().name)
+    }
+
+    fun openItems(items: List<GalleryItem>, title: String) {
+        if (items.isNotEmpty()) _current.value = Gallery(title, items)
     }
 
     /** Lists [folder]'s images in reading order. Returns null if it holds none. */

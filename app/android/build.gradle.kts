@@ -68,4 +68,5 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.filekit.dialogs.compose)
+    implementation(libs.androidx.browser)
 }

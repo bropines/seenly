@@ -4,7 +4,12 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import io.github.bropines.lens.app.data.history.LensDatabase
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
@@ -38,6 +43,18 @@ class AndroidPlatformServices(private val context: Context) : PlatformServices {
             .putExtra(Intent.EXTRA_STREAM, uri)
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         context.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+
+    override fun databaseBuilder(): RoomDatabase.Builder<LensDatabase> =
+        Room.databaseBuilder<LensDatabase>(context, context.getDatabasePath("lens.db").absolutePath)
+
+    override fun openUrl(url: String) {
+        // A Custom Tab runs in the user's browser, with their cookies and consent state.
+        val tab = CustomTabsIntent.Builder().setShowTitle(true).build()
+        tab.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        runCatching { tab.launchUrl(context, Uri.parse(url)) }.onFailure {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
     }
 
     override fun persistAccess(folder: PlatformFile) {

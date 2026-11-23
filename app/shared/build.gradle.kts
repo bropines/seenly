@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.metro)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 kotlin {
@@ -48,6 +50,9 @@ kotlin {
             implementation(libs.ktor.client.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kermit)
+            api(libs.androidx.room.runtime)
+            implementation(libs.kotlinx.io.core)
+            implementation(libs.androidx.sqlite.bundled)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
@@ -59,12 +64,27 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.core.ktx)
+            implementation(libs.androidx.camera.camera2)
+            implementation(libs.androidx.camera.lifecycle)
+            implementation(libs.androidx.camera.compose)
+            implementation(libs.androidx.browser)
+            // QR and barcodes: plain Java, no Play services, so one decoder serves both flavors.
+            implementation(libs.zxing.core)
         }
         jvmMain.dependencies {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.kotlinx.coroutines.swing)
         }
     }
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
+dependencies {
+    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspJvm", libs.androidx.room.compiler)
 }
 
 compose.resources {

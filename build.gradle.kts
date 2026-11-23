@@ -8,4 +8,6 @@ plugins {
     alias(libs.plugins.android.kmp.library) apply false
     alias(libs.plugins.wire) apply false
     alias(libs.plugins.metro) apply false
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.room) apply false
 }
