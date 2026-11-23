@@ -14,8 +14,13 @@ import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.IconButton
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.rounded.SwapHoriz
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -47,24 +52,42 @@ fun LanguageBar(
 ) {
     var picking by remember { mutableStateOf<Side?>(null) }
     val content = if (onDark) Color.White else MaterialTheme.colorScheme.onSurface
-    val colors = AssistChipDefaults.assistChipColors(labelColor = content)
-    val border = AssistChipDefaults.assistChipBorder(enabled = true, borderColor = content.copy(alpha = 0.4f))
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        AssistChip(
+    // Two wide, tall buttons that share the row: easy targets for a thumb.
+    val colors = if (onDark) {
+        ButtonDefaults.filledTonalButtonColors(containerColor = Color.White.copy(alpha = 0.16f), contentColor = Color.White)
+    } else {
+        ButtonDefaults.filledTonalButtonColors()
+    }
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+        FilledTonalButton(
             onClick = { picking = Side.Source },
-            label = { Text(Languages.nameOf(source)) },
-            leadingIcon = { Icon(Icons.Rounded.Language, contentDescription = null, tint = content, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
             colors = colors,
-            border = border,
-        )
-        Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = content.copy(alpha = 0.7f))
-        AssistChip(
+            contentPadding = PaddingValues(horizontal = 12.dp),
+            modifier = Modifier.weight(1f).heightIn(min = 52.dp),
+        ) {
+            Icon(Icons.Rounded.Language, contentDescription = null, modifier = Modifier.size(20.dp))
+            Text(Languages.nameOf(source), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 8.dp))
+        }
+        // With a fixed source the arrow swaps the pair; with "auto" there is nothing to swap.
+        IconButton(
+            onClick = { if (source != null) { onSource(target); onTarget(source) } },
+            enabled = source != null,
+        ) {
+            Icon(
+                if (source != null) Icons.Rounded.SwapHoriz else Icons.AutoMirrored.Rounded.ArrowForward,
+                contentDescription = if (source != null) "Поменять местами" else null,
+                tint = content.copy(alpha = 0.8f),
+            )
+        }
+        FilledTonalButton(
             onClick = { picking = Side.Target },
-            label = { Text(Languages.nameOf(target)) },
-            leadingIcon = { Icon(Icons.Rounded.Translate, contentDescription = null, tint = content, modifier = Modifier.size(AssistChipDefaults.IconSize)) },
             colors = colors,
-            border = border,
-        )
+            contentPadding = PaddingValues(horizontal = 12.dp),
+            modifier = Modifier.weight(1f).heightIn(min = 52.dp),
+        ) {
+            Icon(Icons.Rounded.Translate, contentDescription = null, modifier = Modifier.size(20.dp))
+            Text(Languages.nameOf(target), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 8.dp))
+        }
     }
     when (picking) {
         Side.Source -> LanguagePickerSheet(source, allowAuto = true, onDismiss = { picking = null }) { onSource(it); picking = null }

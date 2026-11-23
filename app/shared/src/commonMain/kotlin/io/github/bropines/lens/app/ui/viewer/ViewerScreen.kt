@@ -243,7 +243,7 @@ fun ViewerScreen(
                 ) {
                     LanguageBar(
                         settings.sourceLanguage, settings.targetLanguage, vm::setSource, vm::setTarget,
-                        modifier = Modifier.weight(1f).background(Scrim, MaterialTheme.shapes.extraLarge).padding(horizontal = 8.dp),
+                        modifier = Modifier.weight(1f),
                         onDark = true,
                     )
                     FilledTonalIconToggleButton(
