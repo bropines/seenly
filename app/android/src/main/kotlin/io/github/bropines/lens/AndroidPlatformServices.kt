@@ -1,5 +1,11 @@
 package io.github.bropines.lens
 
+import android.app.Activity
+import android.content.ComponentName
+import androidx.browser.customtabs.CustomTabsClient
+import androidx.browser.customtabs.CustomTabsServiceConnection
+import androidx.browser.customtabs.CustomTabsSession
+import java.lang.ref.WeakReference
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -48,13 +54,66 @@ class AndroidPlatformServices(private val context: Context) : PlatformServices {
     override fun databaseBuilder(): RoomDatabase.Builder<LensDatabase> =
         Room.databaseBuilder<LensDatabase>(context, context.getDatabasePath("lens.db").absolutePath)
 
+    /** The activity in front, for launching tabs over it. Set by MainActivity while resumed. */
+    var activity: WeakReference<Activity>? = null
+
+    /**
+     * A warmed-up session with the user's browser. Chrome draws a Custom Tab
+     * as a partial sheet over the app only when it is launched with one.
+     */
+    @Volatile private var session: CustomTabsSession? = null
+
+    init {
+        CustomTabsClient.getPackageName(context, null)?.let { browser ->
+            CustomTabsClient.bindCustomTabsService(
+                context,
+                browser,
+                object : CustomTabsServiceConnection() {
+                    override fun onCustomTabsServiceConnected(name: ComponentName, client: CustomTabsClient) {
+                        client.warmup(0)
+                        session = client.newSession(null)
+                    }
+
+                    override fun onServiceDisconnected(name: ComponentName) {
+                        session = null
+                    }
+                },
+            )
+        }
+    }
+
     override fun openUrl(url: String) {
-        // A Custom Tab runs in the user's browser, with their cookies and consent state.
+        val uri = Uri.parse(url)
+        val front = activity?.get()
+        val current = session
+        // A sheet over the picture, the way Lens shows results: the user's browser
+        // (their cookies and consent, so no captcha), resizable, swiped away to return.
+        if (front != null && current != null) {
+            val launched = runCatching {
+                val height = (front.resources.displayMetrics.heightPixels * SHEET_FRACTION).toInt()
+                val tab = CustomTabsIntent.Builder(current)
+                    .setInitialActivityHeightPx(height, CustomTabsIntent.ACTIVITY_HEIGHT_ADJUSTABLE)
+                    // 16 dp is the most Custom Tabs accepts.
+                    .setToolbarCornerRadiusDp(16)
+                    .setShowTitle(true)
+                    .build()
+                tab.intent.data = uri
+                @Suppress("DEPRECATION") // Partial tabs must be started for a result.
+                front.startActivityForResult(tab.intent, PARTIAL_TAB_REQUEST)
+            }
+            if (launched.isSuccess) return
+        }
+        // No session (or a browser without Custom Tabs): a full tab, then any browser.
         val tab = CustomTabsIntent.Builder().setShowTitle(true).build()
         tab.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        runCatching { tab.launchUrl(context, Uri.parse(url)) }.onFailure {
-            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        runCatching { tab.launchUrl(front ?: context, uri) }.onFailure {
+            context.startActivity(Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }
+    }
+
+    private companion object {
+        const val SHEET_FRACTION = 0.68
+        const val PARTIAL_TAB_REQUEST = 7101
     }
 
     override fun persistAccess(folder: PlatformFile) {

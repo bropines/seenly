@@ -48,7 +48,8 @@ fun PageView(
 ) {
     val image by rememberImage(item.file)
     val result = (state as? PageState.Ready)?.result
-    val overlay = rememberOverlayState(result)
+    // Keep the old translation up while a new language decodes: no blink to the bare image.
+    val overlay = rememberOverlayState(result, keepPrevious = true)
     val zoom = rememberZoomState()
 
     LaunchedEffect(zoom) { snapshotFlow { zoom.isZoomed }.collect(onZoomed) }

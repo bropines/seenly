@@ -29,6 +29,18 @@ class MainActivity : ComponentActivity() {
         setContent { LensApp((application as LensApplication).graph, incoming) }
     }
 
+    override fun onResume() {
+        super.onResume()
+        services.activity = java.lang.ref.WeakReference(this)
+    }
+
+    override fun onPause() {
+        if (services.activity?.get() === this) services.activity = null
+        super.onPause()
+    }
+
+    private val services get() = (application as LensApplication).services
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handle(intent)

@@ -71,16 +71,20 @@ public suspend fun decodeOverlay(
 /**
  * Decodes [result] off the main thread and remembers it. Returns null while
  * there is no result or it is still decoding, and never a state that belongs
- * to a previous result.
+ * to a previous result - unless [keepPrevious] is set: then a replaced result
+ * (the same page in a new language, say) keeps showing until its successor
+ * has decoded, instead of blinking to the bare image in between.
  */
 @Composable
-public fun rememberOverlayState(result: ScanResult?): OverlayState? {
+public fun rememberOverlayState(result: ScanResult?, keepPrevious: Boolean = false): OverlayState? {
     val resolver = LocalFontFamilyResolver.current
-    var state by remember(result, resolver) { mutableStateOf<OverlayState?>(null) }
+    var state by remember(resolver) { mutableStateOf<OverlayState?>(null) }
     LaunchedEffect(result, resolver) {
-        state = result?.let { decodeOverlay(it, resolver) }
+        if (result == null || !keepPrevious) state = null
+        if (result != null) state = decodeOverlay(result, resolver)
     }
-    return state
+    val current = state
+    return if (keepPrevious || current?.result === result) current else null
 }
 
 /** One patch as a bitmap with the right alpha, or null when it cannot be decoded. */

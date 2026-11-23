@@ -55,17 +55,29 @@ class ViewerViewModel(
     private val jobs = mutableMapOf<Int, Job>()
     private var visible = gallery.startIndex
 
+    private val _stale = MutableStateFlow<Set<Int>>(emptySet())
+    /** Pages still showing the previous language's result while the new one is fetched. */
+    val stale: StateFlow<Set<Int>> = _stale.asStateFlow()
+
     init {
-        // A new language invalidates every page; rescan what the user is looking at.
+        // A new language invalidates every page. The old translation stays on
+        // screen until the new one arrives, so the change is seen as it lands,
+        // not as a blank page.
+        //
+        // This must follow `settings` itself, not the repository flow: ensure()
+        // reads settings.value, and a second subscription could fire before
+        // this StateFlow has the new value - rescanning in the old language.
         viewModelScope.launch {
-            settingsRepository.settings
+            settings
                 .map { Triple(it.targetLanguage, it.sourceLanguage, it.ocrLanguage) }
                 .distinctUntilChanged()
                 .drop(1)
                 .collect {
                     jobs.values.forEach { it.cancel() }
                     jobs.clear()
-                    _pages.value = emptyMap()
+                    val shown = _pages.value.filterValues { it is PageState.Ready }
+                    _pages.value = shown
+                    _stale.value = shown.keys
                     onPageVisible(visible)
                 }
         }
@@ -89,11 +101,6 @@ class ViewerViewModel(
     private val _searchError = MutableStateFlow<String?>(null)
     val searchError: StateFlow<String?> = _searchError.asStateFlow()
 
-    /**
-     * Runs a visual search on page [index] and hands the results URL to
-     * [open] (the user's browser). [build] picks what to search: the whole
-     * image, a region, an object, or a question for AI Mode.
-     */
     private val _objects = MutableStateFlow<Map<Int, List<DetectedObject>>>(emptyMap())
     /** Objects Lens found per page, for the tappable dots in search mode. */
     val objects: StateFlow<Map<Int, List<DetectedObject>>> = _objects.asStateFlow()
@@ -107,6 +114,11 @@ class ViewerViewModel(
         }
     }
 
+    /**
+     * Runs a visual search on page [index] and hands the results URL to
+     * [open] (the user's browser). [build] picks what to search: the whole
+     * image, a region, an object, or a question for AI Mode.
+     */
     fun visualSearch(index: Int, open: (String) -> Unit, build: suspend (LensSearchSession) -> String) {
         if (_searching.value) return
         viewModelScope.launch {
@@ -136,8 +148,10 @@ class ViewerViewModel(
 
     private fun ensure(index: Int) {
         val state = _pages.value[index]
-        if (state is PageState.Ready || jobs[index]?.isActive == true) return
-        _pages.update { it + (index to PageState.Loading) }
+        val isStale = index in _stale.value
+        if ((state is PageState.Ready && !isStale) || jobs[index]?.isActive == true) return
+        // A stale page keeps its old result visible; only a page with nothing shows the spinner.
+        if (!isStale) _pages.update { it + (index to PageState.Loading) }
         jobs[index] = viewModelScope.launch {
             val next = try {
                 PageState.Ready(scans.scan(gallery.items[index], settings.value))
@@ -151,6 +165,7 @@ class ViewerViewModel(
                 PageState.Failed(friendlyError(e))
             }
             _pages.update { it + (index to next) }
+            _stale.update { it - index }
         }
     }
 }

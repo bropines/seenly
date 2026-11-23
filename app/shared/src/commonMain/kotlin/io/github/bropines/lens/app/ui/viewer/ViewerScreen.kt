@@ -24,6 +24,10 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material3.FilledTonalIconToggleButton
+import io.github.bropines.lens.app.data.Languages
 import androidx.compose.material.icons.rounded.ImageSearch
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
@@ -105,6 +109,8 @@ fun ViewerScreen(
     var quickTranslate by remember { mutableStateOf<String?>(null) }
     var zoomed by remember { mutableStateOf(false) }
     var searchMode by rememberSaveable { mutableStateOf(false) }
+    var overlayHidden by rememberSaveable { mutableStateOf(false) }
+    val stale by vm.stale.collectAsState()
     var askAi by remember { mutableStateOf(false) }
     var lastRegion by remember { mutableStateOf<Region?>(null) }
     val searching by vm.searching.collectAsState()
@@ -123,7 +129,7 @@ fun ViewerScreen(
         // Lens misses tiny side columns (a lone "でも……"), so a reflow that grows far
         // runs over text it was never told about; grow a little less than the preset.
         val base = if (manga) OverlayStyle.Manga.copy(reflowGrowth = 1.25f) else OverlayStyle.Chromium
-        return base.copy(highlightColor = highlight)
+        return base.withPrefs(settings.overlay).copy(highlightColor = highlight)
     }
 
     val selection = rememberTextSelectionState()
@@ -167,7 +173,7 @@ fun ViewerScreen(
                 PageView(
                     item = items[index],
                     state = pages[index],
-                    mode = mode,
+                    mode = if (overlayHidden) OverlayMode.Original else mode,
                     style = styleFor((pages[index] as? PageState.Ready)?.result),
                     onTap = { chrome = !chrome },
                     onParagraphTap = { if (index == pager.currentPage) tappedParagraph = it },
@@ -219,6 +225,8 @@ fun ViewerScreen(
                 onSource = vm::setSource,
                 onTarget = vm::setTarget,
                 onBack = onBack,
+                overlayHidden = overlayHidden,
+                onToggleOverlay = { overlayHidden = !overlayHidden; selection.clear() },
             )
         }
 
@@ -226,7 +234,11 @@ fun ViewerScreen(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            ScanStatus(current, onRetry = { vm.retry(pager.currentPage) })
+            ScanStatus(
+                current,
+                refreshingTo = if (pager.currentPage in stale) Languages.nameOf(settings.targetLanguage) else null,
+                onRetry = { vm.retry(pager.currentPage) },
+            )
             SearchStatus(searching, searchError, onDismiss = vm::dismissSearchError)
             AnimatedVisibility(chrome, enter = FastIn + slideInVertically(tween(160)) { it / 3 }, exit = FastOut + slideOutVertically(tween(120)) { it / 3 }) {
                 ViewerBottomPanel(
@@ -299,6 +311,8 @@ private fun ViewerTopBar(
     onSource: (String?) -> Unit,
     onTarget: (String) -> Unit,
     onBack: () -> Unit,
+    overlayHidden: Boolean,
+    onToggleOverlay: () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth().background(Scrim).statusBarsPadding().padding(bottom = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -307,6 +321,13 @@ private fun ViewerTopBar(
                 Text(title, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
                 counter?.let { Text(it, color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelMedium) }
             }
+            // The eye: the picture as it is, without the translation over it.
+            FilledTonalIconToggleButton(checked = overlayHidden, onCheckedChange = { onToggleOverlay() }, modifier = Modifier.padding(end = 8.dp)) {
+                Icon(
+                    if (overlayHidden) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
+                    contentDescription = if (overlayHidden) "Показать перевод" else "Скрыть перевод",
+                )
+            }
         }
         LanguageBar(source, target, onSource, onTarget, modifier = Modifier.padding(start = 16.dp), onDark = true)
     }
@@ -314,9 +335,18 @@ private fun ViewerTopBar(
 
 /** The scan state of the visible page: a spinner, an error with retry, or nothing once done. */
 @Composable
-private fun ScanStatus(state: PageState?, onRetry: () -> Unit) {
-    AnimatedVisibility(state !is PageState.Ready, enter = FastIn, exit = FastOut) {
+private fun ScanStatus(state: PageState?, refreshingTo: String?, onRetry: () -> Unit) {
+    // Hold the language name through the fade-out, when refreshingTo is already null.
+    var language by remember { mutableStateOf("") }
+    if (refreshingTo != null) language = refreshingTo
+    AnimatedVisibility(state !is PageState.Ready || refreshingTo != null, enter = FastIn, exit = FastOut) {
         when (state) {
+            is PageState.Ready -> Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.padding(12.dp)) {
+                Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    LoadingIndicator(Modifier.size(28.dp))
+                    Text("Перевожу на $language…", Modifier.padding(start = 8.dp))
+                }
+            }
             is PageState.Failed -> Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.padding(12.dp)) {
                 Row(Modifier.padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Rounded.ErrorOutline, contentDescription = null)
@@ -361,10 +391,10 @@ private fun ViewerBottomPanel(
         Column(Modifier.navigationBarsPadding().padding(horizontal = 12.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             // What is shown over the image: three labelled, connected choices.
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
+                // The original is the eye in the top bar, not a mode: it works over any of these.
                 val modes = listOf(
                     Triple(OverlayMode.Translated, "Перевод", Icons.Rounded.Translate),
                     Triple(OverlayMode.TextBoxes, "Текст", Icons.Rounded.TextFields),
-                    Triple(OverlayMode.Original, "Оригинал", Icons.Rounded.Image),
                 )
                 modes.forEachIndexed { index, (value, label, icon) ->
                     ModeButton(
