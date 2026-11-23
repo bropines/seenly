@@ -20,4 +20,9 @@ dependencyResolutionManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":lens-protocol")
+include(":lens-overlay")
+include(":google-translate")
 include(":lens-cli")
+include(":app:shared")
+include(":app:android")
+include(":app:desktop")
