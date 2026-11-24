@@ -27,6 +27,11 @@ import java.io.File
 class AndroidPlatformServices(private val context: Context) : PlatformServices {
     override val dataDir: String = context.filesDir.absolutePath
 
+    override val appVersion: String by lazy {
+        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
+            ?: super.appVersion
+    }
+
     override fun copyText(text: String) {
         context.getSystemService<ClipboardManager>()?.setPrimaryClip(ClipData.newPlainText("Seenly", text))
         // Android 13+ shows its own clipboard confirmation.

@@ -14,8 +14,9 @@ android {
         applicationId = "io.github.bropines.seenly"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "0.1.0"
+        // CI passes the tag's version (-Plens.versionName=0.2.0) and a growing code (-Plens.versionCode=…).
+        versionCode = providers.gradleProperty("lens.versionCode").map { it.toInt() }.getOrElse(1)
+        versionName = providers.gradleProperty("lens.versionName").getOrElse("0.1.0")
     }
 
     signingConfigs {

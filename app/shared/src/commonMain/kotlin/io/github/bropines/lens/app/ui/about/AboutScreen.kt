@@ -37,7 +37,6 @@ import io.github.bropines.lens.app.resources.*
 import org.jetbrains.compose.resources.stringResource
 
 /** Version shown in About; keep in step with versionName in app/android. */
-const val APP_VERSION = "0.1.0"
 
 /** What the app is, whose it is not, what it sends where, and the open-source licences. */
 @Composable
@@ -59,7 +58,7 @@ fun AboutScreen(services: PlatformServices, onBack: () -> Unit) {
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Block(Icons.Rounded.Info, stringResource(Res.string.about_version, APP_VERSION)) {
+            Block(Icons.Rounded.Info, stringResource(Res.string.about_version, services.appVersion)) {
                 Text(stringResource(Res.string.about_intro))
             }
             Block(Icons.Rounded.Gavel, stringResource(Res.string.about_unofficial)) {

@@ -9,6 +9,9 @@ interface PlatformServices {
     /** A private, writable directory for settings and caches. */
     val dataDir: String
 
+    /** The version the user has installed; Android reads it from the package, set by the release tag. */
+    val appVersion: String get() = APP_VERSION
+
     fun copyText(text: String)
 
     /** Hands [text] to the system share sheet, or the clipboard where there is none. */
@@ -34,6 +37,9 @@ interface PlatformServices {
 }
 
 /** PNG bytes of the bitmap, for exporting a translated page. */
+/** The version of a build that cannot tell its own (desktop, previews). */
+const val APP_VERSION = "0.1.0"
+
 expect fun androidx.compose.ui.graphics.ImageBitmap.encodePng(): ByteArray
 
 /** The wallpaper-based scheme where the platform has one (Android 12+), else null. */
