@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="share_label">Перевести в Seenly</string>
+    <string name="accessibility_label">Перевод экрана без просвечивания</string>
+    <string name="accessibility_summary">Непрозрачный перевод поверх других приложений</string>
+    <string name="accessibility_description">Позволяет переводу экрана полностью закрывать исходный текст, а касаниям при этом проходить к приложению под ним. Служба не читает содержимое окон и не следит за действиями: она только рисует перевод, который вы сами запустили пузырём.</string>
+
+    <!-- Screen translation -->
+    <string name="screen_channel">Перевод экрана</string>
+    <string name="screen_notification_title">Перевод экрана включён</string>
+    <string name="screen_notification_text">Тап по пузырю — перевод, удержание — меню</string>
+    <string name="screen_notification_stop">Остановить</string>
+    <string name="screen_accessibility_off">Спецвозможность Seenly выключена — перевод экрана остановлен</string>
+    <string name="screen_start_failed">Не удалось включить перевод экрана: %1$s</string>
+    <string name="screen_capture_failed">Не удалось снять экран</string>
+    <string name="screen_no_text">Текста для перевода не нашлось</string>
+    <string name="screen_translate_failed">Не удалось перевести: %1$s</string>
+    <string name="screen_overlay_required">Нужно разрешение «Поверх других приложений»</string>
+    <string name="screen_overlay_allow">Разрешите Seenly показывать окна поверх других приложений</string>
+    <string name="screen_capture_denied">Без доступа к экрану переводить нечего</string>
+    <string name="screen_capture_unavailable">Система не дала запросить запись экрана</string>
+
+    <string name="copied">Скопировано</string>
+</resources>

@@ -33,7 +33,8 @@ import androidx.compose.ui.unit.dp
 import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
 import com.mikepenz.aboutlibraries.ui.compose.produceLibraries
 import io.github.bropines.lens.app.platform.PlatformServices
-import io.github.bropines.lens.app.resources.Res
+import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.stringResource
 
 /** Version shown in About; keep in step with versionName in app/android. */
 const val APP_VERSION = "0.1.0"
@@ -49,8 +50,8 @@ fun AboutScreen(services: PlatformServices, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("О приложении") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Назад") } },
+                title = { Text(stringResource(Res.string.about_title)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(Res.string.back)) } },
             )
         },
     ) { padding ->
@@ -58,38 +59,25 @@ fun AboutScreen(services: PlatformServices, onBack: () -> Unit) {
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Block(Icons.Rounded.Info, "Seenly · версия $APP_VERSION") {
-                Text(
-                    "Перевод и распознавание текста на картинках, скриншотах и фото с камеры. " +
-                        "Открытый проект на Kotlin Multiplatform.",
-                )
+            Block(Icons.Rounded.Info, stringResource(Res.string.about_version, APP_VERSION)) {
+                Text(stringResource(Res.string.about_intro))
             }
-            Block(Icons.Rounded.Gavel, "Неофициальное приложение") {
-                Text(
-                    "Это независимый проект. Он не связан с Google LLC, не одобрен и не поддерживается ею. " +
-                        "Google, Google Lens и Google Translate — товарные знаки Google LLC; здесь они названы только " +
-                        "чтобы описать, с какими сервисами работает приложение.",
-                )
-                Text(
-                    "Распознавание, перевод и поиск выполняют сервисы Google и другие переводчики, которые вы включили. " +
-                        "Их работа, доступность и условия не зависят от этого приложения и могут измениться в любой момент.",
-                )
+            Block(Icons.Rounded.Gavel, stringResource(Res.string.about_unofficial)) {
+                Text(stringResource(Res.string.about_unofficial_1))
+                Text(stringResource(Res.string.about_unofficial_2))
             }
-            Block(Icons.Rounded.Lock, "Что куда отправляется") {
-                Text("• Картинка, которую вы открыли или сняли, отправляется в Google Lens для распознавания и перевода.")
-                Text("• Текст, который вы переводите отдельно, — в выбранный переводчик.")
-                Text("• Результаты поиска открываются в вашем браузере, со своими cookies и настройками.")
-                Text("• История хранится только на этом устройстве; у приложения нет своих серверов и аналитики.")
-                Text(
-                    "• Служба спецвозможностей Seenly (если вы её включили) не читает окна и не следит за действиями: " +
-                        "она только рисует перевод экрана поверх других приложений.",
-                )
-                Text("• Не открывайте здесь то, чем не готовы поделиться с этими сервисами.")
+            Block(Icons.Rounded.Lock, stringResource(Res.string.about_data)) {
+                Text(stringResource(Res.string.about_data_1))
+                Text(stringResource(Res.string.about_data_2))
+                Text(stringResource(Res.string.about_data_3))
+                Text(stringResource(Res.string.about_data_4))
+                Text(stringResource(Res.string.about_data_5))
+                Text(stringResource(Res.string.about_data_6))
             }
-            Block(Icons.Rounded.Code, "Исходный код и лицензии") {
-                Text("Автор: bropines. Приложение использует открытые библиотеки — их лицензии ниже.")
+            Block(Icons.Rounded.Code, stringResource(Res.string.about_source)) {
+                Text(stringResource(Res.string.about_author))
                 FilledTonalButton(onClick = { licences = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Лицензии открытых библиотек")
+                    Text(stringResource(Res.string.about_licences_button))
                 }
                 FilledTonalButton(onClick = { services.openUrl("https://github.com/bropines") }, modifier = Modifier.fillMaxWidth()) {
                     Text("github.com/bropines")
@@ -122,8 +110,8 @@ private fun LicencesScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Лицензии") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Назад") } },
+                title = { Text(stringResource(Res.string.licences_title)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(Res.string.back)) } },
             )
         },
     ) { padding ->

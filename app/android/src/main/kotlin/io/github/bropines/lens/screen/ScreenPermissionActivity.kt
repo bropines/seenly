@@ -11,6 +11,9 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
+import androidx.annotation.StringRes
+import io.github.bropines.lens.AppLocale
+import io.github.bropines.lens.R
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -50,7 +53,7 @@ class ScreenPermissionActivity : ComponentActivity() {
             if (Settings.canDrawOverlays(this)) {
                 next()
             } else {
-                toast("Нужно разрешение «Поверх других приложений»")
+                toast(R.string.screen_overlay_required)
                 finish()
             }
         }, 400)
@@ -67,7 +70,7 @@ class ScreenPermissionActivity : ComponentActivity() {
                 .putExtra(ScreenTranslateService.EXTRA_RESULT_DATA, data)
             ContextCompat.startForegroundService(this, start)
         } else {
-            toast("Без доступа к экрану переводить нечего")
+            toast(R.string.screen_capture_denied)
         }
         finish()
     }
@@ -91,13 +94,13 @@ class ScreenPermissionActivity : ComponentActivity() {
             // The accessibility service draws its own windows: no overlay permission needed then.
             !Settings.canDrawOverlays(this) && ScreenOverlayHost.service.value == null -> {
                 if (overlayAsked) {
-                    toast("Нужно разрешение «Поверх других приложений»")
+                    toast(R.string.screen_overlay_required)
                     finish()
                     return
                 }
                 overlayAsked = true
                 awaitingOverlay = true
-                toast("Разрешите Seenly показывать окна поверх других приложений")
+                toast(R.string.screen_overlay_allow)
                 val page = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
                 runCatching { overlaySettings.launch(page) }.onFailure {
                     // Some vendor builds only have the list of all apps.
@@ -118,14 +121,15 @@ class ScreenPermissionActivity : ComponentActivity() {
                     manager.createScreenCaptureIntent()
                 }
                 runCatching { capture.launch(consent) }.onFailure {
-                    toast("Система не дала запросить запись экрана")
+                    toast(R.string.screen_capture_unavailable)
                     finish()
                 }
             }
         }
     }
 
-    private fun toast(text: String) = Toast.makeText(applicationContext, text, Toast.LENGTH_LONG).show()
+    private fun toast(@StringRes text: Int) =
+        Toast.makeText(applicationContext, AppLocale.string(applicationContext, text), Toast.LENGTH_LONG).show()
 
     private companion object {
         const val KEY_OVERLAY = "overlay_asked"

@@ -49,6 +49,9 @@ import androidx.compose.ui.unit.dp
 import io.github.bropines.lens.app.data.AppSettings
 import io.github.bropines.lens.app.di.AppGraph
 import io.github.bropines.lens.app.ui.components.LanguageBar
+import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.PlatformFileSerializer
 import io.github.vinceglb.filekit.dialogs.FileKitMode
@@ -72,7 +75,7 @@ fun HomeScreen(
     fun openFolder(folder: PlatformFile) = scope.launch {
         graph.services.persistAccess(folder)
         if (graph.gallery.openFolder(folder) == null) {
-            snackbar.showSnackbar("В папке «${folder.name}» нет картинок")
+            snackbar.showSnackbar(getString(Res.string.home_folder_empty, folder.name))
         } else {
             val serialised = Json.encodeToString(PlatformFileSerializer, folder)
             graph.settings.update { it.copy(lastFolder = serialised) }
@@ -95,7 +98,7 @@ fun HomeScreen(
         topBar = {
             LargeFlexibleTopAppBar(
                 title = { Text("Seenly") },
-                subtitle = { Text("Перевод с картинок") },
+                subtitle = { Text(stringResource(Res.string.home_subtitle)) },
             )
         },
         snackbarHost = { SnackbarHost(snackbar) },
@@ -110,7 +113,7 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Bottom),
         ) {
             Text(
-                "Поделитесь картинкой из любого приложения — она откроется здесь сразу с переводом.",
+                stringResource(Res.string.home_share_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -121,8 +124,8 @@ fun HomeScreen(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                 ) {
                     ListItem(
-                        headlineContent = { Text("Продолжить: ${lastFolder.name}") },
-                        supportingContent = { Text("Последняя открытая папка") },
+                        headlineContent = { Text(stringResource(Res.string.home_continue, lastFolder.name)) },
+                        supportingContent = { Text(stringResource(Res.string.home_last_folder)) },
                         leadingContent = { Icon(Icons.Rounded.History, contentDescription = null) },
                         colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                     )
@@ -135,7 +138,7 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Переводить", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(Res.string.home_translate), style = MaterialTheme.typography.titleMedium)
                     LanguageBar(
                         source = settings.sourceLanguage,
                         target = settings.targetLanguage,
@@ -148,23 +151,23 @@ fun HomeScreen(
                 val running by screen.running.collectAsState()
                 BigAction(
                     icon = Icons.Rounded.Translate,
-                    title = if (running) "Остановить перевод экрана" else "Перевод экрана",
-                    subtitle = if (running) "Пузырь поверх приложений включён" else "Пузырь поверх других приложений: экран, авто при прокрутке, область",
+                    title = stringResource(if (running) Res.string.home_screen_stop else Res.string.screen_translation),
+                    subtitle = stringResource(if (running) Res.string.home_screen_running else Res.string.home_screen_desc),
                     primary = false,
                     onClick = { if (running) screen.stop() else screen.start() },
                 )
             }
             BigAction(
                 icon = Icons.Rounded.FolderOpen,
-                title = "Открыть папку",
-                subtitle = "Листать все картинки папки свайпом — для глав манги",
+                title = stringResource(Res.string.home_open_folder),
+                subtitle = stringResource(Res.string.home_open_folder_desc),
                 primary = false,
                 onClick = { pickFolder.launch() },
             )
             BigAction(
                 icon = Icons.Rounded.Image,
-                title = "Открыть картинки",
-                subtitle = "Одну или несколько из галереи",
+                title = stringResource(Res.string.open_images),
+                subtitle = stringResource(Res.string.home_open_images_desc),
                 primary = true,
                 onClick = { pickImages.launch() },
             )

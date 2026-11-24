@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common -->
+    <string name="back">Назад</string>
+    <string name="cancel">Отмена</string>
+    <string name="copy">Копировать</string>
+    <string name="share">Поделиться</string>
+    <string name="hide">Скрыть</string>
+    <string name="open">Открыть</string>
+    <string name="clear">Очистить</string>
+    <string name="delete">Удалить</string>
+    <string name="retry">Повторить</string>
+    <string name="select_all">Выделить всё</string>
+    <string name="auto">Авто</string>
+    <string name="original">Оригинал</string>
+    <string name="translation">Перевод</string>
+    <string name="translate_action">Перевести</string>
+    <string name="open_images">Открыть картинки</string>
+    <string name="screen_translation">Перевод экрана</string>
+    <string name="text_translation">Перевод текста</string>
+    <string name="translators">Переводчики</string>
+    <string name="source_language">Язык оригинала</string>
+
+    <!-- Dock -->
+    <string name="tab_images">Картинки</string>
+    <string name="tab_history">История</string>
+    <string name="tab_text">Текст</string>
+    <string name="tab_settings">Настройки</string>
+    <string name="camera">Камера</string>
+
+    <!-- Home -->
+    <string name="home_subtitle">Перевод с картинок</string>
+    <string name="home_folder_empty">В папке «%1$s» нет картинок</string>
+    <string name="home_share_hint">Поделитесь картинкой из любого приложения — она откроется здесь сразу с переводом.</string>
+    <string name="home_continue">Продолжить: %1$s</string>
+    <string name="home_last_folder">Последняя открытая папка</string>
+    <string name="home_translate">Переводить</string>
+    <string name="home_screen_stop">Остановить перевод экрана</string>
+    <string name="home_screen_running">Пузырь поверх приложений включён</string>
+    <string name="home_screen_desc">Пузырь поверх других приложений: экран, авто при прокрутке, область</string>
+    <string name="home_open_folder">Открыть папку</string>
+    <string name="home_open_folder_desc">Листать все картинки папки свайпом — для глав манги</string>
+    <string name="home_open_images_desc">Одну или несколько из галереи</string>
+
+    <!-- Language picker -->
+    <string name="language_swap">Поменять местами</string>
+    <string name="language_search">Язык</string>
+    <string name="language_detect">Определить автоматически</string>
+    <string name="language_selected">Выбран</string>
+    <string name="target_language">Язык перевода</string>
+
+    <!-- Settings -->
+    <string name="settings_saved">Настройки сохранены</string>
+    <string name="settings_save_failed">Не удалось сохранить: %1$s</string>
+    <string name="settings_loaded">Настройки загружены</string>
+    <string name="settings_not_a_backup">Это не файл настроек Seenly</string>
+    <string name="settings_read_failed">Не удалось прочитать: %1$s</string>
+    <string name="settings_section_translation">Перевод</string>
+    <string name="settings_target">Переводить на</string>
+    <string name="settings_ocr_hint">Подсказка для распознавания</string>
+    <string name="settings_ocr_hint_none">Не указана — Lens определит сам</string>
+    <string name="settings_section_overlay">Наложение перевода</string>
+    <string name="layout_auto">Автоматически</string>
+    <string name="layout_auto_desc">Манга — по абзацам, остальное — строка в строку</string>
+    <string name="layout_in_place">Строка в строку</string>
+    <string name="layout_in_place_desc">Как в Chrome: для вывесок и скриншотов</string>
+    <string name="layout_reflow">По абзацам</string>
+    <string name="layout_reflow_desc">Текст перетекает внутри пузыря: для манги и комиксов</string>
+    <string name="settings_section_style">Стиль наложения</string>
+    <string name="style_erase">Как стирать исходный текст</string>
+    <string name="erase_patch">Фон Google</string>
+    <string name="erase_fill">Заливка</string>
+    <string name="style_outline">Обводка текста</string>
+    <string name="outline_none">Нет</string>
+    <string name="outline_thin">Тонкая</string>
+    <string name="outline_bold">Жирная</string>
+    <string name="style_font">Шрифт</string>
+    <string name="font_system">Система</string>
+    <string name="font_mono">Моно</string>
+    <string name="style_vertical">Вертикальный текст (японский, китайский)</string>
+    <string name="vertical_keep">Столбцами</string>
+    <string name="vertical_horizontal">Строками</string>
+    <string name="style_text_size">Размер текста</string>
+    <string name="style_min_size">Минимальный размер</string>
+    <string name="settings_opaque">Перевод без просвечивания</string>
+    <string name="settings_opaque_on">Включено: перевод полностью закрывает оригинал</string>
+    <string name="settings_opaque_off">Выключено: в режимах «Авто» и «Область» оригинал просвечивает. Включите «Seenly» в спецвозможностях; если пункт серый — в сведениях о приложении разрешите ограниченные настройки</string>
+    <string name="settings_section_appearance">Оформление</string>
+    <string name="theme_system">Как в системе</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="settings_ui_language">Язык приложения</string>
+    <string name="ui_language_system">Системный</string>
+    <string name="settings_section_app">Приложение</string>
+    <string name="settings_export">Экспорт настроек</string>
+    <string name="settings_export_desc">Все настройки и ключи переводчиков в файл .json. Ключи там открытым текстом — не делитесь файлом</string>
+    <string name="settings_import">Импорт настроек</string>
+    <string name="settings_import_desc">Заменить текущие настройки файлом экспорта</string>
+    <string name="settings_about_desc">Версия, конфиденциальность, лицензии</string>
+    <string name="translators_none">Ни один не включён</string>
+
+    <!-- Translators -->
+    <string name="translators_intro">Для текста, который вы переводите отдельно или выделяете на картинке. Картинки всегда переводит Lens.</string>
+    <string name="translators_failover">Если переводчик не ответил — следующий</string>
+    <string name="translators_failover_desc">Текст увидят только включённые переводчики</string>
+    <string name="translators_enabled">Включены — в этом порядке</string>
+    <string name="translators_available">Доступны</string>
+    <string name="translators_needs_setup">Нужен ключ или адрес — нажмите, чтобы задать</string>
+    <string name="translators_with_key">С ключом</string>
+    <string name="translators_no_key">Без ключа</string>
+    <string name="translators_no_options">Настроек нет.</string>
+    <string name="move_up">Выше</string>
+    <string name="move_down">Ниже</string>
+    <string name="engine_google">Без ключа. Словарь и транслитерация</string>
+    <string name="engine_bing">Без ключа. Microsoft, до 1000 символов за раз</string>
+    <string name="engine_yandex">Без ключа. Словарь для слов и коротких фраз</string>
+    <string name="engine_deepl_web">Без ключа, как приложение DeepL. Доступен не во всех странах</string>
+    <string name="engine_lara">Без ключа. Нейросетевой перевод Translated</string>
+    <string name="engine_modernmt">Без ключа. Адаптивный перевод Translated</string>
+    <string name="engine_mymemory">Без ключа, 5000 символов в день. Нужен язык оригинала</string>
+    <string name="engine_lingva">Без ключа. Зеркало Google через публичный сервер</string>
+    <string name="engine_deepl">Официальный API DeepL, нужен ключ (бесплатный тоже подходит)</string>
+    <string name="engine_deeplx">Ваш сервер DeepLX</string>
+    <string name="engine_yandex_cloud">Yandex Cloud Translate, нужен API-ключ</string>
+    <string name="engine_libretranslate">Свой или публичный сервер LibreTranslate</string>
+    <string name="engine_openai">Любая модель с OpenAI-совместимым API: ключ, адрес, модель</string>
+
+    <!-- About -->
+    <string name="about_title">О приложении</string>
+    <string name="about_version">Seenly · версия %1$s</string>
+    <string name="about_intro">Перевод и распознавание текста на картинках, скриншотах и фото с камеры. Открытый проект на Kotlin Multiplatform.</string>
+    <string name="about_unofficial">Неофициальное приложение</string>
+    <string name="about_unofficial_1">Это независимый проект. Он не связан с Google LLC, не одобрен и не поддерживается ею. Google, Google Lens и Google Translate — товарные знаки Google LLC; здесь они названы только чтобы описать, с какими сервисами работает приложение.</string>
+    <string name="about_unofficial_2">Распознавание, перевод и поиск выполняют сервисы Google и другие переводчики, которые вы включили. Их работа, доступность и условия не зависят от этого приложения и могут измениться в любой момент.</string>
+    <string name="about_data">Что куда отправляется</string>
+    <string name="about_data_1">• Картинка, которую вы открыли или сняли, отправляется в Google Lens для распознавания и перевода.</string>
+    <string name="about_data_2">• Текст, который вы переводите отдельно, — в выбранный переводчик.</string>
+    <string name="about_data_3">• Результаты поиска открываются в вашем браузере, со своими cookies и настройками.</string>
+    <string name="about_data_4">• История хранится только на этом устройстве; у приложения нет своих серверов и аналитики.</string>
+    <string name="about_data_5">• Служба спецвозможностей Seenly (если вы её включили) не читает окна и не следит за действиями: она только рисует перевод экрана поверх других приложений.</string>
+    <string name="about_data_6">• Не открывайте здесь то, чем не готовы поделиться с этими сервисами.</string>
+    <string name="about_source">Исходный код и лицензии</string>
+    <string name="about_author">Автор: bropines. Приложение использует открытые библиотеки — их лицензии ниже.</string>
+    <string name="about_licences_button">Лицензии открытых библиотек</string>
+    <string name="licences_title">Лицензии</string>
+
+    <!-- History -->
+    <string name="history_clear">Очистить историю</string>
+    <string name="history_empty">Здесь появятся переведённые картинки. Они хранятся только на телефоне.</string>
+    <string name="history_nothing_found">Ничего не найдено</string>
+    <string name="history_search">Поиск по тексту и переводу</string>
+    <string name="history_clear_title">Очистить историю?</string>
+    <string name="history_clear_text">Удалятся все сохранённые картинки и переводы. Это нельзя отменить.</string>
+    <string name="ago_now">только что</string>
+    <plurals name="ago_minutes">
+        <item quantity="one">%1$d мин назад</item>
+        <item quantity="few">%1$d мин назад</item>
+        <item quantity="many">%1$d мин назад</item>
+        <item quantity="other">%1$d мин назад</item>
+    </plurals>
+    <plurals name="ago_hours">
+        <item quantity="one">%1$d ч назад</item>
+        <item quantity="few">%1$d ч назад</item>
+        <item quantity="many">%1$d ч назад</item>
+        <item quantity="other">%1$d ч назад</item>
+    </plurals>
+    <plurals name="ago_days">
+        <item quantity="one">%1$d дн назад</item>
+        <item quantity="few">%1$d дн назад</item>
+        <item quantity="many">%1$d дн назад</item>
+        <item quantity="other">%1$d дн назад</item>
+    </plurals>
+
+    <!-- Text translation -->
+    <string name="text_input_hint">Введите или вставьте текст</string>
+    <string name="text_others_failed">%1$s · другие не ответили</string>
+    <string name="text_more_variants">Ещё варианты: %1$s</string>
+    <string name="error_same_language">Языки совпадают</string>
+    <string name="error_missing_key">%1$s: нужен ключ — задайте его в настройках переводчиков</string>
+    <string name="error_rate_limited">Сервисы просят подождать. Попробуйте позже или включите другой переводчик</string>
+    <string name="error_not_translated">Не перевелось: %1$s</string>
+    <string name="error_translation">Ошибка перевода</string>
+
+    <!-- Viewer -->
+    <string name="viewer_show_translation">Показать перевод</string>
+    <string name="viewer_hide_translation">Скрыть перевод</string>
+    <string name="viewer_translating_to">Перевожу на %1$s…</string>
+    <string name="viewer_recognising">Распознаю текст…</string>
+    <string name="viewer_mode_search">Поиск</string>
+    <string name="viewer_search_hint">Обведите что-нибудь пальцем или нажмите на точку — откроется поиск Google</string>
+    <string name="viewer_whole_image">Вся картинка</string>
+    <string name="viewer_ask_ai">Спросить ИИ</string>
+    <string name="viewer_all_text">Весь текст</string>
+    <string name="viewer_as_image">Картинкой</string>
+    <string name="viewer_searching">Ищу в Google…</string>
+    <string name="ask_ai_title">Спросить ИИ о картинке</string>
+    <string name="ask_ai_placeholder">Например: что это за манга?</string>
+    <string name="ask_ai_region_only">Только про обведённую область</string>
+    <string name="ask_ai_note">Откроется Google AI Mode в браузере.</string>
+    <string name="ask_ai_default_question">Что на этой картинке?</string>
+    <string name="ask_ai_ask">Спросить</string>
+    <string name="page_open_failed">Не удалось открыть</string>
+    <string name="quick_open_in_translator">В переводчике</string>
+    <string name="paragraph_original_language">Оригинал · %1$s</string>
+    <string name="paragraph_translation_language">Перевод · %1$s</string>
+    <string name="search_google">Найти в Google</string>
+    <string name="text_view_both">Оба</string>
+    <string name="copy_all">Копировать всё</string>
+    <string name="copy_paragraph">Копировать абзац</string>
+    <string name="open_in_translator">Открыть в переводчике</string>
+    <string name="error_no_file_access">Нет доступа к файлу. Откройте его через «Поделиться» ещё раз.</string>
+    <string name="error_no_connection">Нет связи с Google. Проверьте интернет.</string>
+    <string name="error_timeout">Google отвечает слишком долго. Повторите.</string>
+    <string name="error_file_not_found">Файл не найден.</string>
+    <string name="error_generic">Не получилось: %1$s</string>
+    <string name="error_lens">Ошибка Lens</string>
+    <string name="error_lens_rate_limited">Lens просит подождать (429)</string>
+    <string name="error_lens_http">Ошибка Lens: HTTP %1$d</string>
+
+    <!-- Camera -->
+    <string name="camera_snapshot">Снимок</string>
+    <string name="camera_desktop">Камера есть в приложении для телефона.</string>
+    <string name="camera_permission">Нужен доступ к камере, чтобы переводить на лету.</string>
+    <string name="camera_allow">Разрешить</string>
+    <string name="camera_from_gallery">Из галереи</string>
+    <string name="camera_flash">Вспышка</string>
+    <string name="camera_hint">Наведите на текст и нажмите</string>
+    <string name="camera_capture_failed">Не удалось снять: %1$s</string>
+    <string name="camera_shoot">Снять</string>
+    <string name="camera_password">Пароль</string>
+
+    <!-- Screen translation bubble menu -->
+    <string name="bubble_mode_screen">Экран</string>
+    <string name="bubble_mode_area">Область</string>
+    <string name="bubble_desc_screen">Тап по пузырю переводит то, что сейчас на экране. Тап в любом месте убирает перевод.</string>
+    <string name="bubble_desc_live">Переводит сам, как только картинка остановилась; пока листаете, перевод скрыт. Тап по пузырю — пауза.</string>
+    <string name="bubble_desc_area">Переводит только внутри рамки, когда её содержимое меняется. Рамку можно двигать и растягивать.</string>
+    <string name="bubble_turn_off">Выключить</string>
+    <string name="bubble_done">Готово</string>
+    <string name="bubble_hold_hint">Удержание пузыря открывает это меню</string>
+    <string name="bubble_back">‹ Назад</string>
+
+    <!-- Language names -->
+    <string name="lang_ru">Русский</string>
+    <string name="lang_en">Английский</string>
+    <string name="lang_ja">Японский</string>
+    <string name="lang_ko">Корейский</string>
+    <string name="lang_zh_cn">Китайский (упрощённый)</string>
+    <string name="lang_zh_tw">Китайский (традиционный)</string>
+    <string name="lang_uk">Украинский</string>
+    <string name="lang_be">Белорусский</string>
+    <string name="lang_kk">Казахский</string>
+    <string name="lang_de">Немецкий</string>
+    <string name="lang_fr">Французский</string>
+    <string name="lang_es">Испанский</string>
+    <string name="lang_it">Итальянский</string>
+    <string name="lang_pt">Португальский</string>
+    <string name="lang_pl">Польский</string>
+    <string name="lang_cs">Чешский</string>
+    <string name="lang_nl">Нидерландский</string>
+    <string name="lang_sv">Шведский</string>
+    <string name="lang_fi">Финский</string>
+    <string name="lang_no">Норвежский</string>
+    <string name="lang_da">Датский</string>
+    <string name="lang_tr">Турецкий</string>
+    <string name="lang_el">Греческий</string>
+    <string name="lang_iw">Иврит</string>
+    <string name="lang_ar">Арабский</string>
+    <string name="lang_fa">Персидский</string>
+    <string name="lang_hi">Хинди</string>
+    <string name="lang_th">Тайский</string>
+    <string name="lang_vi">Вьетнамский</string>
+    <string name="lang_id">Индонезийский</string>
+    <string name="lang_ms">Малайский</string>
+    <string name="lang_tl">Филиппинский</string>
+    <string name="lang_hu">Венгерский</string>
+    <string name="lang_ro">Румынский</string>
+    <string name="lang_bg">Болгарский</string>
+    <string name="lang_sr">Сербский</string>
+    <string name="lang_ka">Грузинский</string>
+    <string name="lang_hy">Армянский</string>
+    <string name="lang_az">Азербайджанский</string>
+    <string name="lang_uz">Узбекский</string>
+</resources>

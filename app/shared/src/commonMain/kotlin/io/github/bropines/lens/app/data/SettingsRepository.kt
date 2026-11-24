@@ -41,6 +41,8 @@ data class AppSettings(
     val readingLayout: ReadingLayout = ReadingLayout.Auto,
     val textEngine: TextEngine = TextEngine.Google,
     val theme: ThemeMode = ThemeMode.System,
+    /** The UI language as a BCP 47 tag ("en", "ru"); null follows the system. */
+    val uiLanguage: String? = null,
     /** The last folder opened, as FileKit's serialised PlatformFile, so it can be reopened. */
     val lastFolder: String? = null,
     val overlay: OverlayPrefs = OverlayPrefs(),
@@ -118,6 +120,7 @@ class SettingsRepository(services: PlatformServices) {
             p[LAYOUT] = next.readingLayout.name
             p[ENGINE] = next.textEngine.name
             p[THEME] = next.theme.name
+            if (next.uiLanguage != null) p[UI_LANGUAGE] = next.uiLanguage else p.remove(UI_LANGUAGE)
             if (next.lastFolder != null) p[LAST_FOLDER] = next.lastFolder else p.remove(LAST_FOLDER)
             p[ERASE] = next.overlay.erase.name
             p[OUTLINE] = next.overlay.outline.name
@@ -164,6 +167,7 @@ class SettingsRepository(services: PlatformServices) {
         readingLayout = this[LAYOUT].toEnum(ReadingLayout.Auto),
         textEngine = this[ENGINE].toEnum(TextEngine.Google),
         theme = this[THEME].toEnum(ThemeMode.System),
+        uiLanguage = this[UI_LANGUAGE]?.ifEmpty { null },
         lastFolder = this[LAST_FOLDER],
         overlay = OverlayPrefs(
             erase = this[ERASE].toEnum(EraseChoice.Auto),
@@ -189,6 +193,7 @@ class SettingsRepository(services: PlatformServices) {
         val LAYOUT = stringPreferencesKey("reading_layout")
         val ENGINE = stringPreferencesKey("text_engine")
         val THEME = stringPreferencesKey("theme")
+        val UI_LANGUAGE = stringPreferencesKey("ui_language")
         val LAST_FOLDER = stringPreferencesKey("last_folder")
         val ERASE = stringPreferencesKey("overlay_erase")
         val OUTLINE = stringPreferencesKey("overlay_outline")

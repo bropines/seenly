@@ -1,5 +1,7 @@
 package io.github.bropines.lens.app.ui.camera
 
+import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.stringResource
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -93,20 +95,20 @@ actual fun CameraScreen(
             LiveCamera(services, onCaptured)
         } else if (asked) {
             Column(Modifier.align(Alignment.Center).padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Нужен доступ к камере, чтобы переводить на лету.", color = Color.White)
+                Text(stringResource(Res.string.camera_permission), color = Color.White)
                 Button(onClick = { permission.launch(Manifest.permission.CAMERA) }, modifier = Modifier.padding(top = 16.dp)) {
-                    Text("Разрешить")
+                    Text(stringResource(Res.string.camera_allow))
                 }
             }
         }
         Row(Modifier.statusBarsPadding().padding(8.dp)) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Назад", tint = Color.White) }
+            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.back), tint = Color.White) }
         }
         IconButton(
             onClick = onPickImages,
             modifier = Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(start = 32.dp, bottom = 44.dp)
                 .size(56.dp).background(Color.White.copy(alpha = 0.18f), CircleShape),
-        ) { Icon(Icons.Rounded.PhotoLibrary, contentDescription = "Из галереи", tint = Color.White) }
+        ) { Icon(Icons.Rounded.PhotoLibrary, contentDescription = stringResource(Res.string.camera_from_gallery), tint = Color.White) }
     }
 }
 
@@ -120,6 +122,7 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
     var torch by remember { mutableStateOf(false) }
     var capturing by remember { mutableStateOf(false) }
     var code by remember { mutableStateOf<ScannedCode?>(null) }
+    // What went wrong taking the last photo; the UI words it.
     var error by remember { mutableStateOf<String?>(null) }
     val capture = remember {
         ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build()
@@ -165,7 +168,7 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
         ) {
             Icon(
                 if (torch) Icons.Rounded.FlashOn else Icons.Rounded.FlashOff,
-                contentDescription = "Вспышка",
+                contentDescription = stringResource(Res.string.camera_flash),
                 tint = if (torch) Color.Black else Color.White,
             )
         }
@@ -179,7 +182,7 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
                 code?.let { CodeCard(it, services, onDismiss = { code = null }) }
             }
             Text(
-                error ?: "Наведите на текст и нажмите",
+                error?.let { stringResource(Res.string.camera_capture_failed, it) } ?: stringResource(Res.string.camera_hint),
                 color = if (error != null) MaterialTheme.colorScheme.error else Color.White.copy(alpha = 0.8f),
                 style = MaterialTheme.typography.labelLarge,
             )
@@ -200,7 +203,7 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
 
                         override fun onError(exception: ImageCaptureException) {
                             capturing = false
-                            error = "Не удалось снять: ${exception.message ?: exception.imageCaptureError}"
+                            error = exception.message ?: exception.imageCaptureError.toString()
                         }
                     },
                 )
@@ -211,10 +214,11 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
 
 @Composable
 private fun Shutter(busy: Boolean, onClick: () -> Unit) {
+    val label = stringResource(Res.string.camera_shoot)
     Box(
         Modifier.size(84.dp).border(4.dp, Color.White, CircleShape).padding(8.dp)
             .background(if (busy) Color.White.copy(alpha = 0.5f) else Color.White, CircleShape)
-            .clickable(enabled = !busy, onClickLabel = "Снять", onClick = onClick),
+            .clickable(enabled = !busy, onClickLabel = label, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { if (busy) LoadingIndicator(Modifier.size(36.dp)) }
 }
@@ -245,15 +249,15 @@ private fun CodeCard(code: ScannedCode, services: PlatformServices, onDismiss: (
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (code.isUrl) {
                     Button(onClick = { services.openUrl(code.text) }) {
-                        Icon(Icons.Rounded.OpenInNew, null, Modifier.padding(end = 6.dp)); Text("Открыть")
+                        Icon(Icons.Rounded.OpenInNew, null, Modifier.padding(end = 6.dp)); Text(stringResource(Res.string.open))
                     }
                 }
                 val wifiPassword = code.wifi?.second
                 FilledTonalButton(onClick = { services.copyText(wifiPassword ?: code.text) }) {
                     Icon(Icons.Rounded.ContentCopy, null, Modifier.padding(end = 6.dp))
-                    Text(if (wifiPassword != null) "Пароль" else "Копировать")
+                    Text(stringResource(if (wifiPassword != null) Res.string.camera_password else Res.string.copy))
                 }
-                FilledTonalButton(onClick = onDismiss) { Text("Скрыть") }
+                FilledTonalButton(onClick = onDismiss) { Text(stringResource(Res.string.hide)) }
             }
         }
     }

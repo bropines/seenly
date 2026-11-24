@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English, the default UI language. Russian is in values-ru; keep both in step. -->
+<resources>
+    <!-- Common -->
+    <string name="back">Back</string>
+    <string name="cancel">Cancel</string>
+    <string name="copy">Copy</string>
+    <string name="share">Share</string>
+    <string name="hide">Hide</string>
+    <string name="open">Open</string>
+    <string name="clear">Clear</string>
+    <string name="delete">Delete</string>
+    <string name="retry">Retry</string>
+    <string name="select_all">Select all</string>
+    <string name="auto">Auto</string>
+    <string name="original">Original</string>
+    <string name="translation">Translation</string>
+    <string name="translate_action">Translate</string>
+    <string name="open_images">Open images</string>
+    <string name="screen_translation">Screen translation</string>
+    <string name="text_translation">Text translation</string>
+    <string name="translators">Translators</string>
+    <string name="source_language">Source language</string>
+
+    <!-- Dock -->
+    <string name="tab_images">Images</string>
+    <string name="tab_history">History</string>
+    <string name="tab_text">Text</string>
+    <string name="tab_settings">Settings</string>
+    <string name="camera">Camera</string>
+
+    <!-- Home -->
+    <string name="home_subtitle">Translate from images</string>
+    <string name="home_folder_empty">No images in the folder “%1$s”</string>
+    <string name="home_share_hint">Share an image from any app and it opens here, already translated.</string>
+    <string name="home_continue">Continue: %1$s</string>
+    <string name="home_last_folder">Last opened folder</string>
+    <string name="home_translate">Translate</string>
+    <string name="home_screen_stop">Stop screen translation</string>
+    <string name="home_screen_running">The bubble over other apps is on</string>
+    <string name="home_screen_desc">A bubble over other apps: whole screen, auto while scrolling, or an area</string>
+    <string name="home_open_folder">Open folder</string>
+    <string name="home_open_folder_desc">Swipe through every image in a folder — for manga chapters</string>
+    <string name="home_open_images_desc">One or several from the gallery</string>
+
+    <!-- Language picker -->
+    <string name="language_swap">Swap languages</string>
+    <string name="language_search">Language</string>
+    <string name="language_detect">Detect automatically</string>
+    <string name="language_selected">Selected</string>
+    <string name="target_language">Translation language</string>
+
+    <!-- Settings -->
+    <string name="settings_saved">Settings saved</string>
+    <string name="settings_save_failed">Couldn’t save: %1$s</string>
+    <string name="settings_loaded">Settings loaded</string>
+    <string name="settings_not_a_backup">This isn’t a Seenly settings file</string>
+    <string name="settings_read_failed">Couldn’t read: %1$s</string>
+    <string name="settings_section_translation">Translation</string>
+    <string name="settings_target">Translate into</string>
+    <string name="settings_ocr_hint">Recognition hint</string>
+    <string name="settings_ocr_hint_none">Not set — Lens detects it</string>
+    <string name="settings_section_overlay">Translation overlay</string>
+    <string name="layout_auto">Automatic</string>
+    <string name="layout_auto_desc">Manga by paragraph, everything else line by line</string>
+    <string name="layout_in_place">Line by line</string>
+    <string name="layout_in_place_desc">Like Chrome: for signs and screenshots</string>
+    <string name="layout_reflow">By paragraph</string>
+    <string name="layout_reflow_desc">Text flows inside the bubble: for manga and comics</string>
+    <string name="settings_section_style">Overlay style</string>
+    <string name="style_erase">How to erase the original text</string>
+    <string name="erase_patch">Google background</string>
+    <string name="erase_fill">Fill</string>
+    <string name="style_outline">Text outline</string>
+    <string name="outline_none">None</string>
+    <string name="outline_thin">Thin</string>
+    <string name="outline_bold">Bold</string>
+    <string name="style_font">Font</string>
+    <string name="font_system">System</string>
+    <string name="font_mono">Mono</string>
+    <string name="style_vertical">Vertical text (Japanese, Chinese)</string>
+    <string name="vertical_keep">Columns</string>
+    <string name="vertical_horizontal">Rows</string>
+    <string name="style_text_size">Text size</string>
+    <string name="style_min_size">Minimum size</string>
+    <string name="settings_opaque">Opaque translation</string>
+    <string name="settings_opaque_on">On: the translation fully covers the original</string>
+    <string name="settings_opaque_off">Off: in the Auto and Area modes the original shows through. Turn on “Seenly” in Accessibility; if it is greyed out, allow restricted settings in the app info</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="theme_system">Same as system</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="settings_ui_language">App language</string>
+    <string name="ui_language_system">System</string>
+    <string name="settings_section_app">App</string>
+    <string name="settings_export">Export settings</string>
+    <string name="settings_export_desc">All settings and translator keys to a .json file. The keys are in plain text — don’t share the file</string>
+    <string name="settings_import">Import settings</string>
+    <string name="settings_import_desc">Replace the current settings with an exported file</string>
+    <string name="settings_about_desc">Version, privacy, licences</string>
+    <string name="translators_none">None enabled</string>
+
+    <!-- Translators -->
+    <string name="translators_intro">For text you translate on its own or select on an image. Images are always translated by Lens.</string>
+    <string name="translators_failover">If a translator doesn’t answer, try the next</string>
+    <string name="translators_failover_desc">Only enabled translators see the text</string>
+    <string name="translators_enabled">Enabled — in this order</string>
+    <string name="translators_available">Available</string>
+    <string name="translators_needs_setup">Needs a key or address — tap to set it</string>
+    <string name="translators_with_key">Needs a key</string>
+    <string name="translators_no_key">No key</string>
+    <string name="translators_no_options">No settings.</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
+    <string name="engine_google">No key. Dictionary and transliteration</string>
+    <string name="engine_bing">No key. Microsoft, up to 1000 characters at a time</string>
+    <string name="engine_yandex">No key. Dictionary for words and short phrases</string>
+    <string name="engine_deepl_web">No key, like the DeepL app. Not available in every country</string>
+    <string name="engine_lara">No key. Neural translation by Translated</string>
+    <string name="engine_modernmt">No key. Adaptive translation by Translated</string>
+    <string name="engine_mymemory">No key, 5000 characters a day. Needs the source language</string>
+    <string name="engine_lingva">No key. A Google mirror through a public server</string>
+    <string name="engine_deepl">Official DeepL API, needs a key (a free one works too)</string>
+    <string name="engine_deeplx">Your DeepLX server</string>
+    <string name="engine_yandex_cloud">Yandex Cloud Translate, needs an API key</string>
+    <string name="engine_libretranslate">Your own or a public LibreTranslate server</string>
+    <string name="engine_openai">Any model with an OpenAI-compatible API: key, address, model</string>
+
+    <!-- About -->
+    <string name="about_title">About</string>
+    <string name="about_version">Seenly · version %1$s</string>
+    <string name="about_intro">Translation and text recognition for images, screenshots and camera photos. An open-source Kotlin Multiplatform project.</string>
+    <string name="about_unofficial">Unofficial app</string>
+    <string name="about_unofficial_1">This is an independent project. It is not affiliated with, endorsed or supported by Google LLC. Google, Google Lens and Google Translate are trademarks of Google LLC; they are named here only to describe which services the app works with.</string>
+    <string name="about_unofficial_2">Recognition, translation and search are done by Google services and the other translators you turned on. How they work, whether they are available and their terms do not depend on this app and may change at any time.</string>
+    <string name="about_data">What is sent where</string>
+    <string name="about_data_1">• The image you open or take is sent to Google Lens for recognition and translation.</string>
+    <string name="about_data_2">• Text you translate on its own goes to the translator you chose.</string>
+    <string name="about_data_3">• Search results open in your browser, with its own cookies and settings.</string>
+    <string name="about_data_4">• History is stored only on this device; the app has no servers or analytics of its own.</string>
+    <string name="about_data_5">• The Seenly accessibility service (if you turned it on) does not read windows or watch what you do: it only draws the screen translation over other apps.</string>
+    <string name="about_data_6">• Don’t open anything here that you aren’t ready to share with these services.</string>
+    <string name="about_source">Source code and licences</string>
+    <string name="about_author">Author: bropines. The app uses open-source libraries; their licences are below.</string>
+    <string name="about_licences_button">Open-source licences</string>
+    <string name="licences_title">Licences</string>
+
+    <!-- History -->
+    <string name="history_clear">Clear history</string>
+    <string name="history_empty">Translated images will appear here. They are stored only on this phone.</string>
+    <string name="history_nothing_found">Nothing found</string>
+    <string name="history_search">Search text and translations</string>
+    <string name="history_clear_title">Clear history?</string>
+    <string name="history_clear_text">All saved images and translations will be deleted. This can’t be undone.</string>
+    <string name="ago_now">just now</string>
+    <plurals name="ago_minutes">
+        <item quantity="one">%1$d min ago</item>
+        <item quantity="other">%1$d min ago</item>
+    </plurals>
+    <plurals name="ago_hours">
+        <item quantity="one">%1$d h ago</item>
+        <item quantity="other">%1$d h ago</item>
+    </plurals>
+    <plurals name="ago_days">
+        <item quantity="one">%1$d day ago</item>
+        <item quantity="other">%1$d days ago</item>
+    </plurals>
+
+    <!-- Text translation -->
+    <string name="text_input_hint">Type or paste text</string>
+    <string name="text_others_failed">%1$s · the others didn’t answer</string>
+    <string name="text_more_variants">More options: %1$s</string>
+    <string name="error_same_language">The languages are the same</string>
+    <string name="error_missing_key">%1$s: needs a key — set it in the translator settings</string>
+    <string name="error_rate_limited">The services ask you to wait. Try again later or turn on another translator</string>
+    <string name="error_not_translated">Not translated: %1$s</string>
+    <string name="error_translation">Translation error</string>
+
+    <!-- Viewer -->
+    <string name="viewer_show_translation">Show translation</string>
+    <string name="viewer_hide_translation">Hide translation</string>
+    <string name="viewer_translating_to">Translating into %1$s…</string>
+    <string name="viewer_recognising">Recognising text…</string>
+    <string name="viewer_mode_search">Search</string>
+    <string name="viewer_search_hint">Circle something with your finger or tap a dot to open a Google search</string>
+    <string name="viewer_whole_image">Whole image</string>
+    <string name="viewer_ask_ai">Ask AI</string>
+    <string name="viewer_all_text">All text</string>
+    <string name="viewer_as_image">As image</string>
+    <string name="viewer_searching">Searching Google…</string>
+    <string name="ask_ai_title">Ask AI about the image</string>
+    <string name="ask_ai_placeholder">For example: what manga is this?</string>
+    <string name="ask_ai_region_only">Only about the circled area</string>
+    <string name="ask_ai_note">Google AI Mode opens in the browser.</string>
+    <string name="ask_ai_default_question">What is in this image?</string>
+    <string name="ask_ai_ask">Ask</string>
+    <string name="page_open_failed">Couldn’t open</string>
+    <string name="quick_open_in_translator">In translator</string>
+    <string name="paragraph_original_language">Original · %1$s</string>
+    <string name="paragraph_translation_language">Translation · %1$s</string>
+    <string name="search_google">Search Google</string>
+    <string name="text_view_both">Both</string>
+    <string name="copy_all">Copy all</string>
+    <string name="copy_paragraph">Copy paragraph</string>
+    <string name="open_in_translator">Open in translator</string>
+    <string name="error_no_file_access">No access to the file. Open it with “Share” again.</string>
+    <string name="error_no_connection">Can’t reach Google. Check your internet connection.</string>
+    <string name="error_timeout">Google is taking too long to answer. Try again.</string>
+    <string name="error_file_not_found">File not found.</string>
+    <string name="error_generic">Didn’t work: %1$s</string>
+    <string name="error_lens">Lens error</string>
+    <string name="error_lens_rate_limited">Lens asks you to wait (429)</string>
+    <string name="error_lens_http">Lens error: HTTP %1$d</string>
+
+    <!-- Camera -->
+    <string name="camera_snapshot">Photo</string>
+    <string name="camera_desktop">The camera is in the phone app.</string>
+    <string name="camera_permission">Camera access is needed to translate on the fly.</string>
+    <string name="camera_allow">Allow</string>
+    <string name="camera_from_gallery">From gallery</string>
+    <string name="camera_flash">Flash</string>
+    <string name="camera_hint">Point at text and tap</string>
+    <string name="camera_capture_failed">Couldn’t take the photo: %1$s</string>
+    <string name="camera_shoot">Take photo</string>
+    <string name="camera_password">Password</string>
+
+    <!-- Screen translation bubble menu -->
+    <string name="bubble_mode_screen">Screen</string>
+    <string name="bubble_mode_area">Area</string>
+    <string name="bubble_desc_screen">Tapping the bubble translates what is on screen now. Tap anywhere to remove the translation.</string>
+    <string name="bubble_desc_live">Translates on its own as soon as the picture stops; while you scroll, the translation is hidden. Tap the bubble to pause.</string>
+    <string name="bubble_desc_area">Translates only inside the frame, whenever its content changes. The frame can be moved and resized.</string>
+    <string name="bubble_turn_off">Turn off</string>
+    <string name="bubble_done">Done</string>
+    <string name="bubble_hold_hint">Hold the bubble to open this menu</string>
+    <string name="bubble_back">‹ Back</string>
+
+    <!-- Language names, in the UI language (the native names come from Languages). -->
+    <string name="lang_ru">Russian</string>
+    <string name="lang_en">English</string>
+    <string name="lang_ja">Japanese</string>
+    <string name="lang_ko">Korean</string>
+    <string name="lang_zh_cn">Chinese (Simplified)</string>
+    <string name="lang_zh_tw">Chinese (Traditional)</string>
+    <string name="lang_uk">Ukrainian</string>
+    <string name="lang_be">Belarusian</string>
+    <string name="lang_kk">Kazakh</string>
+    <string name="lang_de">German</string>
+    <string name="lang_fr">French</string>
+    <string name="lang_es">Spanish</string>
+    <string name="lang_it">Italian</string>
+    <string name="lang_pt">Portuguese</string>
+    <string name="lang_pl">Polish</string>
+    <string name="lang_cs">Czech</string>
+    <string name="lang_nl">Dutch</string>
+    <string name="lang_sv">Swedish</string>
+    <string name="lang_fi">Finnish</string>
+    <string name="lang_no">Norwegian</string>
+    <string name="lang_da">Danish</string>
+    <string name="lang_tr">Turkish</string>
+    <string name="lang_el">Greek</string>
+    <string name="lang_iw">Hebrew</string>
+    <string name="lang_ar">Arabic</string>
+    <string name="lang_fa">Persian</string>
+    <string name="lang_hi">Hindi</string>
+    <string name="lang_th">Thai</string>
+    <string name="lang_vi">Vietnamese</string>
+    <string name="lang_id">Indonesian</string>
+    <string name="lang_ms">Malay</string>
+    <string name="lang_tl">Filipino</string>
+    <string name="lang_hu">Hungarian</string>
+    <string name="lang_ro">Romanian</string>
+    <string name="lang_bg">Bulgarian</string>
+    <string name="lang_sr">Serbian</string>
+    <string name="lang_ka">Georgian</string>
+    <string name="lang_hy">Armenian</string>
+    <string name="lang_az">Azerbaijani</string>
+    <string name="lang_uz">Uzbek</string>
+</resources>

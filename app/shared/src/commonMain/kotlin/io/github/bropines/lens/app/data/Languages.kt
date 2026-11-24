@@ -49,8 +49,8 @@ object Languages {
 
     private val byCode = all.associateBy { it.code }
 
-    fun nameOf(code: String?): String = when {
-        code.isNullOrEmpty() -> "Авто"
-        else -> byCode[code]?.nativeName ?: code
-    }
+    /** The language's own name, or the code for one not in the list. "Auto" is the UI's to say: see languageName. */
+    fun nativeName(code: String): String = byCode[code]?.nativeName ?: code
+
+    fun englishName(code: String): String = byCode[code]?.englishName ?: code
 }

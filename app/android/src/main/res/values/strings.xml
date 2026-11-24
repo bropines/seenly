@@ -1,8 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- English, the default. Russian is in values-ru. The app's screens take their strings from
+     app/shared's Compose resources; these are the ones Android itself shows. -->
 <resources>
-    <string name="app_name">Seenly</string>
-    <string name="share_label">Перевести в Seenly</string>
-    <string name="accessibility_label">Перевод экрана без просвечивания</string>
-    <string name="accessibility_summary">Непрозрачный перевод поверх других приложений</string>
-    <string name="accessibility_description">Позволяет переводу экрана полностью закрывать исходный текст, а касаниям при этом проходить к приложению под ним. Служба не читает содержимое окон и не следит за действиями: она только рисует перевод, который вы сами запустили пузырём.</string>
+    <string name="app_name" translatable="false">Seenly</string>
+    <string name="share_label">Translate in Seenly</string>
+    <string name="accessibility_label">Opaque screen translation</string>
+    <string name="accessibility_summary">Opaque translation over other apps</string>
+    <string name="accessibility_description">Lets the screen translation fully cover the original text while touches still reach the app below it. The service does not read window content or watch what you do: it only draws the translation you started with the bubble.</string>
+
+    <!-- Screen translation -->
+    <string name="screen_channel">Screen translation</string>
+    <string name="screen_notification_title">Screen translation is on</string>
+    <string name="screen_notification_text">Tap the bubble to translate, hold it for the menu</string>
+    <string name="screen_notification_stop">Stop</string>
+    <string name="screen_accessibility_off">Seenly accessibility was turned off, so screen translation stopped</string>
+    <string name="screen_start_failed">Couldn’t turn on screen translation: %1$s</string>
+    <string name="screen_capture_failed">Couldn’t capture the screen</string>
+    <string name="screen_no_text">No text to translate was found</string>
+    <string name="screen_translate_failed">Couldn’t translate: %1$s</string>
+    <string name="screen_overlay_required">The “Display over other apps” permission is needed</string>
+    <string name="screen_overlay_allow">Allow Seenly to display over other apps</string>
+    <string name="screen_capture_denied">Without access to the screen there is nothing to translate</string>
+    <string name="screen_capture_unavailable">The system wouldn’t let the app ask to record the screen</string>
+
+    <string name="copied">Copied</string>
 </resources>

@@ -41,12 +41,15 @@ import io.github.bropines.lens.app.ui.home.HomeScreen
 import io.github.bropines.lens.app.ui.settings.SettingsScreen
 import io.github.bropines.lens.app.ui.text.TextTranslateScreen
 import io.github.bropines.lens.app.ui.text.TextTranslateViewModel
+import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
-enum class Tab(val label: String, val icon: ImageVector, val selectedIcon: ImageVector) {
-    Images("Картинки", Icons.Outlined.Image, Icons.Rounded.Image),
-    History("История", Icons.Outlined.History, Icons.Rounded.History),
-    Text("Текст", Icons.Outlined.Translate, Icons.Rounded.Translate),
-    Settings("Настройки", Icons.Outlined.Settings, Icons.Rounded.Settings),
+enum class Tab(val label: StringResource, val icon: ImageVector, val selectedIcon: ImageVector) {
+    Images(Res.string.tab_images, Icons.Outlined.Image, Icons.Rounded.Image),
+    History(Res.string.tab_history, Icons.Outlined.History, Icons.Rounded.History),
+    Text(Res.string.tab_text, Icons.Outlined.Translate, Icons.Rounded.Translate),
+    Settings(Res.string.tab_settings, Icons.Outlined.Settings, Icons.Rounded.Settings),
 }
 
 /**
@@ -77,7 +80,7 @@ fun MainScreen(
                         shape = MaterialTheme.shapes.extraLarge,
                         elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
                         modifier = Modifier.size(64.dp),
-                    ) { Icon(Icons.Rounded.PhotoCamera, contentDescription = "Камера", modifier = Modifier.size(30.dp)) }
+                    ) { Icon(Icons.Rounded.PhotoCamera, contentDescription = stringResource(Res.string.camera), modifier = Modifier.size(30.dp)) }
                 }
                 DockItem(Tab.Text, tab, onTab)
                 DockItem(Tab.Settings, tab, onTab)
@@ -98,7 +101,7 @@ fun MainScreen(
                     Tab.Text -> TextTranslateScreen(textVm, graph.services, onBack = null)
                     Tab.Settings -> SettingsScreen(
                         graph.settings, settings, onBack = null, onAbout = onOpenAbout, onTranslators = onOpenTranslators,
-                        translatorsSummary = settings.translators.enabled.joinToString(" → ") { graph.translator.nameOf(it) }.ifEmpty { "Ни один не включён" },
+                        translatorsSummary = settings.translators.enabled.joinToString(" → ") { graph.translator.nameOf(it) }.ifEmpty { stringResource(Res.string.translators_none) },
                         screen = graph.services.screenTranslate,
                     )
                 }
@@ -113,6 +116,6 @@ private fun DockItem(item: Tab, current: Tab, onTab: (Tab) -> Unit) {
         selected = item == current,
         onClick = { onTab(item) },
         icon = { Icon(if (item == current) item.selectedIcon else item.icon, contentDescription = null) },
-        label = { Text(item.label, maxLines = 1) },
+        label = { Text(stringResource(item.label), maxLines = 1) },
     )
 }

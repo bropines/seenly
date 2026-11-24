@@ -27,7 +27,11 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.FilledTonalIconToggleButton
-import io.github.bropines.lens.app.data.Languages
+import io.github.bropines.lens.app.ui.components.languageName
+import io.github.bropines.lens.app.ui.UiText
+import io.github.bropines.lens.app.ui.asString
+import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.material.icons.rounded.ImageSearch
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
@@ -230,7 +234,7 @@ fun ViewerScreen(
         ) {
             ScanStatus(
                 current,
-                refreshingTo = if (pager.currentPage in stale) Languages.nameOf(settings.targetLanguage) else null,
+                refreshingTo = if (pager.currentPage in stale) languageName(settings.targetLanguage) else null,
                 onRetry = { vm.retry(pager.currentPage) },
             )
             SearchStatus(searching, searchError, onDismiss = vm::dismissSearchError)
@@ -253,7 +257,7 @@ fun ViewerScreen(
                     ) {
                         Icon(
                             if (overlayHidden) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
-                            contentDescription = if (overlayHidden) "Показать перевод" else "Скрыть перевод",
+                            contentDescription = stringResource(if (overlayHidden) Res.string.viewer_show_translation else Res.string.viewer_hide_translation),
                             modifier = Modifier.size(28.dp),
                         )
                     }
@@ -328,7 +332,7 @@ private fun ViewerTopBar(
 ) {
     Column(Modifier.fillMaxWidth().background(Scrim).statusBarsPadding().padding(bottom = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Назад", tint = Color.White) }
+            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.back), tint = Color.White) }
             Column(Modifier.weight(1f)) {
                 Text(title, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
                 counter?.let { Text(it, color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelMedium) }
@@ -348,20 +352,20 @@ private fun ScanStatus(state: PageState?, refreshingTo: String?, onRetry: () -> 
             is PageState.Ready -> Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.padding(12.dp)) {
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     LoadingIndicator(Modifier.size(28.dp))
-                    Text("Перевожу на $language…", Modifier.padding(start = 8.dp))
+                    Text(stringResource(Res.string.viewer_translating_to, language), Modifier.padding(start = 8.dp))
                 }
             }
             is PageState.Failed -> Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.padding(12.dp)) {
                 Row(Modifier.padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Rounded.ErrorOutline, contentDescription = null)
-                    Text(state.message, maxLines = 2, modifier = Modifier.weight(1f, fill = false))
-                    Button(onClick = onRetry) { Text("Повторить") }
+                    Text(state.message.asString(), maxLines = 2, modifier = Modifier.weight(1f, fill = false))
+                    Button(onClick = onRetry) { Text(stringResource(Res.string.retry)) }
                 }
             }
             else -> Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.padding(12.dp)) {
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     LoadingIndicator(Modifier.size(28.dp))
-                    Text("Распознаю текст…", Modifier.padding(start = 8.dp))
+                    Text(stringResource(Res.string.viewer_recognising), Modifier.padding(start = 8.dp))
                 }
             }
         }
@@ -397,8 +401,8 @@ private fun ViewerBottomPanel(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
                 // The original is the eye in the top bar, not a mode: it works over any of these.
                 val modes = listOf(
-                    Triple(OverlayMode.Translated, "Перевод", Icons.Rounded.Translate),
-                    Triple(OverlayMode.TextBoxes, "Текст", Icons.Rounded.TextFields),
+                    Triple(OverlayMode.Translated, stringResource(Res.string.translation), Icons.Rounded.Translate),
+                    Triple(OverlayMode.TextBoxes, stringResource(Res.string.tab_text), Icons.Rounded.TextFields),
                 )
                 modes.forEachIndexed { index, (value, label, icon) ->
                     ModeButton(
@@ -412,7 +416,7 @@ private fun ViewerBottomPanel(
                     )
                 }
                 ModeButton(
-                    label = "Поиск",
+                    label = stringResource(Res.string.viewer_mode_search),
                     icon = Icons.Rounded.ImageSearch,
                     checked = searchMode,
                     onClick = onSearchMode,
@@ -423,7 +427,7 @@ private fun ViewerBottomPanel(
             }
             if (searchMode) {
                 Text(
-                    "Обведите что-нибудь пальцем или нажмите на точку — откроется поиск Google",
+                    stringResource(Res.string.viewer_search_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 4.dp),
@@ -433,28 +437,28 @@ private fun ViewerBottomPanel(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 val cell = Modifier.weight(1f)
                 if (searchMode) {
-                    ActionChip(Icons.Rounded.ImageSearch, "Вся картинка", true, onSearchWhole, cell)
-                    ActionChip(Icons.Rounded.AutoAwesome, "Спросить ИИ", true, onAskAi, cell)
-                    ActionChip(Icons.Rounded.Notes, "Весь текст", hasText, onShowText, cell)
+                    ActionChip(Icons.Rounded.ImageSearch, stringResource(Res.string.viewer_whole_image), true, onSearchWhole, cell)
+                    ActionChip(Icons.Rounded.AutoAwesome, stringResource(Res.string.viewer_ask_ai), true, onAskAi, cell)
+                    ActionChip(Icons.Rounded.Notes, stringResource(Res.string.viewer_all_text), hasText, onShowText, cell)
                     return@Row
                 }
                 when (mode) {
                     OverlayMode.Translated -> {
-                        ActionChip(Icons.Rounded.ContentCopy, "Копировать", hasTranslation, onCopyTranslation, cell)
-                        ActionChip(Icons.Rounded.AddPhotoAlternate, "Картинкой", canExportImage, onExportImage, cell)
-                        ActionChip(Icons.Rounded.Share, "Поделиться", hasText, onShareText, cell)
+                        ActionChip(Icons.Rounded.ContentCopy, stringResource(Res.string.copy), hasTranslation, onCopyTranslation, cell)
+                        ActionChip(Icons.Rounded.AddPhotoAlternate, stringResource(Res.string.viewer_as_image), canExportImage, onExportImage, cell)
+                        ActionChip(Icons.Rounded.Share, stringResource(Res.string.share), hasText, onShareText, cell)
                     }
                     OverlayMode.TextBoxes -> {
-                        ActionChip(Icons.Rounded.SelectAll, "Выделить всё", hasText, onSelectAll, cell)
-                        ActionChip(Icons.Rounded.ContentCopy, "Копировать", hasText, onCopyOriginal, cell)
-                        ActionChip(Icons.Rounded.Share, "Поделиться", hasText, onShareText, cell)
+                        ActionChip(Icons.Rounded.SelectAll, stringResource(Res.string.select_all), hasText, onSelectAll, cell)
+                        ActionChip(Icons.Rounded.ContentCopy, stringResource(Res.string.copy), hasText, onCopyOriginal, cell)
+                        ActionChip(Icons.Rounded.Share, stringResource(Res.string.share), hasText, onShareText, cell)
                     }
                     OverlayMode.Original -> {
-                        ActionChip(Icons.Rounded.ContentCopy, "Копировать", hasText, onCopyOriginal, cell)
-                        ActionChip(Icons.Rounded.Share, "Поделиться", hasText, onShareText, cell)
+                        ActionChip(Icons.Rounded.ContentCopy, stringResource(Res.string.copy), hasText, onCopyOriginal, cell)
+                        ActionChip(Icons.Rounded.Share, stringResource(Res.string.share), hasText, onShareText, cell)
                     }
                 }
-                ActionChip(Icons.Rounded.Notes, "Весь текст", hasText, onShowText, cell)
+                ActionChip(Icons.Rounded.Notes, stringResource(Res.string.viewer_all_text), hasText, onShowText, cell)
             }
         }
     }
@@ -491,7 +495,7 @@ private fun ModeButton(
 
 /** A visual search on its way to the browser, or why it did not get there. */
 @Composable
-private fun SearchStatus(searching: Boolean, error: String?, onDismiss: () -> Unit) {
+private fun SearchStatus(searching: Boolean, error: UiText?, onDismiss: () -> Unit) {
     AnimatedVisibility(searching || error != null, enter = FastIn, exit = FastOut) {
         Surface(
             shape = MaterialTheme.shapes.extraLarge,
@@ -501,11 +505,11 @@ private fun SearchStatus(searching: Boolean, error: String?, onDismiss: () -> Un
             Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (error != null) {
                     Icon(Icons.Rounded.ErrorOutline, contentDescription = null)
-                    Text(error, Modifier.padding(start = 8.dp).weight(1f, fill = false), maxLines = 2)
-                    IconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, contentDescription = "Скрыть") }
+                    Text(error.asString(), Modifier.padding(start = 8.dp).weight(1f, fill = false), maxLines = 2)
+                    IconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, contentDescription = stringResource(Res.string.hide)) }
                 } else {
                     LoadingIndicator(Modifier.size(28.dp))
-                    Text("Ищу в Google…", Modifier.padding(start = 8.dp))
+                    Text(stringResource(Res.string.viewer_searching), Modifier.padding(start = 8.dp))
                 }
             }
         }
@@ -517,35 +521,36 @@ private fun SearchStatus(searching: Boolean, error: String?, onDismiss: () -> Un
 private fun AskAiDialog(hasRegion: Boolean, onDismiss: () -> Unit, onAsk: (String, Boolean) -> Unit) {
     var question by remember { mutableStateOf("") }
     var useRegion by remember { mutableStateOf(hasRegion) }
+    val defaultQuestion = stringResource(Res.string.ask_ai_default_question)
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Rounded.AutoAwesome, contentDescription = null) },
-        title = { Text("Спросить ИИ о картинке") },
+        title = { Text(stringResource(Res.string.ask_ai_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = question,
                     onValueChange = { question = it },
-                    placeholder = { Text("Например: что это за манга?") },
+                    placeholder = { Text(stringResource(Res.string.ask_ai_placeholder)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 if (hasRegion) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = useRegion, onCheckedChange = { useRegion = it })
-                        Text("Только про обведённую область")
+                        Text(stringResource(Res.string.ask_ai_region_only))
                     }
                 }
                 Text(
-                    "Откроется Google AI Mode в браузере.",
+                    stringResource(Res.string.ask_ai_note),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = { onAsk(question.ifBlank { "Что на этой картинке?" }, useRegion) }) { Text("Спросить") }
+            TextButton(onClick = { onAsk(question.ifBlank { defaultQuestion }, useRegion) }) { Text(stringResource(Res.string.ask_ai_ask)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) } },
     )
 }
 

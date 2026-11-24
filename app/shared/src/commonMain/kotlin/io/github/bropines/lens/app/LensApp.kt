@@ -44,6 +44,9 @@ import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
+import io.github.bropines.lens.app.resources.Res
+import io.github.bropines.lens.app.resources.camera_snapshot
+import org.jetbrains.compose.resources.stringResource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
@@ -136,10 +139,11 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
                             backStack[backStack.lastIndex] = Route.Viewer
                         }
                     }
+                    val snapshot = stringResource(Res.string.camera_snapshot)
                     CameraScreen(
                         services = graph.services,
                         onCaptured = { file ->
-                            graph.gallery.openItems(listOf(GalleryItem(file, "Снимок")), "Снимок")
+                            graph.gallery.openItems(listOf(GalleryItem(file, snapshot)), snapshot)
                             // Replace the camera: back from the photo goes home, like Lens.
                             backStack[backStack.lastIndex] = Route.Viewer
                         },

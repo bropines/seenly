@@ -94,7 +94,8 @@ dependencies {
 
 compose.resources {
     packageOfResClass = "io.github.bropines.lens.app.resources"
-    publicResClass = false
+    // Public: the Android app's screen-translator menu shows the same strings.
+    publicResClass = true
 }
 
 tasks.withType<Test>().configureEach {

@@ -6,6 +6,9 @@ import io.github.bropines.lens.app.data.AppSettings
 import io.github.bropines.lens.app.data.Gallery
 import io.github.bropines.lens.app.data.ScanRepository
 import io.github.bropines.lens.app.data.SettingsRepository
+import io.github.bropines.lens.app.resources.*
+import io.github.bropines.lens.app.ui.UiText
+import io.github.bropines.lens.app.ui.uiText
 import io.github.bropines.lens.protocol.DetectedObject
 import io.github.bropines.lens.protocol.LensException
 import io.github.bropines.lens.protocol.LensSearchSession
@@ -24,21 +27,24 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** A message a person can act on, instead of an exception's text. */
-internal fun friendlyError(e: Throwable): String {
+internal fun friendlyError(e: Throwable): UiText {
     val name = e::class.simpleName.orEmpty()
     return when {
-        "Security" in name || "Permission" in name -> "Нет доступа к файлу. Откройте его через «Поделиться» ещё раз."
-        "UnknownHost" in name || "Connect" in name || "Socket" in name -> "Нет связи с Google. Проверьте интернет."
-        "Timeout" in name -> "Google отвечает слишком долго. Повторите."
-        "FileNotFound" in name || "NoSuch" in name -> "Файл не найден."
-        else -> "Не получилось: ${e.message ?: name}"
+        "Security" in name || "Permission" in name -> uiText(Res.string.error_no_file_access)
+        "UnknownHost" in name || "Connect" in name || "Socket" in name -> uiText(Res.string.error_no_connection)
+        "Timeout" in name -> uiText(Res.string.error_timeout)
+        "FileNotFound" in name || "NoSuch" in name -> uiText(Res.string.error_file_not_found)
+        else -> uiText(Res.string.error_generic, e.message ?: name)
     }
 }
+
+/** Lens's own message when it gave one. */
+private fun lensError(e: LensException): UiText = e.message?.let(UiText::Plain) ?: uiText(Res.string.error_lens)
 
 sealed interface PageState {
     data object Loading : PageState
     data class Ready(val result: ScanResult) : PageState
-    data class Failed(val message: String) : PageState
+    data class Failed(val message: UiText) : PageState
 }
 
 class ViewerViewModel(
@@ -98,8 +104,8 @@ class ViewerViewModel(
     private val _searching = MutableStateFlow(false)
     /** A visual search is being prepared (upload, session, interaction). */
     val searching: StateFlow<Boolean> = _searching.asStateFlow()
-    private val _searchError = MutableStateFlow<String?>(null)
-    val searchError: StateFlow<String?> = _searchError.asStateFlow()
+    private val _searchError = MutableStateFlow<UiText?>(null)
+    val searchError: StateFlow<UiText?> = _searchError.asStateFlow()
 
     private val _objects = MutableStateFlow<Map<Int, List<DetectedObject>>>(emptyMap())
     /** Objects Lens found per page, for the tappable dots in search mode. */
@@ -131,7 +137,7 @@ class ViewerViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _searchError.value = if (e is LensException) e.message ?: "Ошибка Lens" else friendlyError(e)
+                _searchError.value = if (e is LensException) lensError(e) else friendlyError(e)
             } finally {
                 _searching.value = false
             }
@@ -158,9 +164,9 @@ class ViewerViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: LensException.Http) {
-                PageState.Failed(if (e.status == 429) "Lens просит подождать (429)" else "Ошибка Lens: HTTP ${e.status}")
+                PageState.Failed(if (e.status == 429) uiText(Res.string.error_lens_rate_limited) else uiText(Res.string.error_lens_http, e.status))
             } catch (e: LensException) {
-                PageState.Failed(e.message ?: "Ошибка Lens")
+                PageState.Failed(lensError(e))
             } catch (e: Exception) {
                 PageState.Failed(friendlyError(e))
             }

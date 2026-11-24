@@ -46,6 +46,9 @@ import io.github.bropines.lens.translate.OptionSpec
 import io.github.bropines.lens.translate.OptionType
 import io.github.bropines.lens.translate.TranslationProvider
 import kotlinx.coroutines.launch
+import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * The text translators: which are on, in what order they are tried, and each
@@ -66,25 +69,25 @@ fun TranslatorsScreen(repository: SettingsRepository, settings: AppSettings, tra
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Переводчики") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Назад") } },
+                title = { Text(stringResource(Res.string.translators)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(Res.string.back)) } },
             )
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
             Text(
-                "Для текста, который вы переводите отдельно или выделяете на картинке. Картинки всегда переводит Lens.",
+                stringResource(Res.string.translators_intro),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(16.dp),
             )
             ListItem(
-                headlineContent = { Text("Если переводчик не ответил — следующий") },
-                supportingContent = { Text("Текст увидят только включённые переводчики") },
+                headlineContent = { Text(stringResource(Res.string.translators_failover)) },
+                supportingContent = { Text(stringResource(Res.string.translators_failover_desc)) },
                 trailingContent = { Switch(checked = prefs.failOver, onCheckedChange = { on -> update { it.copy(failOver = on) } }) },
             )
 
-            SectionTitle("Включены — в этом порядке")
+            SectionTitle(stringResource(Res.string.translators_enabled))
             enabled.forEachIndexed { index, provider ->
                 EngineRow(
                     provider = provider,
@@ -96,7 +99,7 @@ fun TranslatorsScreen(repository: SettingsRepository, settings: AppSettings, tra
                     onDown = if (index < enabled.lastIndex) ({ update { it.copy(enabled = it.enabled.move(index, index + 1)) } }) else null,
                 )
             }
-            if (disabled.isNotEmpty()) SectionTitle("Доступны")
+            if (disabled.isNotEmpty()) SectionTitle(stringResource(Res.string.translators_available))
             disabled.forEach { provider ->
                 EngineRow(
                     provider = provider,
@@ -129,20 +132,20 @@ fun TranslatorsScreen(repository: SettingsRepository, settings: AppSettings, tra
 private fun List<String>.move(from: Int, to: Int): List<String> = toMutableList().apply { add(to, removeAt(from)) }
 
 /** One line per engine in the app's language; the providers' own descriptions are English. */
-private val DESCRIPTIONS = mapOf(
-    "google" to "Без ключа. Словарь и транслитерация",
-    "bing" to "Без ключа. Microsoft, до 1000 символов за раз",
-    "yandex" to "Без ключа. Словарь для слов и коротких фраз",
-    "deepl-web" to "Без ключа, как приложение DeepL. Доступен не во всех странах",
-    "lara" to "Без ключа. Нейросетевой перевод Translated",
-    "modernmt" to "Без ключа. Адаптивный перевод Translated",
-    "mymemory" to "Без ключа, 5000 символов в день. Нужен язык оригинала",
-    "lingva" to "Без ключа. Зеркало Google через публичный сервер",
-    "deepl" to "Официальный API DeepL, нужен ключ (бесплатный тоже подходит)",
-    "deeplx" to "Ваш сервер DeepLX",
-    "yandex-cloud" to "Yandex Cloud Translate, нужен API-ключ",
-    "libretranslate" to "Свой или публичный сервер LibreTranslate",
-    "openai" to "Любая модель с OpenAI-совместимым API: ключ, адрес, модель",
+private val DESCRIPTIONS: Map<String, StringResource> = mapOf(
+    "google" to Res.string.engine_google,
+    "bing" to Res.string.engine_bing,
+    "yandex" to Res.string.engine_yandex,
+    "deepl-web" to Res.string.engine_deepl_web,
+    "lara" to Res.string.engine_lara,
+    "modernmt" to Res.string.engine_modernmt,
+    "mymemory" to Res.string.engine_mymemory,
+    "lingva" to Res.string.engine_lingva,
+    "deepl" to Res.string.engine_deepl,
+    "deeplx" to Res.string.engine_deeplx,
+    "yandex-cloud" to Res.string.engine_yandex_cloud,
+    "libretranslate" to Res.string.engine_libretranslate,
+    "openai" to Res.string.engine_openai,
 )
 
 @Composable
@@ -170,11 +173,11 @@ private fun EngineRow(
         supportingContent = {
             Text(
                 when {
-                    needsSetup -> "Нужен ключ или адрес — нажмите, чтобы задать"
-                    DESCRIPTIONS[provider.id] != null -> DESCRIPTIONS.getValue(provider.id)
+                    needsSetup -> stringResource(Res.string.translators_needs_setup)
+                    DESCRIPTIONS[provider.id] != null -> stringResource(DESCRIPTIONS.getValue(provider.id))
                     provider.description.isNotBlank() -> provider.description
-                    provider.needsCredentials -> "С ключом"
-                    else -> "Без ключа"
+                    provider.needsCredentials -> stringResource(Res.string.translators_with_key)
+                    else -> stringResource(Res.string.translators_no_key)
                 },
                 color = if (needsSetup) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
@@ -190,8 +193,8 @@ private fun EngineRow(
         trailingContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (on) {
-                    IconButton(onClick = { onUp?.invoke() }, enabled = onUp != null) { Icon(Icons.Rounded.KeyboardArrowUp, "Выше") }
-                    IconButton(onClick = { onDown?.invoke() }, enabled = onDown != null) { Icon(Icons.Rounded.KeyboardArrowDown, "Ниже") }
+                    IconButton(onClick = { onUp?.invoke() }, enabled = onUp != null) { Icon(Icons.Rounded.KeyboardArrowUp, stringResource(Res.string.move_up)) }
+                    IconButton(onClick = { onDown?.invoke() }, enabled = onDown != null) { Icon(Icons.Rounded.KeyboardArrowDown, stringResource(Res.string.move_down)) }
                 }
                 Switch(checked = on, onCheckedChange = { onToggle() })
             }
@@ -214,7 +217,7 @@ private fun EngineOptionsSheet(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(provider.name, style = MaterialTheme.typography.titleLarge)
-            if (provider.options.isEmpty()) Text("Настроек нет.")
+            if (provider.options.isEmpty()) Text(stringResource(Res.string.translators_no_options))
             provider.options.forEach { spec -> OptionField(spec, values[spec.key] ?: spec.default) { onChange(spec.key, it) } }
         }
     }

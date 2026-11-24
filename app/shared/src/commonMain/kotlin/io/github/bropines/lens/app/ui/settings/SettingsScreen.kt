@@ -84,6 +84,10 @@ import io.github.bropines.lens.app.data.SettingsRepository
 import io.github.bropines.lens.app.data.TextEngine
 import io.github.bropines.lens.app.data.ThemeMode
 import io.github.bropines.lens.app.ui.components.LanguagePickerSheet
+import io.github.bropines.lens.app.ui.components.languageName
+import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import kotlinx.coroutines.launch
 
 @Composable
@@ -104,7 +108,7 @@ fun SettingsScreen(
         if (file == null) return@rememberFileSaverLauncher
         scope.launch {
             val message = runCatching { file.writeString(repository.exportJson()) }
-                .fold({ "Настройки сохранены" }, { "Не удалось сохранить: ${it.message}" })
+                .fold({ getString(Res.string.settings_saved) }, { getString(Res.string.settings_save_failed, it.message.orEmpty()) })
             snackbar.showSnackbar(message)
         }
     }
@@ -113,7 +117,16 @@ fun SettingsScreen(
         if (file == null) return@rememberFilePickerLauncher
         scope.launch {
             val message = runCatching { repository.importJson(file.readString()) }
-                .fold({ "Настройки загружены" }, { if (it is IllegalArgumentException) "Это не файл настроек Seenly" else "Не удалось прочитать: ${it.message}" })
+                .fold(
+                    { getString(Res.string.settings_loaded) },
+                    {
+                        if (it is IllegalArgumentException) {
+                            getString(Res.string.settings_not_a_backup)
+                        } else {
+                            getString(Res.string.settings_read_failed, it.message.orEmpty())
+                        }
+                    },
+                )
             snackbar.showSnackbar(message)
         }
     }
@@ -123,89 +136,108 @@ fun SettingsScreen(
         contentWindowInsets = if (onBack == null) WindowInsets(0) else ScaffoldDefaults.contentWindowInsets,
         topBar = {
             TopAppBar(
-                title = { Text("Настройки") },
-                navigationIcon = { if (onBack != null) IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Назад") } },
+                title = { Text(stringResource(Res.string.tab_settings)) },
+                navigationIcon = { if (onBack != null) IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(Res.string.back)) } },
             )
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
-            Section("Перевод")
-            Setting(Icons.Rounded.Translate, "Переводить на", Languages.nameOf(settings.targetLanguage)) { picker = "target" }
-            Setting(Icons.Rounded.Language, "Язык оригинала", Languages.nameOf(settings.sourceLanguage)) { picker = "source" }
+            Section(stringResource(Res.string.settings_section_translation))
+            Setting(Icons.Rounded.Translate, stringResource(Res.string.settings_target), languageName(settings.targetLanguage)) { picker = "target" }
+            Setting(Icons.Rounded.Language, stringResource(Res.string.source_language), languageName(settings.sourceLanguage)) { picker = "source" }
             Setting(
                 Icons.Rounded.DocumentScanner,
-                "Подсказка для распознавания",
-                if (settings.ocrLanguage.isEmpty()) "Не указана — Lens определит сам" else Languages.nameOf(settings.ocrLanguage),
+                stringResource(Res.string.settings_ocr_hint),
+                if (settings.ocrLanguage.isEmpty()) stringResource(Res.string.settings_ocr_hint_none) else languageName(settings.ocrLanguage),
             ) { picker = "ocr" }
 
-            Section("Наложение перевода")
-            Choice(Icons.Rounded.AutoAwesome, "Автоматически", "Манга — по абзацам, остальное — строка в строку", settings.readingLayout == ReadingLayout.Auto) {
+            Section(stringResource(Res.string.settings_section_overlay))
+            Choice(Icons.Rounded.AutoAwesome, stringResource(Res.string.layout_auto), stringResource(Res.string.layout_auto_desc), settings.readingLayout == ReadingLayout.Auto) {
                 update { it.copy(readingLayout = ReadingLayout.Auto) }
             }
-            Choice(Icons.Rounded.ViewHeadline, "Строка в строку", "Как в Chrome: для вывесок и скриншотов", settings.readingLayout == ReadingLayout.InPlace) {
+            Choice(Icons.Rounded.ViewHeadline, stringResource(Res.string.layout_in_place), stringResource(Res.string.layout_in_place_desc), settings.readingLayout == ReadingLayout.InPlace) {
                 update { it.copy(readingLayout = ReadingLayout.InPlace) }
             }
-            Choice(Icons.Rounded.ChatBubbleOutline, "По абзацам", "Текст перетекает внутри пузыря: для манги и комиксов", settings.readingLayout == ReadingLayout.Reflow) {
+            Choice(Icons.Rounded.ChatBubbleOutline, stringResource(Res.string.layout_reflow), stringResource(Res.string.layout_reflow_desc), settings.readingLayout == ReadingLayout.Reflow) {
                 update { it.copy(readingLayout = ReadingLayout.Reflow) }
             }
 
-            Section("Стиль наложения")
+            Section(stringResource(Res.string.settings_section_style))
             val o = settings.overlay
             fun overlay(transform: (OverlayPrefs) -> OverlayPrefs) = update { it.copy(overlay = transform(it.overlay)) }
+            val auto = stringResource(Res.string.auto)
             Segmented(
-                Icons.Rounded.AutoFixHigh, "Как стирать исходный текст",
-                listOf(EraseChoice.Auto to "Авто", EraseChoice.Patch to "Фон Google", EraseChoice.Fill to "Заливка"),
+                Icons.Rounded.AutoFixHigh, stringResource(Res.string.style_erase),
+                listOf(EraseChoice.Auto to auto, EraseChoice.Patch to stringResource(Res.string.erase_patch), EraseChoice.Fill to stringResource(Res.string.erase_fill)),
                 o.erase,
             ) { v -> overlay { it.copy(erase = v) } }
             Segmented(
-                Icons.Rounded.BorderStyle, "Обводка текста",
-                listOf(OutlineChoice.Auto to "Авто", OutlineChoice.None to "Нет", OutlineChoice.Thin to "Тонкая", OutlineChoice.Bold to "Жирная"),
+                Icons.Rounded.BorderStyle, stringResource(Res.string.style_outline),
+                listOf(
+                    OutlineChoice.Auto to auto,
+                    OutlineChoice.None to stringResource(Res.string.outline_none),
+                    OutlineChoice.Thin to stringResource(Res.string.outline_thin),
+                    OutlineChoice.Bold to stringResource(Res.string.outline_bold),
+                ),
                 o.outline,
             ) { v -> overlay { it.copy(outline = v) } }
             Segmented(
-                Icons.Rounded.FontDownload, "Шрифт",
-                listOf(FontChoice.System to "Система", FontChoice.Sans to "Sans", FontChoice.Serif to "Serif", FontChoice.Mono to "Моно"),
+                Icons.Rounded.FontDownload, stringResource(Res.string.style_font),
+                listOf(
+                    FontChoice.System to stringResource(Res.string.font_system),
+                    FontChoice.Sans to "Sans",
+                    FontChoice.Serif to "Serif",
+                    FontChoice.Mono to stringResource(Res.string.font_mono),
+                ),
                 o.font,
             ) { v -> overlay { it.copy(font = v) } }
             Segmented(
-                Icons.Rounded.TextRotateVertical, "Вертикальный текст (японский, китайский)",
-                listOf(VerticalChoice.Auto to "Авто", VerticalChoice.Keep to "Столбцами", VerticalChoice.Horizontal to "Строками"),
+                Icons.Rounded.TextRotateVertical, stringResource(Res.string.style_vertical),
+                listOf(
+                    VerticalChoice.Auto to auto,
+                    VerticalChoice.Keep to stringResource(Res.string.vertical_keep),
+                    VerticalChoice.Horizontal to stringResource(Res.string.vertical_horizontal),
+                ),
                 o.vertical,
             ) { v -> overlay { it.copy(vertical = v) } }
             SliderSetting(
-                Icons.Rounded.FormatSize, "Размер текста", "${(o.textScale * 100).roundToInt()}%",
+                Icons.Rounded.FormatSize, stringResource(Res.string.style_text_size), "${(o.textScale * 100).roundToInt()}%",
                 value = o.textScale, range = 0.7f..1.3f, steps = 11,
             ) { v -> overlay { it.copy(textScale = (v * 20).roundToInt() / 20f) } }
             SliderSetting(
-                Icons.Rounded.TextFields, "Минимальный размер", if (o.minFontSp == 0) "Авто" else "${o.minFontSp} sp",
+                Icons.Rounded.TextFields, stringResource(Res.string.style_min_size), if (o.minFontSp == 0) auto else "${o.minFontSp} sp",
                 value = o.minFontSp.toFloat(), range = 0f..16f, steps = 15,
             ) { v -> overlay { it.copy(minFontSp = v.roundToInt()) } }
 
             if (screen != null) {
                 val opaque by screen.opaque.collectAsState()
-                Section("Перевод экрана")
+                Section(stringResource(Res.string.screen_translation))
                 Setting(
                     Icons.Rounded.Layers,
-                    "Перевод без просвечивания",
-                    if (opaque) {
-                        "Включено: перевод полностью закрывает оригинал"
-                    } else {
-                        "Выключено: в режимах «Авто» и «Область» оригинал просвечивает. " +
-                            "Включите «Seenly» в спецвозможностях; если пункт серый — " +
-                            "в сведениях о приложении разрешите ограниченные настройки"
-                    },
+                    stringResource(Res.string.settings_opaque),
+                    stringResource(if (opaque) Res.string.settings_opaque_on else Res.string.settings_opaque_off),
                 ) { screen.openOpaqueSettings() }
             }
 
-            Section("Перевод текста")
-            Setting(Icons.Rounded.GTranslate, "Переводчики", translatorsSummary, onTranslators)
+            Section(stringResource(Res.string.text_translation))
+            Setting(Icons.Rounded.GTranslate, stringResource(Res.string.translators), translatorsSummary, onTranslators)
 
-            Section("Оформление")
+            Section(stringResource(Res.string.settings_section_appearance))
+            // The app's own language. English and Russian are named natively, so each reads right whatever is chosen.
+            Segmented(
+                Icons.Rounded.Language, stringResource(Res.string.settings_ui_language),
+                listOf(
+                    null to stringResource(Res.string.ui_language_system),
+                    "en" to Languages.nativeName("en"),
+                    "ru" to Languages.nativeName("ru"),
+                ),
+                settings.uiLanguage,
+            ) { v -> update { it.copy(uiLanguage = v) } }
             ThemeMode.entries.forEach { mode ->
                 val label = when (mode) {
-                    ThemeMode.System -> "Как в системе"
-                    ThemeMode.Light -> "Светлая"
-                    ThemeMode.Dark -> "Тёмная"
+                    ThemeMode.System -> stringResource(Res.string.theme_system)
+                    ThemeMode.Light -> stringResource(Res.string.theme_light)
+                    ThemeMode.Dark -> stringResource(Res.string.theme_dark)
                 }
                 val icon = when (mode) {
                     ThemeMode.System -> Icons.Rounded.BrightnessAuto
@@ -215,13 +247,13 @@ fun SettingsScreen(
                 Choice(icon, label, null, settings.theme == mode) { update { it.copy(theme = mode) } }
             }
 
-            Section("Приложение")
+            Section(stringResource(Res.string.settings_section_app))
             Setting(
-                Icons.Rounded.Upload, "Экспорт настроек",
-                "Все настройки и ключи переводчиков в файл .json. Ключи там открытым текстом — не делитесь файлом",
+                Icons.Rounded.Upload, stringResource(Res.string.settings_export),
+                stringResource(Res.string.settings_export_desc),
             ) { exporter.launch(suggestedName = "lens-settings", extension = "json") }
-            Setting(Icons.Rounded.Download, "Импорт настроек", "Заменить текущие настройки файлом экспорта") { importer.launch() }
-            Setting(Icons.Rounded.Info, "О приложении", "Версия, конфиденциальность, лицензии", onAbout)
+            Setting(Icons.Rounded.Download, stringResource(Res.string.settings_import), stringResource(Res.string.settings_import_desc)) { importer.launch() }
+            Setting(Icons.Rounded.Info, stringResource(Res.string.about_title), stringResource(Res.string.settings_about_desc), onAbout)
         }
     }
 

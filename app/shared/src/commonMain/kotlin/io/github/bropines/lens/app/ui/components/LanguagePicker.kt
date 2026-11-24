@@ -38,8 +38,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.bropines.lens.app.data.Languages
+import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.stringResource
 
-/** "Auto → Русский": tap either side to change it. */
+/** "Auto → English": tap either side to change it. */
 @Composable
 fun LanguageBar(
     source: String?,
@@ -66,7 +68,7 @@ fun LanguageBar(
             modifier = Modifier.weight(1f).heightIn(min = 52.dp),
         ) {
             Icon(Icons.Rounded.Language, contentDescription = null, modifier = Modifier.size(20.dp))
-            Text(Languages.nameOf(source), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 8.dp))
+            Text(languageName(source), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 8.dp))
         }
         // With a fixed source the arrow swaps the pair; with "auto" there is nothing to swap.
         IconButton(
@@ -75,7 +77,7 @@ fun LanguageBar(
         ) {
             Icon(
                 if (source != null) Icons.Rounded.SwapHoriz else Icons.AutoMirrored.Rounded.ArrowForward,
-                contentDescription = if (source != null) "Поменять местами" else null,
+                contentDescription = if (source != null) stringResource(Res.string.language_swap) else null,
                 tint = content.copy(alpha = 0.8f),
             )
         }
@@ -86,7 +88,7 @@ fun LanguageBar(
             modifier = Modifier.weight(1f).heightIn(min = 52.dp),
         ) {
             Icon(Icons.Rounded.Translate, contentDescription = null, modifier = Modifier.size(20.dp))
-            Text(Languages.nameOf(target), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 8.dp))
+            Text(languageName(target), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 8.dp))
         }
     }
     when (picking) {
@@ -101,9 +103,11 @@ private enum class Side { Source, Target }
 @Composable
 fun LanguagePickerSheet(selected: String?, allowAuto: Boolean, onDismiss: () -> Unit, onPick: (String?) -> Unit) {
     var query by remember { mutableStateOf("") }
-    val filtered = remember(query) {
+    val localized = Languages.all.associate { it.code to localizedLanguageName(it.code) }
+    val filtered = remember(query, localized) {
         Languages.all.filter {
-            query.isBlank() || it.nativeName.contains(query, true) || it.englishName.contains(query, true) || it.code.startsWith(query, true)
+            query.isBlank() || it.nativeName.contains(query, true) || it.englishName.contains(query, true) ||
+                localized.getValue(it.code).contains(query, true) || it.code.startsWith(query, true)
         }
     }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
@@ -111,16 +115,16 @@ fun LanguagePickerSheet(selected: String?, allowAuto: Boolean, onDismiss: () -> 
             value = query,
             onValueChange = { query = it },
             leadingIcon = { Icon(Icons.Rounded.Search, null) },
-            placeholder = { Text("Язык") },
+            placeholder = { Text(stringResource(Res.string.language_search)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         )
         LazyColumn {
             if (allowAuto && query.isBlank()) {
-                item { LanguageRow("Определить автоматически", null, selected == null) { onPick(null) } }
+                item { LanguageRow(stringResource(Res.string.language_detect), null, selected == null) { onPick(null) } }
             }
             items(filtered, key = { it.code }) { language ->
-                LanguageRow(language.nativeName, language.englishName, language.code == selected) { onPick(language.code) }
+                LanguageRow(language.nativeName, localized.getValue(language.code), language.code == selected) { onPick(language.code) }
             }
         }
     }
@@ -132,7 +136,7 @@ private fun LanguageRow(title: String, subtitle: String?, checked: Boolean, onCl
         headlineContent = { Text(title) },
         supportingContent = subtitle?.let { { Text(it) } },
         trailingContent = if (checked) {
-            { Icon(Icons.Rounded.Check, contentDescription = "Выбран", tint = MaterialTheme.colorScheme.primary) }
+            { Icon(Icons.Rounded.Check, contentDescription = stringResource(Res.string.language_selected), tint = MaterialTheme.colorScheme.primary) }
         } else null,
         modifier = Modifier.clickable(onClick = onClick),
     )

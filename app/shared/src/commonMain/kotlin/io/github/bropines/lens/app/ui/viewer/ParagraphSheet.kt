@@ -1,5 +1,7 @@
 package io.github.bropines.lens.app.ui.viewer
 
+import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,7 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.bropines.lens.app.data.Languages
+import io.github.bropines.lens.app.ui.components.languageName
 import io.github.bropines.lens.app.platform.PlatformServices
 import io.github.bropines.lens.protocol.Paragraph
 
@@ -41,7 +43,9 @@ fun ParagraphSheet(
         ) {
             val translation = paragraph.translation
             Text(
-                "Оригинал" + (paragraph.language ?: translation?.sourceLanguage)?.let { " · ${Languages.nameOf(it)}" }.orEmpty(),
+                (paragraph.language ?: translation?.sourceLanguage)
+                    ?.let { stringResource(Res.string.paragraph_original_language, languageName(it)) }
+                    ?: stringResource(Res.string.original),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -49,7 +53,7 @@ fun ParagraphSheet(
             if (translation != null) {
                 HorizontalDivider()
                 Text(
-                    "Перевод · ${Languages.nameOf(translation.targetLanguage)}",
+                    stringResource(Res.string.paragraph_translation_language, languageName(translation.targetLanguage)),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -59,12 +63,12 @@ fun ParagraphSheet(
                 val compact = PaddingValues(horizontal = 10.dp)
                 FilledTonalButton(onClick = { services.copyText(paragraph.readableText()) }, contentPadding = compact, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Rounded.ContentCopy, null, Modifier.padding(end = 6.dp))
-                    Text("Оригинал", maxLines = 1)
+                    Text(stringResource(Res.string.original), maxLines = 1)
                 }
                 if (translation != null) {
                     FilledTonalButton(onClick = { services.copyText(translation.text) }, contentPadding = compact, modifier = Modifier.weight(1f)) {
                         Icon(Icons.Rounded.ContentCopy, null, Modifier.padding(end = 6.dp))
-                        Text("Перевод", maxLines = 1)
+                        Text(stringResource(Res.string.translation), maxLines = 1)
                     }
                 }
                 OutlinedButton(onClick = { onTranslateWithGoogle(paragraph.readableText()) }, contentPadding = compact, modifier = Modifier.weight(1f)) {

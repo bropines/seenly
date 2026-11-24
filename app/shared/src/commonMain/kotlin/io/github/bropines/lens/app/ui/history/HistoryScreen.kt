@@ -48,7 +48,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import io.github.bropines.lens.app.data.Languages
+import io.github.bropines.lens.app.ui.components.languageName
+import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import io.github.bropines.lens.app.data.history.HistoryEntry
 import io.github.bropines.lens.app.data.history.HistoryRepository
 import io.github.vinceglb.filekit.PlatformFile
@@ -69,10 +72,10 @@ fun HistoryScreen(history: HistoryRepository, onOpen: (HistoryEntry) -> Unit) {
         contentWindowInsets = WindowInsets(0),
         topBar = {
             TopAppBar(
-                title = { Text("История") },
+                title = { Text(stringResource(Res.string.tab_history)) },
                 actions = {
                     if (entries.isNotEmpty() && query.isBlank()) {
-                        IconButton(onClick = { confirmClear = true }) { Icon(Icons.Rounded.DeleteSweep, contentDescription = "Очистить историю") }
+                        IconButton(onClick = { confirmClear = true }) { Icon(Icons.Rounded.DeleteSweep, contentDescription = stringResource(Res.string.history_clear)) }
                     }
                 },
             )
@@ -88,7 +91,7 @@ fun HistoryScreen(history: HistoryRepository, onOpen: (HistoryEntry) -> Unit) {
                 ) {
                     Icon(Icons.Rounded.History, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
-                        if (query.isBlank()) "Здесь появятся переведённые картинки. Они хранятся только на телефоне." else "Ничего не найдено",
+                        stringResource(if (query.isBlank()) Res.string.history_empty else Res.string.history_nothing_found),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 12.dp),
                     )
@@ -108,7 +111,7 @@ fun HistoryScreen(history: HistoryRepository, onOpen: (HistoryEntry) -> Unit) {
                 value = query,
                 onValueChange = { query = it },
                 leadingIcon = { Icon(Icons.Rounded.Search, null) },
-                placeholder = { Text("Поиск по тексту и переводу") },
+                placeholder = { Text(stringResource(Res.string.history_search)) },
                 singleLine = true,
                 shape = MaterialTheme.shapes.extraLarge,
                 modifier = Modifier.fillMaxWidth().imePadding().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -119,12 +122,12 @@ fun HistoryScreen(history: HistoryRepository, onOpen: (HistoryEntry) -> Unit) {
     if (confirmClear) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
-            title = { Text("Очистить историю?") },
-            text = { Text("Удалятся все сохранённые картинки и переводы. Это нельзя отменить.") },
+            title = { Text(stringResource(Res.string.history_clear_title)) },
+            text = { Text(stringResource(Res.string.history_clear_text)) },
             confirmButton = {
-                TextButton(onClick = { confirmClear = false; scope.launch { history.clear() } }) { Text("Очистить") }
+                TextButton(onClick = { confirmClear = false; scope.launch { history.clear() } }) { Text(stringResource(Res.string.clear)) }
             },
-            dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Отмена") } },
+            dismissButton = { TextButton(onClick = { confirmClear = false }) { Text(stringResource(Res.string.cancel)) } },
         )
     }
 }
@@ -140,7 +143,7 @@ private fun SwipeToDelete(onDelete: () -> Unit, content: @Composable () -> Unit)
             Box(
                 Modifier.fillMaxSize().clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.errorContainer).padding(end = 24.dp),
                 contentAlignment = Alignment.CenterEnd,
-            ) { Icon(Icons.Rounded.Delete, contentDescription = "Удалить", tint = MaterialTheme.colorScheme.onErrorContainer) }
+            ) { Icon(Icons.Rounded.Delete, contentDescription = stringResource(Res.string.delete), tint = MaterialTheme.colorScheme.onErrorContainer) }
         },
     ) { content() }
 }
@@ -174,7 +177,7 @@ private fun HistoryRow(entry: HistoryEntry, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    "${Languages.nameOf(entry.sourceLanguage)} → ${Languages.nameOf(entry.targetLanguage)} · ${ago(entry.createdAt)}",
+                    "${languageName(entry.sourceLanguage)} → ${languageName(entry.targetLanguage)} · ${ago(entry.createdAt)}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -184,12 +187,13 @@ private fun HistoryRow(entry: HistoryEntry, onClick: () -> Unit) {
 }
 
 @OptIn(ExperimentalTime::class)
+@Composable
 private fun ago(millis: Long): String {
     val minutes = (Clock.System.now() - Instant.fromEpochMilliseconds(millis)).inWholeMinutes
     return when {
-        minutes < 1 -> "только что"
-        minutes < 60 -> "$minutes мин назад"
-        minutes < 60 * 24 -> "${minutes / 60} ч назад"
-        else -> "${minutes / (60 * 24)} дн назад"
+        minutes < 1 -> stringResource(Res.string.ago_now)
+        minutes < 60 -> pluralStringResource(Res.plurals.ago_minutes, minutes.toInt(), minutes)
+        minutes < 60 * 24 -> (minutes / 60).toInt().let { pluralStringResource(Res.plurals.ago_hours, it, it) }
+        else -> (minutes / (60 * 24)).toInt().let { pluralStringResource(Res.plurals.ago_days, it, it) }
     }
 }

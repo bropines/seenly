@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.bropines.lens.app.data.SettingsRepository
 import io.github.bropines.lens.app.data.TextTranslator
+import io.github.bropines.lens.app.resources.*
+import io.github.bropines.lens.app.ui.UiText
+import io.github.bropines.lens.app.ui.uiText
 import io.github.bropines.lens.translate.ErrorCode
 import io.github.bropines.lens.translate.PipelineResult
 import io.github.bropines.lens.translate.TranslationException
@@ -28,7 +31,7 @@ data class TextTranslateState(
     val engine: String? = null,
     val loading: Boolean = false,
     val result: PipelineResult? = null,
-    val error: String? = null,
+    val error: UiText? = null,
 )
 
 /** Translates as you type, after a short pause, and keeps only the latest request. */
@@ -74,14 +77,14 @@ class TextTranslateViewModel(
         } catch (e: TranslationException) {
             _state.update { it.copy(loading = false, error = describe(e)) }
         } catch (e: Exception) {
-            _state.update { it.copy(loading = false, error = e.message ?: "Ошибка перевода") }
+            _state.update { it.copy(loading = false, error = e.message?.let(UiText::Plain) ?: uiText(Res.string.error_translation)) }
         }
     }
 
-    private fun describe(e: TranslationException): String = when (e.code) {
-        ErrorCode.SameLanguage -> "Языки совпадают"
-        ErrorCode.MissingCredential -> "${translator.nameOf(e.engineId.orEmpty())}: нужен ключ — задайте его в настройках переводчиков"
-        ErrorCode.RateLimited -> "Сервисы просят подождать. Попробуйте позже или включите другой переводчик"
-        else -> "Не перевелось: ${e.message}"
+    private fun describe(e: TranslationException): UiText = when (e.code) {
+        ErrorCode.SameLanguage -> uiText(Res.string.error_same_language)
+        ErrorCode.MissingCredential -> uiText(Res.string.error_missing_key, translator.nameOf(e.engineId.orEmpty()))
+        ErrorCode.RateLimited -> uiText(Res.string.error_rate_limited)
+        else -> uiText(Res.string.error_not_translated, e.message.orEmpty())
     }
 }

@@ -1,5 +1,7 @@
 package io.github.bropines.lens.app.ui.viewer
 
+import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -56,9 +58,9 @@ fun TextSheet(
             horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
         ) {
             val options = listOf(
-                TextView.Both to "Оба",
-                TextView.Original to "Оригинал",
-                TextView.Translation to "Перевод",
+                TextView.Both to stringResource(Res.string.text_view_both),
+                TextView.Original to stringResource(Res.string.original),
+                TextView.Translation to stringResource(Res.string.translation),
             )
             val icons = mapOf(TextView.Both to Icons.Rounded.ViewAgenda, TextView.Original to Icons.Rounded.TextFields, TextView.Translation to Icons.Rounded.Translate)
             options.forEachIndexed { index, (option, label) ->
@@ -86,9 +88,9 @@ fun TextSheet(
                         TextView.Both -> shareableText(result)
                     },
                 )
-            }) { Icon(Icons.Rounded.ContentCopy, contentDescription = "Копировать всё") }
+            }) { Icon(Icons.Rounded.ContentCopy, contentDescription = stringResource(Res.string.copy_all)) }
             IconButton(onClick = { services.shareText(shareableText(result)) }) {
-                Icon(Icons.Rounded.Share, contentDescription = "Поделиться")
+                Icon(Icons.Rounded.Share, contentDescription = stringResource(Res.string.share))
             }
         }
         HorizontalDivider()
@@ -120,9 +122,9 @@ fun TextSheet(
                         Column {
                             IconButton(onClick = {
                                 services.copyText(if (view == TextView.Translation) paragraph.translation?.text ?: paragraph.text else paragraph.text)
-                            }) { Icon(Icons.Rounded.ContentCopy, contentDescription = "Копировать абзац") }
+                            }) { Icon(Icons.Rounded.ContentCopy, contentDescription = stringResource(Res.string.copy_paragraph)) }
                             IconButton(onClick = { onTranslateWithGoogle(paragraph.readableText()) }) {
-                                Icon(Icons.Rounded.GTranslate, contentDescription = "Открыть в переводчике")
+                                Icon(Icons.Rounded.GTranslate, contentDescription = stringResource(Res.string.open_in_translator))
                             }
                         }
                     }

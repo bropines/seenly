@@ -1,5 +1,7 @@
 package io.github.bropines.lens.app.ui.viewer
 
+import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -58,7 +60,7 @@ fun PageView(
     when (val loaded = image) {
         ImageState.Loading -> Centered(onTap) { LoadingIndicator() }
         ImageState.Failed -> Centered(onTap) {
-            Icon(Icons.Rounded.BrokenImage, contentDescription = "Не удалось открыть", tint = Color.White)
+            Icon(Icons.Rounded.BrokenImage, contentDescription = stringResource(Res.string.page_open_failed), tint = Color.White)
         }
         is ImageState.Ready -> TranslatedImage(
             image = loaded.bitmap,

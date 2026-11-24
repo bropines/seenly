@@ -1,5 +1,7 @@
 package io.github.bropines.lens.app.ui.camera
 
+import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,8 +24,8 @@ actual fun CameraScreen(
     onBack: () -> Unit,
 ) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Камера есть в приложении для телефона.")
-        Button(onClick = onPickImages) { Text("Открыть картинки") }
-        Button(onClick = onBack) { Text("Назад") }
+        Text(stringResource(Res.string.camera_desktop))
+        Button(onClick = onPickImages) { Text(stringResource(Res.string.open_images)) }
+        Button(onClick = onBack) { Text(stringResource(Res.string.back)) }
     }
 }

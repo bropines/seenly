@@ -23,6 +23,7 @@ import androidx.core.app.ServiceCompat
 import androidx.core.content.IntentCompat
 import io.github.bropines.lens.LensApplication
 import io.github.bropines.lens.MainActivity
+import io.github.bropines.lens.AppLocale
 import io.github.bropines.lens.R
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -106,7 +107,7 @@ class ScreenTranslateService : Service() {
             // Its windows (and screenshots) die with the service: nothing would be left on screen to stop with.
             scope.launch {
                 ScreenOverlayHost.service.first { it !== trusted }
-                Toast.makeText(this@ScreenTranslateService, "Спецвозможность Seenly выключена — перевод экрана остановлен", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@ScreenTranslateService, AppLocale.string(this@ScreenTranslateService, R.string.screen_accessibility_off), Toast.LENGTH_LONG).show()
                 stopSelf()
             }
         }
@@ -114,7 +115,7 @@ class ScreenTranslateService : Service() {
 
     private fun fail(e: Exception) {
         Log.e(TAG, "could not start", e)
-        Toast.makeText(this, "Не удалось включить перевод экрана: ${e.message}", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, AppLocale.string(this, R.string.screen_start_failed, e.message.orEmpty()), Toast.LENGTH_LONG).show()
         stopSelf()
     }
 
@@ -143,7 +144,7 @@ class ScreenTranslateService : Service() {
     private fun notification(): Notification {
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(
-            NotificationChannel(CHANNEL, "Перевод экрана", NotificationManager.IMPORTANCE_LOW).apply { setShowBadge(false) },
+            NotificationChannel(CHANNEL, AppLocale.string(this, R.string.screen_channel), NotificationManager.IMPORTANCE_LOW).apply { setShowBadge(false) },
         )
         val immutable = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), immutable)
@@ -152,12 +153,12 @@ class ScreenTranslateService : Service() {
         )
         return NotificationCompat.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_screen_translate)
-            .setContentTitle("Перевод экрана включён")
-            .setContentText("Тап по пузырю — перевод, удержание — меню")
+            .setContentTitle(AppLocale.string(this, R.string.screen_notification_title))
+            .setContentText(AppLocale.string(this, R.string.screen_notification_text))
             .setContentIntent(open)
             .setOngoing(true)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
-            .addAction(0, "Остановить", stop)
+            .addAction(0, AppLocale.string(this, R.string.screen_notification_stop), stop)
             .build()
     }
 

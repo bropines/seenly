@@ -31,7 +31,7 @@ class AndroidPlatformServices(private val context: Context) : PlatformServices {
         context.getSystemService<ClipboardManager>()?.setPrimaryClip(ClipData.newPlainText("Seenly", text))
         // Android 13+ shows its own clipboard confirmation.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            Toast.makeText(context, "Скопировано", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppLocale.string(context, R.string.copied), Toast.LENGTH_SHORT).show()
         }
     }
 

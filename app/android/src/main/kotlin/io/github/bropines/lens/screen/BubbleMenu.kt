@@ -56,6 +56,9 @@ import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import io.github.bropines.lens.app.data.AppSettings
 import io.github.bropines.lens.app.data.Languages
+import io.github.bropines.lens.app.resources.*
+import io.github.bropines.lens.app.ui.components.languageName
+import org.jetbrains.compose.resources.stringResource
 import io.github.bropines.lens.app.data.SettingsRepository
 import io.github.bropines.lens.app.ui.theme.LensTheme
 
@@ -234,7 +237,7 @@ private fun MenuSheet(
             ) {
                 when (val pick = picking) {
                     null -> Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        Text("Перевод экрана", style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(Res.string.screen_translation), style = MaterialTheme.typography.titleLarge)
                         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                             val modes = ScreenMode.entries
                             modes.forEachIndexed { index, item ->
@@ -246,9 +249,9 @@ private fun MenuSheet(
                                 ) {
                                     Text(
                                         when (item) {
-                                            ScreenMode.Screen -> "Экран"
-                                            ScreenMode.Live -> "Авто"
-                                            ScreenMode.Area -> "Область"
+                                            ScreenMode.Screen -> stringResource(Res.string.bubble_mode_screen)
+                                            ScreenMode.Live -> stringResource(Res.string.auto)
+                                            ScreenMode.Area -> stringResource(Res.string.bubble_mode_area)
                                         },
                                     )
                                 }
@@ -256,39 +259,39 @@ private fun MenuSheet(
                         }
                         Text(
                             when (mode) {
-                                ScreenMode.Screen -> "Тап по пузырю переводит то, что сейчас на экране. Тап в любом месте убирает перевод."
-                                ScreenMode.Live -> "Переводит сам, как только картинка остановилась; пока листаете, перевод скрыт. Тап по пузырю — пауза."
-                                ScreenMode.Area -> "Переводит только внутри рамки, когда её содержимое меняется. Рамку можно двигать и растягивать."
+                                ScreenMode.Screen -> stringResource(Res.string.bubble_desc_screen)
+                                ScreenMode.Live -> stringResource(Res.string.bubble_desc_live)
+                                ScreenMode.Area -> stringResource(Res.string.bubble_desc_area)
                             },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilledTonalButton(onClick = { picking = Picking.Source }, modifier = Modifier.weight(1f)) {
-                                Text(Languages.nameOf(current.sourceLanguage), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(languageName(current.sourceLanguage), maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                             Text("→", style = MaterialTheme.typography.titleMedium)
                             FilledTonalButton(onClick = { picking = Picking.Target }, modifier = Modifier.weight(1f)) {
-                                Text(Languages.nameOf(current.targetLanguage), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(languageName(current.targetLanguage), maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(onClick = onStop, modifier = Modifier.weight(1f)) { Text("Выключить") }
+                            OutlinedButton(onClick = onStop, modifier = Modifier.weight(1f)) { Text(stringResource(Res.string.bubble_turn_off)) }
                             Button(onClick = onPrimary, modifier = Modifier.weight(1f)) {
-                                Text(if (mode == ScreenMode.Screen) "Перевести" else "Готово")
+                                Text(stringResource(if (mode == ScreenMode.Screen) Res.string.translate_action else Res.string.bubble_done))
                             }
                         }
                         Text(
-                            "Удержание пузыря открывает это меню",
+                            stringResource(Res.string.bubble_hold_hint),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     else -> Column(Modifier.padding(vertical = 12.dp)) {
                         Row(Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            TextButton(onClick = { picking = null }) { Text("‹ Назад") }
+                            TextButton(onClick = { picking = null }) { Text(stringResource(Res.string.bubble_back)) }
                             Text(
-                                if (pick == Picking.Source) "Язык оригинала" else "Язык перевода",
+                                stringResource(if (pick == Picking.Source) Res.string.source_language else Res.string.target_language),
                                 style = MaterialTheme.typography.titleMedium,
                             )
                         }
@@ -312,7 +315,7 @@ private fun MenuSheet(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
-                                        Languages.nameOf(code),
+                                        languageName(code),
                                         style = MaterialTheme.typography.bodyLarge,
                                         fontWeight = if (chosen) FontWeight.SemiBold else FontWeight.Normal,
                                         color = if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,

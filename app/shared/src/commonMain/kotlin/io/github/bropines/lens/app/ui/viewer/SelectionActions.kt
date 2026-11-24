@@ -1,5 +1,7 @@
 package io.github.bropines.lens.app.ui.viewer
 
+import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.IconButton
@@ -45,11 +47,11 @@ fun SelectionActions(
                 shadowElevation = 6.dp,
             ) {
                 Row(Modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Action(Icons.Rounded.ContentCopy, "Копировать", onCopy)
-                    Action(Icons.Rounded.Translate, "Перевести", onTranslate)
-                    IconAction(Icons.Rounded.Search, "Найти в Google", onSearch)
-                    IconAction(Icons.Rounded.SelectAll, "Выделить всё", onSelectAll)
-                    IconAction(Icons.Rounded.Share, "Поделиться", onShare)
+                    Action(Icons.Rounded.ContentCopy, stringResource(Res.string.copy), onCopy)
+                    Action(Icons.Rounded.Translate, stringResource(Res.string.translate_action), onTranslate)
+                    IconAction(Icons.Rounded.Search, stringResource(Res.string.search_google), onSearch)
+                    IconAction(Icons.Rounded.SelectAll, stringResource(Res.string.select_all), onSelectAll)
+                    IconAction(Icons.Rounded.Share, stringResource(Res.string.share), onShare)
                 }
             }
         },

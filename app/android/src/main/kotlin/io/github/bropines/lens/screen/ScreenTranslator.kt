@@ -10,6 +10,9 @@ import android.os.SystemClock
 import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.annotation.StringRes
+import io.github.bropines.lens.AppLocale
+import io.github.bropines.lens.R
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.createFontFamilyResolver
@@ -276,12 +279,12 @@ internal class ScreenTranslator(
                 capturer.refresh()
                 val frame = grabClean(null)
                 if (frame == null) {
-                    toast("Не удалось снять экран")
+                    toast(R.string.screen_capture_failed)
                     return@launch
                 }
                 val result = translate(frame, Rect(0, 0, screen.x, screen.y), current)
                 val bitmap = result.bitmap
-                if (bitmap == null) toast("Текста для перевода не нашлось") else layer.show(bitmap, result.rect, modal = true)
+                if (bitmap == null) toast(R.string.screen_no_text) else layer.show(bitmap, result.rect, modal = true)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -607,10 +610,11 @@ internal class ScreenTranslator(
     private fun report(error: Throwable) {
         Log.w(TAG, "translation failed", error)
         failed = true
-        toast("Не удалось перевести: ${error.message ?: error::class.simpleName}")
+        toast(R.string.screen_translate_failed, error.message ?: error::class.simpleName.orEmpty())
     }
 
-    private fun toast(text: String) = Toast.makeText(service, text, Toast.LENGTH_SHORT).show()
+    private fun toast(@StringRes text: Int, vararg args: Any) =
+        Toast.makeText(service, AppLocale.string(service, text, *args), Toast.LENGTH_SHORT).show()
 
     private companion object {
         const val TAG = "ScreenTranslator"

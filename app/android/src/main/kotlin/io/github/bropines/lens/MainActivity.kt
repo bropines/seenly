@@ -1,5 +1,6 @@
 package io.github.bropines.lens
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -19,11 +20,15 @@ class MainActivity : ComponentActivity() {
     /** Images shared or opened into the app. Replays one, so a share that starts the app is not lost before composition. */
     private val incoming = MutableSharedFlow<List<PlatformFile>>(replay = 1, extraBufferCapacity = 4)
 
+    // Before Android 13 the UI language reaches the activity through its context (see AppLocale).
+    override fun attachBaseContext(newBase: Context) = super.attachBaseContext(AppLocale.wrap(newBase))
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         FileKit.init(this)
+        (application as LensApplication).followUiLanguage()
         // After a configuration change the intent was already handled.
         if (savedInstanceState == null) handle(intent)
         setContent { LensApp((application as LensApplication).graph, incoming) }

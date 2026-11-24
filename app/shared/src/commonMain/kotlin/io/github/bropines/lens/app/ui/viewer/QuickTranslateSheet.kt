@@ -1,5 +1,7 @@
 package io.github.bropines.lens.app.ui.viewer
 
+import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,7 +35,7 @@ import kotlinx.coroutines.CancellationException
 private sealed interface Quick {
     data object Loading : Quick
     data class Done(val result: PipelineResult) : Quick { val translation get() = result.translation }
-    data class Failed(val message: String) : Quick
+    data class Failed(val message: String?) : Quick
 }
 
 /** Google Translate for a selection or paragraph, without leaving the image. */
@@ -52,7 +54,7 @@ fun QuickTranslateSheet(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Quick.Failed(e.message ?: "Ошибка перевода")
+            Quick.Failed(e.message)
         }
     }
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -66,7 +68,7 @@ fun QuickTranslateSheet(
             }
             when (val s = state) {
                 Quick.Loading -> LinearWavyProgressIndicator(Modifier.fillMaxWidth())
-                is Quick.Failed -> Text(s.message, color = MaterialTheme.colorScheme.error)
+                is Quick.Failed -> Text(s.message ?: stringResource(Res.string.error_translation), color = MaterialTheme.colorScheme.error)
                 is Quick.Done -> {
                     SelectionContainer { Text(s.translation.text, style = MaterialTheme.typography.titleLarge) }
                     s.translation.usefulTargetRomanisation(target)?.let {
@@ -85,11 +87,11 @@ fun QuickTranslateSheet(
                 val translated = (state as? Quick.Done)?.translation?.text
                 FilledTonalButton(onClick = { translated?.let(services::copyText) }, enabled = translated != null) {
                     Icon(Icons.Rounded.ContentCopy, null, Modifier.padding(end = 6.dp))
-                    Text("Копировать")
+                    Text(stringResource(Res.string.copy))
                 }
                 OutlinedButton(onClick = onOpenFull) {
                     Icon(Icons.Rounded.OpenInNew, null, Modifier.padding(end = 6.dp))
-                    Text("В переводчике")
+                    Text(stringResource(Res.string.quick_open_in_translator))
                 }
             }
         }
