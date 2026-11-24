@@ -114,7 +114,16 @@ data class OverlayPrefs(
     val minFontSp: Int = 0,
     val font: FontChoice = FontChoice.System,
     val vertical: VerticalChoice = VerticalChoice.Auto,
+    /** Line by line: one size for all lines of a paragraph instead of each its own. */
+    val uniformLineSize: RefineChoice = RefineChoice.Auto,
+    /** Line by line: a line widened to the readable size grows from its start, keeping indents. */
+    val growFromLineStart: RefineChoice = RefineChoice.Auto,
+    /** Line by line: paragraphs of several lines are re-wrapped as one block, as in manga. */
+    val reflowDense: RefineChoice = RefineChoice.Auto,
 )
+
+/** A layout refinement: decided per paragraph from its shape, always, or never. */
+enum class RefineChoice { Auto, On, Off }
 
 enum class EraseChoice { Auto, Patch, Fill }
 enum class OutlineChoice { Auto, None, Thin, Bold }
@@ -167,6 +176,9 @@ class SettingsRepository(services: PlatformServices) {
             p[MIN_FONT] = next.overlay.minFontSp
             p[FONT] = next.overlay.font.name
             p[VERTICAL] = next.overlay.vertical.name
+            p[UNIFORM_SIZE] = next.overlay.uniformLineSize.name
+            p[GROW_FROM_START] = next.overlay.growFromLineStart.name
+            p[REFLOW_DENSE] = next.overlay.reflowDense.name
             p[TRANSLATORS] = json.encodeToString(TranslatorPrefs.serializer(), next.translators)
             p[UPDATE_AUTO] = next.updates.autoCheck
             p[UPDATE_BETA] = next.updates.beta
@@ -238,6 +250,9 @@ class SettingsRepository(services: PlatformServices) {
             minFontSp = (this[MIN_FONT] ?: 0).coerceIn(0, 16),
             font = this[FONT].toEnum(FontChoice.System),
             vertical = this[VERTICAL].toEnum(VerticalChoice.Auto),
+            uniformLineSize = this[UNIFORM_SIZE].toEnum(RefineChoice.Auto),
+            growFromLineStart = this[GROW_FROM_START].toEnum(RefineChoice.Auto),
+            reflowDense = this[REFLOW_DENSE].toEnum(RefineChoice.Auto),
         ),
         translators = this[TRANSLATORS]
             ?.let { runCatching { json.decodeFromString(TranslatorPrefs.serializer(), it) }.getOrNull() }
@@ -273,6 +288,9 @@ class SettingsRepository(services: PlatformServices) {
         val FONT = stringPreferencesKey("overlay_font")
         val TRANSLATORS = stringPreferencesKey("translators")
         val VERTICAL = stringPreferencesKey("overlay_vertical")
+        val UNIFORM_SIZE = stringPreferencesKey("overlay_uniform_size")
+        val GROW_FROM_START = stringPreferencesKey("overlay_grow_from_start")
+        val REFLOW_DENSE = stringPreferencesKey("overlay_reflow_dense")
         val UPDATE_AUTO = booleanPreferencesKey("update_auto_check")
         val UPDATE_BETA = booleanPreferencesKey("update_beta")
         val LOCAL_FALLBACK = booleanPreferencesKey("on_device_fallback")

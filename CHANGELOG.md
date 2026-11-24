@@ -10,6 +10,7 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 - Colour presets in Settings → Appearance: from the wallpaper (Android 12+), violet, blue, teal, green, amber, red, pink or monochrome; the screen-translation menu follows them.
 - AMOLED black: a pure black background in the dark theme.
+- Three line-by-line refinements in Settings → Style, each Auto, On or Off: one text size per paragraph, widening a line from its aligned edge instead of both sides, and setting body-text paragraphs as one block. Auto decides for each paragraph from its shape (line sizes, a common edge, line spacing).
 
 ### Fixed
 

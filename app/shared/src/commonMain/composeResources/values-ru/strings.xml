@@ -81,6 +81,12 @@
     <string name="vertical_keep">Столбцами</string>
     <string name="vertical_horizontal">Строками</string>
     <string name="style_text_size">Размер текста</string>
+    <string name="style_uniform_size">Один размер на абзац</string>
+    <string name="style_grow_start">Расширять строки от края</string>
+    <string name="style_reflow_dense">Абзацы блоком</string>
+    <string name="style_refine_hint">Для текста «строка в строку». Один размер: у строк абзаца общий размер, без скачков. От края: строка, увеличенная до минимального размера, сохраняет отступ, а не растёт в обе стороны. Блоком: абзац из трёх и более строк укладывается целиком, как для документов и фото экранов. «Авто» решает для каждого абзаца по его форме.</string>
+    <string name="choice_on">Вкл</string>
+    <string name="choice_off">Выкл</string>
     <string name="style_min_size">Минимальный размер</string>
     <string name="settings_opaque">Перевод без просвечивания</string>
     <string name="settings_opaque_on">Включено: перевод полностью закрывает оригинал</string>

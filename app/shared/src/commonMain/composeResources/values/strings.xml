@@ -83,6 +83,12 @@
     <string name="vertical_horizontal">Rows</string>
     <string name="style_text_size">Text size</string>
     <string name="style_min_size">Minimum size</string>
+    <string name="style_uniform_size">One size per paragraph</string>
+    <string name="style_grow_start">Widen lines from their edge</string>
+    <string name="style_reflow_dense">Paragraphs as blocks</string>
+    <string name="style_refine_hint">For line-by-line text. One size: the lines of a paragraph share a text size instead of jumping. Widen from the edge: a line raised to the minimum size keeps its indent instead of growing to both sides. Blocks: a paragraph of three or more lines is re-wrapped as one block, as for documents and photos of screens. Auto decides for each paragraph from its shape.</string>
+    <string name="choice_on">On</string>
+    <string name="choice_off">Off</string>
     <string name="settings_opaque">Opaque translation</string>
     <string name="settings_opaque_on">On: the translation fully covers the original</string>
     <string name="settings_opaque_off">Off: in the Auto and Area modes the original shows through. Turn on “Seenly” in Accessibility; if it is greyed out, allow restricted settings in the app info</string>

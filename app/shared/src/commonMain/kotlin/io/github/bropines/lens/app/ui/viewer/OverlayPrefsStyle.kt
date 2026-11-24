@@ -5,8 +5,10 @@ import io.github.bropines.lens.app.data.EraseChoice
 import io.github.bropines.lens.app.data.FontChoice
 import io.github.bropines.lens.app.data.OutlineChoice
 import io.github.bropines.lens.app.data.OverlayPrefs
+import io.github.bropines.lens.app.data.RefineChoice
 import io.github.bropines.lens.app.data.VerticalChoice
 import io.github.bropines.lens.overlay.EraseMode
+import io.github.bropines.lens.overlay.LayoutChoice
 import io.github.bropines.lens.overlay.OverlayStyle
 import io.github.bropines.lens.overlay.VerticalTextPolicy
 
@@ -36,4 +38,13 @@ fun OverlayStyle.withPrefs(prefs: OverlayPrefs): OverlayStyle = copy(
         VerticalChoice.Keep -> VerticalTextPolicy.Keep
         VerticalChoice.Horizontal -> VerticalTextPolicy.Horizontal
     },
+    uniformParagraphSize = prefs.uniformLineSize.toLayout(),
+    growFromLineStart = prefs.growFromLineStart.toLayout(),
+    reflowDenseParagraphs = prefs.reflowDense.toLayout(),
 )
+
+private fun RefineChoice.toLayout(): LayoutChoice = when (this) {
+    RefineChoice.Auto -> LayoutChoice.Auto
+    RefineChoice.On -> LayoutChoice.On
+    RefineChoice.Off -> LayoutChoice.Off
+}

@@ -24,12 +24,16 @@ import io.github.bropines.lens.app.data.FontChoice
 import io.github.bropines.lens.app.data.OutlineChoice
 import io.github.bropines.lens.app.data.OverlayPrefs
 import io.github.bropines.lens.app.data.VerticalChoice
+import io.github.bropines.lens.app.data.RefineChoice
 import kotlin.math.roundToInt
 import androidx.compose.material.icons.rounded.BrightnessAuto
 import androidx.compose.material.icons.rounded.ChatBubbleOutline
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Contrast
+import androidx.compose.material.icons.rounded.FormatLineSpacing
+import androidx.compose.material.icons.rounded.WrapText
+import androidx.compose.material.icons.automirrored.rounded.FormatAlignLeft
 import androidx.compose.material.icons.rounded.DocumentScanner
 import androidx.compose.material.icons.rounded.GTranslate
 import androidx.compose.material.icons.rounded.Info
@@ -269,6 +273,28 @@ fun SettingsScreen(
                 Icons.Rounded.TextFields, stringResource(Res.string.style_min_size), if (o.minFontSp == 0) auto else "${o.minFontSp} sp",
                 value = o.minFontSp.toFloat(), range = 0f..16f, steps = 15,
             ) { v -> overlay { it.copy(minFontSp = v.roundToInt()) } }
+            // Line-by-line refinements; each is optional because none is right for every page.
+            // "Auto" decides per paragraph from its shape; On and Off force it.
+            val refine = listOf(
+                RefineChoice.Auto to auto,
+                RefineChoice.On to stringResource(Res.string.choice_on),
+                RefineChoice.Off to stringResource(Res.string.choice_off),
+            )
+            Segmented(Icons.Rounded.FormatLineSpacing, stringResource(Res.string.style_uniform_size), refine, o.uniformLineSize) { v ->
+                overlay { it.copy(uniformLineSize = v) }
+            }
+            Segmented(Icons.AutoMirrored.Rounded.FormatAlignLeft, stringResource(Res.string.style_grow_start), refine, o.growFromLineStart) { v ->
+                overlay { it.copy(growFromLineStart = v) }
+            }
+            Segmented(Icons.Rounded.WrapText, stringResource(Res.string.style_reflow_dense), refine, o.reflowDense) { v ->
+                overlay { it.copy(reflowDense = v) }
+            }
+            Text(
+                stringResource(Res.string.style_refine_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            )
 
             if (screen != null) {
                 val opaque by screen.opaque.collectAsState()

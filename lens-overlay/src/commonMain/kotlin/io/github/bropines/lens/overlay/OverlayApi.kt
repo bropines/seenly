@@ -75,6 +75,12 @@ public enum class VerticalTextPolicy {
  * The defaults reproduce Chromium's Lens overlay. [Manga] is a preset for pages
  * of speech bubbles.
  */
+/** How many lines make a paragraph "dense" for [OverlayStyle.reflowDenseParagraphs]. */
+public const val DENSE_PARAGRAPH_LINES: Int = 3
+
+/** A layout refinement: decided per paragraph from its geometry, always, or never. */
+public enum class LayoutChoice { Auto, On, Off }
+
 @Immutable
 public data class OverlayStyle(
     val layout: TranslationLayout = TranslationLayout.Chromium,
@@ -126,6 +132,33 @@ public data class OverlayStyle(
      * else its rectangle.
      */
     val bubbleShape: Boolean = true,
+    /**
+     * [TranslationLayout.Chromium] only: every line of a paragraph gets the
+     * same size, the largest at which all of them fit their boxes. Lens splits
+     * a paragraph's translation over its lines unevenly, so sizing each line
+     * alone makes the size jump from line to line. [LayoutChoice.Auto] does it
+     * where the source lines are one size and the fitted sizes still jump.
+     * Off is Chromium's behaviour.
+     */
+    val uniformParagraphSize: LayoutChoice = LayoutChoice.Off,
+    /**
+     * [TranslationLayout.Chromium] only: where a line the readable-size floor
+     * makes wider than its box grows from. On: from where the line starts (the
+     * left for left-to-right text), keeping indents. Off: evenly to both sides,
+     * centred on the source line, as Chromium does. Auto: from the side the
+     * paragraph is aligned to, centred only for centred text.
+     */
+    val growFromLineStart: LayoutChoice = LayoutChoice.Off,
+    /**
+     * [TranslationLayout.Chromium] only: a horizontal paragraph of
+     * [DENSE_PARAGRAPH_LINES] or more lines is set as one re-wrapped block in
+     * its box, as the reflow layout does, instead of line by line. Suits dense
+     * text (documents, screenshots, photos of screens), where Lens's split of
+     * the translation over the lines matters most. [LayoutChoice.Auto] does it
+     * for paragraphs that look like body text: lines of one size, a common
+     * starting edge, regular spacing.
+     */
+    val reflowDenseParagraphs: LayoutChoice = LayoutChoice.Off,
     /**
      * The colour of text mode ([OverlayMode.TextBoxes]): a faint tint on every
      * line, a stronger one on the selection, and the selection handles at full

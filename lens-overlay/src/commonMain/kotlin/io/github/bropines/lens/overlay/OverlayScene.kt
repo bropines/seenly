@@ -137,6 +137,21 @@ private const val SQRT2 = 1.4142135f
 /** The shape is used only when its text is at least this large against the rectangle's. */
 private const val SHAPE_MIN_GAIN = 1.0f
 
+// The geometry LayoutChoice.Auto reads a paragraph by.
+
+/** Lines whose thickness differs by less than this factor are one text size. */
+private const val SAME_SIZE = 1.25f
+
+/** Fitted sizes further apart than this factor are a visible jump. */
+private const val SIZE_JUMP = 1.4f
+
+/** How far, in line heights, a line may start from the common edge and still share it. */
+private const val EDGE_TOLERANCE = 0.6f
+
+/** The range of centre-to-centre line spacing, in line heights, that body text keeps. */
+private const val MIN_SPACING = 0.8f
+private const val MAX_SPACING = 2.2f
+
 /**
  * Lays [result] out over an image of [image]'s size.
  *
@@ -271,6 +286,17 @@ private class SceneBuilder(
             }
         }
 
+        // Dense text: the paragraph as one block, not Lens's uneven split over lines.
+        if (!reflow && !vertical && paragraphBox != null && hasLineText) {
+            val boxes = lineBoxes.filterNotNull()
+            val dense = when (style.reflowDenseParagraphs) {
+                LayoutChoice.Off -> false
+                LayoutChoice.On -> boxes.size >= DENSE_PARAGRAPH_LINES
+                LayoutChoice.Auto -> looksLikeBodyText(boxes, rtl)
+            }
+            if (dense) reflow = true
+        }
+
         val paragraphBackground: Int by lazy {
             paragraph.lines.firstNotNullOfOrNull { it.translationStyle?.backgroundColor }?.let(::opaque)
                 ?: (paragraphBox ?: lineBoxes.firstNotNullOfOrNull { it })?.let(::sampleAround)
@@ -317,6 +343,33 @@ private class SceneBuilder(
             // rectangle wins.
             if (shaped != null && shaped.size >= rectangle.size * SHAPE_MIN_GAIN) shaped.emit() else rectangle.emit()
         } else {
+            // One size for the whole paragraph: the largest every line fits at.
+            val shared = if (!vertical && style.uniformParagraphSize != LayoutChoice.Off) {
+                val fits = paragraph.lines.indices.mapNotNull { l ->
+                    val box = lineBoxes[l] ?: return@mapNotNull null
+                    val text = paragraph.lines[l].translation?.trim().orEmpty()
+                    if (text.isEmpty()) null else box to fitLineSize(box, text, rtl)
+                }
+                val wanted = when (style.uniformParagraphSize) {
+                    LayoutChoice.On -> fits.size >= 2
+                    // Source lines of one size whose translations came out at visibly different sizes.
+                    else -> fits.size >= 2 && similarHeights(fits.map { it.first }) &&
+                        fits.maxOf { it.second } > fits.minOf { it.second } * SIZE_JUMP
+                }
+                if (wanted) fits.minOf { it.second } else null
+            } else {
+                null
+            }
+            val growth = when (style.growFromLineStart) {
+                LayoutChoice.Off -> 0f
+                LayoutChoice.On -> if (rtl) -1f else 1f
+                // Grow away from the side the paragraph is aligned to; centred text stays centred.
+                LayoutChoice.Auto -> when (alignment.side(rtl)) {
+                    Side.Left -> 1f
+                    Side.Right -> -1f
+                    Side.Center -> 0f
+                }
+            }
             paragraph.lines.forEachIndexed { l, line ->
                 val box = lineBoxes[l] ?: return@forEachIndexed
                 val text = line.translation?.trim().orEmpty()
@@ -328,7 +381,7 @@ private class SceneBuilder(
                     // A line the floor raises past its box gets a background
                     // sized to it, unless a hull already covers the paragraph.
                     val grownBackground = if (style.erase == EraseMode.ServerPatch) background(l) else null
-                    horizontalLine(index, box, text, rtl, alignment, ink, grownBackground)
+                    horizontalLine(index, box, text, rtl, alignment, ink, grownBackground, shared, growth)
                 }
             }
         }
@@ -472,6 +525,33 @@ private class SceneBuilder(
      * line inside [box]. The height test uses the font's line box, not these
      * glyphs' ink, and "equal" already fails, which leaves slack.
      */
+    /** Whether the lines are about one text size: their thickness varies by less than [SAME_SIZE]. */
+    private fun similarHeights(boxes: List<OrientedBox>): Boolean =
+        boxes.isNotEmpty() && boxes.maxOf { it.height } <= boxes.minOf { it.height } * SAME_SIZE
+
+    /**
+     * Whether a paragraph's lines read as body text rather than a sign or a
+     * label: at least [DENSE_PARAGRAPH_LINES] of them, one size, all but at
+     * most one (a first-line indent, a short last line's alignment) starting
+     * at a common edge, and stacked at an ordinary line spacing.
+     */
+    private fun looksLikeBodyText(boxes: List<OrientedBox>, rtl: Boolean): Boolean {
+        if (boxes.size < DENSE_PARAGRAPH_LINES || !similarHeights(boxes)) return false
+        val h = boxes.map { it.height }.sorted()[boxes.size / 2]
+        val angle = boxes[0].rotation
+        val c = cos(angle)
+        val s = sin(angle)
+        // Each line's start along the reading direction, and its place across it.
+        val starts = boxes.map { b ->
+            val along = b.centerX * c + b.centerY * s
+            if (rtl) -(along + b.width / 2) else along - b.width / 2
+        }
+        val edge = starts.sorted()[starts.size / 2]
+        if (starts.count { abs(it - edge) > EDGE_TOLERANCE * h } > 1) return false
+        val across = boxes.map { b -> -b.centerX * s + b.centerY * c }.sorted()
+        return across.zipWithNext { a, b -> b - a }.all { it in (MIN_SPACING * h)..(MAX_SPACING * h) }
+    }
+
     private fun fitLineSize(box: OrientedBox, text: String, rtl: Boolean): Float =
         fitFontSize(MIN_FONT_PX, max(MIN_FONT_PX, box.height)) { size ->
             val probe = measure(text, size, rtl)
@@ -490,8 +570,12 @@ private class SceneBuilder(
         alignment: TextAlignment,
         ink: Ink,
         grownBackground: Int?,
+        /** The paragraph's shared fitted size, or null to fit this line alone. */
+        sharedFit: Float? = null,
+        /** Which way a widened line grows along itself: 1 rightwards, -1 leftwards, 0 to both sides. */
+        growth: Float = 0f,
     ) {
-        val fitted = fitLineSize(box, text, rtl)
+        val fitted = sharedFit ?: fitLineSize(box, text, rtl)
         var size = finalFontSize(fitted, style.textScale, minFontPx)
         var probe = measure(text, size, rtl)
         // Nothing may be drawn where the image will only clip it: a floor that
@@ -509,8 +593,15 @@ private class SceneBuilder(
         val enlarged = size > fitted
         val drawW = if (enlarged) min(max(box.width, textWidth + size * 0.4f), width) else box.width
         val drawH = if (enlarged) min(max(box.height, size * 1.35f), height) else box.height
-        val shift = nudgeInside(box, drawW, drawH, rtl)
-        val area = box.copy(centerX = box.centerX + shift.x, centerY = box.centerY + shift.y, width = drawW, height = drawH)
+        // Grown from one end: the centre moves along the line by half of what was added.
+        val anchor = if (growth != 0f && drawW > box.width) {
+            val along = (drawW - box.width) / 2 * growth
+            box.copy(centerX = box.centerX + along * cos(box.rotation), centerY = box.centerY + along * sin(box.rotation))
+        } else {
+            box
+        }
+        val shift = nudgeInside(anchor, drawW, drawH, rtl)
+        val area = anchor.copy(centerX = anchor.centerX + shift.x, centerY = anchor.centerY + shift.y, width = drawW, height = drawH)
         if (enlarged && grownBackground != null) erases += RectFillOp(area, Color(grownBackground))
 
         val frame = area.frame
