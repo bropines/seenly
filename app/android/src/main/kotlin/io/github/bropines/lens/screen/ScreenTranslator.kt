@@ -82,8 +82,20 @@ internal class ScreenTranslator(
     /** Counts one-shot runs, so a cancelled one does not tidy up after its successor. */
     private var run = 0
     private var live: Job? = null
-    /** The last frame translated and what came of it: an unchanged screen is never sent twice. */
-    private var cached: Cached? = null
+    /**
+     * The last few views translated and what came of them, newest last: a view
+     * seen a moment ago is shown again from here, never sent to Lens twice.
+     * Bounded by count; each layer holds only the rectangle it changed.
+     */
+    private val recent = ArrayDeque<Cached>()
+    /** The current minimum time between two requests; grows while they come back to back. */
+    private var gap = MIN_GAP_MS
+
+    private fun remember(entry: Cached) {
+        recent.removeAll { it.settings == entry.settings && it.signature.diff(entry.signature) < CHANGED_CELLS }
+        recent.addLast(entry)
+        while (recent.size > RECENT) recent.removeFirst()
+    }
     /** Until then our own windows may still be in the frames. */
     private var dirtyUntil = 0L
 
@@ -117,7 +129,7 @@ internal class ScreenTranslator(
         val size = wm.screenSize()
         if (size == screen) return
         screen = size
-        cached = null
+        recent.clear()
         layer.clear()
         capturer.resize(size.x, size.y, dpi)
         layer.attach(size)
@@ -131,7 +143,8 @@ internal class ScreenTranslator(
         once?.cancel()
         live?.cancel()
         layer.clear()
-        cached = null
+        recent.clear()
+        gap = MIN_GAP_MS
         failed = false
         if (mode == ScreenMode.Area) {
             // The grips report the fitted rectangle back through onAreaChanged.
@@ -320,11 +333,14 @@ internal class ScreenTranslator(
                             signature.diff(base, covered, maskValue = false) >= CHANGED_CELLS
                         if (!moved) {
                             val settled = reference
+                            // Only a frame taken after the translation went up can show it: screenshots
+                            // arrive late, and an older one would look as if the view had changed.
+                            val sinceShown = capturer.frameAt - shownAt
                             if (settled != null) {
                                 moved = signature.diff(settled, covered, maskValue = true) >= CHANGED_CELLS
-                            } else if (now - shownAt >= 100 && now - capturer.lastMotionAt >= 60) {
+                            } else if (sinceShown >= SETTLE_OWN_MS && now - capturer.lastMotionAt >= 60) {
                                 reference = signature
-                            } else if (now - shownAt >= 500) {
+                            } else if (sinceShown >= 500) {
                                 // Still moving under the translation half a second on: it is stale.
                                 moved = true
                             }
@@ -340,10 +356,13 @@ internal class ScreenTranslator(
                     }
                     Phase.Waiting -> {
                         val still = now - capturer.lastMotionAt >= STILL_MS
-                        if (!still || now - hiddenAt < SETTLE_OWN_MS || now < dirtyUntil || now - requestedAt < MIN_GAP_MS) continue
-                        val known = cached
-                        if (known != null && known.settings == settings && signature.diff(known.signature) < CHANGED_CELLS) {
-                            // The same view as last time (scrolled away and back, or just un-paused).
+                        // The frame must be one taken after our translation left the screen.
+                        val clean = capturer.frameAt >= max(hiddenAt, dirtyUntil) + SETTLE_OWN_MS
+                        if (!still || !clean || now < dirtyUntil || now - requestedAt < gap) continue
+                        val known = recent.lastOrNull { it.settings == settings && signature.diff(it.signature) < CHANGED_CELLS }
+                        if (known != null) {
+                            // A view translated a moment ago (scrolled away and back, or just un-paused):
+                            // shown again from memory, never asked of Lens a second time.
                             sent = known.signature
                             sentSettings = known.settings
                             covered = show(known.layer, known.signature)
@@ -357,7 +376,11 @@ internal class ScreenTranslator(
                         val asked = settings
                         sent = signature
                         sentSettings = asked
+                        // Requests back to back mean something keeps changing the view on its own
+                        // (an animation, or a loop through our own drawing): slow down, up to 8 s.
+                        gap = if (now - requestedAt < BURST_MS) min(gap * 2, MAX_GAP_MS) else MIN_GAP_MS
                         requestedAt = now
+                        Log.d(TAG, "live request, next gap ${gap} ms")
                         failed = false
                         updateBubble(busy = true)
                         request = scope.async { runCatching { translate(frame, region, asked) } }
@@ -377,11 +400,10 @@ internal class ScreenTranslator(
                             val outcome = pending.await()
                             val result = outcome.getOrNull()
                             if (result != null) {
-                                cached = Cached(base, sentSettings, result)
+                                remember(Cached(base, sentSettings, result))
                                 covered = show(result, base)
                             } else {
                                 // Shown, with nothing on screen: it is tried again when the view changes.
-                                cached = null
                                 covered = null
                                 outcome.exceptionOrNull()?.let { if (it !is CancellationException) report(it) }
                             }
@@ -601,6 +623,11 @@ internal class ScreenTranslator(
         const val SETTLE_OWN_MS = 100L
         /** No two requests closer than this, however restless the screen. */
         const val MIN_GAP_MS = 400L
+        /** Requests closer together than this count as a burst, which doubles the gap. */
+        const val BURST_MS = 3_000L
+        const val MAX_GAP_MS = 8_000L
+        /** Views remembered with their translations. */
+        const val RECENT = 6
         /** This many changed samples (of 2880) mean the view is a different one. */
         const val CHANGED_CELLS = 12
     }

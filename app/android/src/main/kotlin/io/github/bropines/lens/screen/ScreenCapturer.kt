@@ -88,6 +88,8 @@ internal class ScreenCapturer(
     /** `SystemClock.uptimeMillis()` of the last frame that differed from the one before it. */
     @Volatile override var lastMotionAt: Long = SystemClock.uptimeMillis()
         private set
+    @Volatile override var frameAt: Long = 0L
+        private set
 
     private val callback = object : MediaProjection.Callback() {
         override fun onStop() {
@@ -129,6 +131,8 @@ internal class ScreenCapturer(
             val previous = signature
             if (previous == null || next.diff(previous) >= MOTION_CELLS) lastMotionAt = SystemClock.uptimeMillis()
             signature = next
+            // A recording delivers frames within a vsync or two: arrival is close enough.
+            frameAt = SystemClock.uptimeMillis()
         }
     }
 

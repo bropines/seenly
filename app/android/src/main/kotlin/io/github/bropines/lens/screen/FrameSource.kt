@@ -29,6 +29,13 @@ internal interface FrameSource {
     /** `SystemClock.uptimeMillis()` of the last frame that differed from the one before it. */
     val lastMotionAt: Long
 
+    /**
+     * No later than the moment the latest frame was taken. Screenshots arrive
+     * hundreds of milliseconds late, so whether a frame shows our own drawing
+     * is decided by this, never by when it arrived.
+     */
+    val frameAt: Long
+
     /** Whether frames are needed all the time (live and area) or only on request ("this screen"). */
     var continuous: Boolean
 
@@ -97,6 +104,8 @@ internal class AccessibilityCapturer(
         private set
     @Volatile override var lastMotionAt: Long = SystemClock.uptimeMillis()
         private set
+    @Volatile override var frameAt: Long = 0L
+        private set
 
     @Volatile override var continuous: Boolean = false
         set(value) {
@@ -138,7 +147,8 @@ internal class AccessibilityCapturer(
                             }
                         }
                     }.getOrNull()
-                    if (bitmap != null) accept(bitmap)
+                    // Taken somewhere between the request and now: the request time is the safe bound.
+                    if (bitmap != null) accept(bitmap, started)
                     next(INTERVAL_MS - (SystemClock.uptimeMillis() - started))
                 }
 
@@ -156,7 +166,7 @@ internal class AccessibilityCapturer(
         if (wanted && !closed) schedule(delay.coerceAtLeast(0))
     }
 
-    private fun accept(bitmap: Bitmap) {
+    private fun accept(bitmap: Bitmap, takenAt: Long) {
         val done: List<CompletableDeferred<Unit>>
         synchronized(lock) {
             if (closed) {
@@ -172,8 +182,9 @@ internal class AccessibilityCapturer(
                 ((p shr 16 and 0xFF) + 2 * (p shr 8 and 0xFF) + (p and 0xFF)) shr 2
             }
             val previous = signature
-            if (previous == null || next.diff(previous) >= MOTION_CELLS) lastMotionAt = SystemClock.uptimeMillis()
+            if (previous == null || next.diff(previous) >= MOTION_CELLS) lastMotionAt = takenAt
             signature = next
+            frameAt = takenAt
             done = waiters.toList()
             waiters.clear()
         }
