@@ -23,6 +23,10 @@ import androidx.core.content.IntentCompat
 import io.github.bropines.lens.LensApplication
 import io.github.bropines.lens.MainActivity
 import io.github.bropines.lens.R
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 /**
  * Keeps the screen capture and the bubble alive while the user is in other
@@ -33,6 +37,7 @@ import io.github.bropines.lens.R
 class ScreenTranslateService : Service() {
     private var capturer: ScreenCapturer? = null
     private var translator: ScreenTranslator? = null
+    private val scope = MainScope()
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -58,12 +63,25 @@ class ScreenTranslateService : Service() {
                 stopSelf()
                 return
             }
-            val ui = windowContext()
+            // With the accessibility service on, every window goes through it, so the
+            // translation can be opaque; the bubble and menu follow so they stay on top of it.
+            val trusted = ScreenOverlayHost.service.value
+            ScreenOverlayHost.windowType =
+                if (trusted != null) WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY else WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            val ui = trusted ?: windowContext()
             val size = (ui.getSystemService(Context.WINDOW_SERVICE) as WindowManager).screenSize()
             val capture = ScreenCapturer(projection, size.x, size.y, resources.configuration.densityDpi, onStopped = ::stopSelf)
             capturer = capture
             translator = ScreenTranslator(this, ui, (application as LensApplication).graph, capture, stop = ::stopSelf)
             ScreenTranslateState.running.value = true
+            if (trusted != null) {
+                // Its windows die with the service: nothing would be left on screen to stop with.
+                scope.launch {
+                    ScreenOverlayHost.service.first { it !== trusted }
+                    Toast.makeText(this@ScreenTranslateService, "Спецвозможность Lens выключена — перевод экрана остановлен", Toast.LENGTH_LONG).show()
+                    stopSelf()
+                }
+            }
         } catch (e: Exception) {
             Log.e(TAG, "could not start", e)
             Toast.makeText(this, "Не удалось включить перевод экрана: ${e.message}", Toast.LENGTH_LONG).show()
@@ -84,6 +102,7 @@ class ScreenTranslateService : Service() {
     }
 
     override fun onDestroy() {
+        scope.cancel()
         translator?.close()
         translator = null
         capturer?.close()

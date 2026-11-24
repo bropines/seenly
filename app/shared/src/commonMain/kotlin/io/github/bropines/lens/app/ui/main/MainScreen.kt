@@ -99,6 +99,7 @@ fun MainScreen(
                     Tab.Settings -> SettingsScreen(
                         graph.settings, settings, onBack = null, onAbout = onOpenAbout, onTranslators = onOpenTranslators,
                         translatorsSummary = settings.translators.enabled.joinToString(" → ") { graph.translator.nameOf(it) }.ifEmpty { "Ни один не включён" },
+                        screen = graph.services.screenTranslate,
                     )
                 }
             }

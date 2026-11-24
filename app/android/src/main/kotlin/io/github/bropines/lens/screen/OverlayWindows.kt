@@ -55,7 +55,7 @@ internal fun overlayParams(width: Int, height: Int, flags: Int = 0): WindowManag
     WindowManager.LayoutParams(
         width,
         height,
-        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+        ScreenOverlayHost.windowType,
         flags or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
         PixelFormat.TRANSLUCENT,
     ).apply {
@@ -180,7 +180,10 @@ internal class LayerView(
     }
 
     private fun passThroughOpacity(): Float =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        // An accessibility overlay is trusted: opaque, and touches still pass.
+        if (ScreenOverlayHost.trusted) {
+            1f
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             (context.getSystemService(Context.INPUT_SERVICE) as InputManager).maximumObscuringOpacityForTouch
         } else {
             1f

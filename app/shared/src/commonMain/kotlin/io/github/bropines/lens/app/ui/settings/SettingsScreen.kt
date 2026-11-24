@@ -32,6 +32,9 @@ import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.DocumentScanner
 import androidx.compose.material.icons.rounded.GTranslate
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Layers
+import androidx.compose.runtime.collectAsState
+import io.github.bropines.lens.app.screen.ScreenTranslate
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Translate
@@ -80,6 +83,7 @@ fun SettingsScreen(
     onAbout: () -> Unit = {},
     onTranslators: () -> Unit = {},
     translatorsSummary: String = "",
+    screen: ScreenTranslate? = null,
 ) {
     val scope = rememberCoroutineScope()
     fun update(transform: (AppSettings) -> AppSettings) = scope.launch { repository.update(transform) }
@@ -146,6 +150,22 @@ fun SettingsScreen(
                 Icons.Rounded.TextFields, "Минимальный размер", if (o.minFontSp == 0) "Авто" else "${o.minFontSp} sp",
                 value = o.minFontSp.toFloat(), range = 0f..16f, steps = 15,
             ) { v -> overlay { it.copy(minFontSp = v.roundToInt()) } }
+
+            if (screen != null) {
+                val opaque by screen.opaque.collectAsState()
+                Section("Перевод экрана")
+                Setting(
+                    Icons.Rounded.Layers,
+                    "Перевод без просвечивания",
+                    if (opaque) {
+                        "Включено: перевод полностью закрывает оригинал"
+                    } else {
+                        "Выключено: в режимах «Авто» и «Область» оригинал просвечивает. " +
+                            "Включите «Lens» в спецвозможностях; если пункт серый — " +
+                            "в сведениях о приложении разрешите ограниченные настройки"
+                    },
+                ) { screen.openOpaqueSettings() }
+            }
 
             Section("Перевод текста")
             Setting(Icons.Rounded.GTranslate, "Переводчики", translatorsSummary, onTranslators)

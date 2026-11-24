@@ -1,10 +1,12 @@
 package io.github.bropines.lens.screen
 
 import android.app.Activity
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
 import android.graphics.RectF
+import android.provider.Settings
 import io.github.bropines.lens.app.screen.ScreenTranslate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +32,20 @@ class AndroidScreenTranslate(
 
     override fun stop() {
         context.stopService(Intent(context, ScreenTranslateService::class.java))
+    }
+
+    override val opaque: StateFlow<Boolean> get() = ScreenOverlayHost.on
+
+    override fun openOpaqueSettings() {
+        val component = ComponentName(context, LensAccessibilityService::class.java).flattenToString()
+        // Straight to this service's page where the system has one, else the list of all.
+        val details = Intent("android.settings.ACCESSIBILITY_DETAILS_SETTINGS")
+            .putExtra(Intent.EXTRA_COMPONENT_NAME, component)
+        val list = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        val front = frontActivity()
+        fun launch(intent: Intent) =
+            if (front != null) front.startActivity(intent) else context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        runCatching { launch(details) }.recoverCatching { launch(list) }
     }
 }
 

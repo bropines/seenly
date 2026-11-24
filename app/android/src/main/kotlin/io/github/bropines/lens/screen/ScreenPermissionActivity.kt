@@ -88,7 +88,8 @@ class ScreenPermissionActivity : ComponentActivity() {
 
     private fun next() {
         when {
-            !Settings.canDrawOverlays(this) -> {
+            // The accessibility service draws its own windows: no overlay permission needed then.
+            !Settings.canDrawOverlays(this) && ScreenOverlayHost.service.value == null -> {
                 if (overlayAsked) {
                     toast("Нужно разрешение «Поверх других приложений»")
                     finish()
