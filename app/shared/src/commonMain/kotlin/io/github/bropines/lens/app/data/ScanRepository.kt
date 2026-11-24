@@ -11,8 +11,12 @@ import io.github.bropines.lens.protocol.LensSearchSession
 import io.github.bropines.lens.protocol.SearchPageOptions
 import io.github.bropines.lens.protocol.ScanOptions
 import io.github.bropines.lens.protocol.ScanResult
+import io.github.bropines.lens.app.platform.quarterTurns
+import io.github.bropines.lens.app.platform.rotateEncodedImage
 import io.github.vinceglb.filekit.readBytes
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -32,8 +36,25 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
     /** The last few pages uploaded for search; each session's upload stays searchable for ~30 minutes. */
     private val searchTargets = LinkedHashMap<String, SearchTarget>()
 
-    suspend fun scan(item: GalleryItem, settings: AppSettings): ScanResult {
-        val key = cacheKey(item, settings)
+    /** Clockwise quarter turns per item key, set in the viewer; kept for the app's run. */
+    private val rotations = mutableMapOf<String, Int>()
+
+    fun rotation(item: GalleryItem): Int = rotations[item.key] ?: 0
+
+    fun setRotation(item: GalleryItem, turns: Int) {
+        val q = quarterTurns(turns)
+        if (q == 0) rotations.remove(item.key) else rotations[item.key] = q
+    }
+
+    /** [item]'s bytes as uploaded: turned by [rotation] quarter turns clockwise. */
+    private suspend fun uploadBytes(item: GalleryItem, rotation: Int): ByteArray {
+        val bytes = item.file.readBytes()
+        return if (quarterTurns(rotation) == 0) bytes else withContext(Dispatchers.Default) { rotateEncodedImage(bytes, rotation) }
+    }
+
+    /** Scans [item] turned [rotation] quarter turns clockwise, so Lens sees the page as the viewer shows it. */
+    suspend fun scan(item: GalleryItem, settings: AppSettings, rotation: Int = 0): ScanResult {
+        val key = cacheKey(item, settings, rotation)
         val (deferred, owner) = lock.withLock {
             cache.remove(key)?.let { hit ->
                 cache[key] = hit
@@ -44,14 +65,14 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
         }
         if (!owner) return deferred.await()
         try {
-            val bytes = item.file.readBytes()
+            val bytes = uploadBytes(item, rotation)
             // Tall pages (screenshots, webtoon strips) go up in full-resolution bands. Search
             // makes its own untranslated upload (searchSession), so this needs no session.
             val result = lens.scanTiled(bytes, settings.toScanOptions())
             put(key, result)
             deferred.complete(result)
             // History is a convenience: a failure to save it must not fail the scan.
-            runCatching { history.record(item, bytes, settings, result) }.onFailure { log.w(it) { "history not saved" } }
+            runCatching { history.record(item, bytes, settings, result, quarterTurns(rotation)) }.onFailure { log.w(it) { "history not saved" } }
             return result
         } catch (e: Throwable) {
             deferred.completeExceptionally(e)
@@ -66,15 +87,16 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
      * scanned earlier in this run already has one; a page from history or an
      * expired one is uploaded again first.
      */
-    suspend fun searchSession(item: GalleryItem, settings: AppSettings): SearchTarget {
+    suspend fun searchSession(item: GalleryItem, settings: AppSettings, rotation: Int = 0): SearchTarget {
         // Lens lists the objects in a picture only for a plain request: with the
         // TRANSLATE filter overlay_objects comes back empty. Search therefore has
         // its own session and upload, without translation.
-        val key = cacheKey(item, settings) + "|search"
+        val key = cacheKey(item, settings, rotation) + "|search"
         lock.withLock { searchTargets[key] }?.let { return it }
         val session = lens.searchSession(PAGE)
         val options = settings.toScanOptions().copy(targetLanguage = null, sourceLanguage = null)
-        val target = SearchTarget(session, session.scan(item.file.readBytes(), options).objects)
+        // Turned like the shown page, so regions drawn on it and object boxes line up.
+        val target = SearchTarget(session, session.scan(uploadBytes(item, rotation), options).objects)
         lock.withLock {
             searchTargets[key] = target
             if (searchTargets.size > SESSIONS) searchTargets.remove(searchTargets.keys.first())
@@ -122,8 +144,9 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
         return bytes
     }
 
-    private fun cacheKey(item: GalleryItem, s: AppSettings) =
-        "${item.key}|${s.targetLanguage}|${s.sourceLanguage}|${s.ocrLanguage}"
+    /** The rotation is part of the key: the 0° and 90° scans of a page have different boxes. */
+    private fun cacheKey(item: GalleryItem, s: AppSettings, rotation: Int = 0) =
+        "${item.key}|${s.targetLanguage}|${s.sourceLanguage}|${s.ocrLanguage}|r${quarterTurns(rotation)}"
 
     private companion object {
         const val CACHE_SIZE = 200

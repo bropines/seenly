@@ -9,15 +9,41 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
+import androidx.camera.core.SurfaceOrientedMeteringPointFactory
 import androidx.camera.core.SurfaceRequest
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
+import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.rounded.CenterFocusStrong
+import androidx.compose.material.icons.rounded.Exposure
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Monitor
+import androidx.compose.material.icons.rounded.RestartAlt
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.IntOffset
+import kotlinx.coroutines.delay
+import java.util.Locale
+import kotlin.math.roundToInt
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -127,6 +153,15 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
     val capture = remember {
         ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build()
     }
+    // Maps viewfinder taps to surface coordinates, whatever the crop and rotation.
+    val transformer = remember { MutableCoordinateTransformer() }
+    // Exposure compensation as a device index (EV = index * step), screen preset, metering point.
+    var evIndex by remember { mutableIntStateOf(0) }
+    var screenMode by remember { mutableStateOf(false) }
+    var showExposure by remember { mutableStateOf(false) }
+    var exposureTouch by remember { mutableIntStateOf(0) }
+    var focus by remember { mutableStateOf<FocusMark?>(null) }
+    val exposure = camera?.cameraInfo?.exposureState?.takeIf { it.isExposureCompensationSupported }
 
     LaunchedEffect(lifecycleOwner) {
         val preview = Preview.Builder().build().apply { setSurfaceProvider { surfaceRequest = it } }
@@ -136,28 +171,91 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
             .apply { setAnalyzer(executor, CodeAnalyzer { found -> if (found != code) code = found }) }
         val provider = ProcessCameraProvider.awaitInstance(context)
         provider.unbindAll()
-        camera = provider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, capture, analysis)
+        val bound = provider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, capture, analysis)
+        camera = bound
         try {
             awaitCancellation()
         } finally {
+            // Leave the camera as we found it: continuous AF/AE, no compensation.
+            bound.cameraControl.cancelFocusAndMetering()
+            bound.cameraControl.setExposureCompensationIndex(0)
             provider.unbindAll()
             executor.shutdown()
         }
     }
     LaunchedEffect(camera, torch) { camera?.cameraControl?.enableTorch(torch) }
+    LaunchedEffect(camera, evIndex) {
+        if (exposure != null) camera?.cameraControl?.setExposureCompensationIndex(evIndex)
+    }
+    // The slider tucks itself away a few seconds after the last touch.
+    LaunchedEffect(showExposure, exposureTouch) {
+        if (showExposure) { delay(4000); showExposure = false }
+    }
+
+    fun meter(at: Offset, lock: Boolean) {
+        val cam = camera ?: return
+        val request = surfaceRequest ?: return
+        val surface = with(transformer) { at.transform() }
+        val w = request.resolution.width.toFloat()
+        val h = request.resolution.height.toFloat()
+        val point = SurfaceOrientedMeteringPointFactory(w, h).createPoint(surface.x.coerceIn(0f, w), surface.y.coerceIn(0f, h))
+        val action = FocusMeteringAction.Builder(
+            point,
+            FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE or FocusMeteringAction.FLAG_AWB,
+        ).apply { if (lock) disableAutoCancel() }.build()
+        // Fixed-focus lenses and devices without metering regions: nothing to do.
+        if (!cam.cameraInfo.isFocusMeteringSupported(action)) return
+        val mark = FocusMark(at, lock, System.nanoTime())
+        focus = mark
+        val result = cam.cameraControl.startFocusAndMetering(action)
+        result.addListener({
+            val ok = runCatching { result.get().isFocusSuccessful }.getOrDefault(false)
+            if (focus?.id == mark.id) focus = mark.copy(focused = ok)
+        }, ContextCompat.getMainExecutor(context))
+        if (exposure != null) { showExposure = true; exposureTouch++ }
+    }
+
+    fun unlock() {
+        camera?.cameraControl?.cancelFocusAndMetering()
+        focus = null
+    }
 
     Box(Modifier.fillMaxSize()) {
         surfaceRequest?.let { request ->
             CameraXViewfinder(
                 surfaceRequest = request,
+                coordinateTransformer = transformer,
                 modifier = Modifier.fillMaxSize().pointerInput(camera) {
                     detectTransformGestures { _, _, zoom, _ ->
                         val state = camera?.cameraInfo?.zoomState?.value ?: return@detectTransformGestures
                         val next = (state.zoomRatio * zoom).coerceIn(state.minZoomRatio, state.maxZoomRatio)
                         camera?.cameraControl?.setZoomRatio(next)
                     }
+                }.pointerInput(camera, request) {
+                    // Tap: focus and meter there, then back to continuous AF. Hold: lock AF/AE there.
+                    detectTapGestures(
+                        onTap = { meter(it, lock = false) },
+                        onLongPress = { meter(it, lock = true) },
+                    )
                 },
             )
+        }
+
+        focus?.let { mark -> FocusRing(mark, onFaded = { if (focus?.id == mark.id) focus = null }) }
+
+        if (focus?.locked == true) {
+            Surface(
+                onClick = ::unlock,
+                shape = CircleShape,
+                color = Color.Black.copy(alpha = 0.55f),
+                contentColor = Color.White,
+                modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 12.dp),
+            ) {
+                Row(Modifier.padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Rounded.Lock, contentDescription = stringResource(Res.string.camera_focus_unlock), modifier = Modifier.size(18.dp))
+                    Text(stringResource(Res.string.camera_focus_locked), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = 8.dp))
+                }
+            }
         }
 
         // Bottom right, mirroring the gallery button: both within the thumb's reach beside the shutter.
@@ -181,8 +279,47 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
             AnimatedVisibility(code != null, enter = fadeIn(tween(120)) + slideInVertically(tween(160)) { it / 2 }, exit = fadeOut(tween(90))) {
                 code?.let { CodeCard(it, services, onDismiss = { code = null }) }
             }
+            if (exposure != null) {
+                val range = exposure.exposureCompensationRange
+                val step = exposure.exposureCompensationStep.toFloat()
+                AnimatedVisibility(showExposure, enter = fadeIn(tween(120)) + slideInVertically(tween(160)) { it / 2 }, exit = fadeOut(tween(120))) {
+                    ExposureSlider(
+                        index = evIndex,
+                        min = range.lower,
+                        max = range.upper,
+                        onChange = { evIndex = it; exposureTouch++ },
+                        onReset = { evIndex = 0; screenMode = false; exposureTouch++ },
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    // Screens are bright, emissive and flat: pull exposure down so the glyphs keep their
+                    // edges, and drop any tap lock so continuous AF follows the user's hand.
+                    CameraChip(
+                        active = screenMode,
+                        onClick = {
+                            screenMode = !screenMode
+                            evIndex = if (screenMode) screenIndex(step, range.lower, range.upper) else 0
+                            unlock()
+                        },
+                    ) {
+                        Icon(Icons.Rounded.Monitor, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(stringResource(Res.string.camera_screen_mode), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = 6.dp))
+                    }
+                    val evLabel = stringResource(Res.string.camera_exposure_value, formatEv(evIndex * step))
+                    val exposureLabel = stringResource(Res.string.camera_exposure)
+                    CameraChip(
+                        active = evIndex != 0,
+                        onClick = { showExposure = !showExposure; exposureTouch++ },
+                        modifier = Modifier.semantics { contentDescription = "$exposureLabel $evLabel" },
+                    ) {
+                        Icon(Icons.Rounded.Exposure, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(evLabel, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = 6.dp))
+                    }
+                }
+            }
             Text(
-                error?.let { stringResource(Res.string.camera_capture_failed, it) } ?: stringResource(Res.string.camera_hint),
+                error?.let { stringResource(Res.string.camera_capture_failed, it) }
+                    ?: if (screenMode) stringResource(Res.string.camera_screen_mode_on) else stringResource(Res.string.camera_hint),
                 color = if (error != null) MaterialTheme.colorScheme.error else Color.White.copy(alpha = 0.8f),
                 style = MaterialTheme.typography.labelLarge,
             )
@@ -221,6 +358,88 @@ private fun Shutter(busy: Boolean, onClick: () -> Unit) {
             .clickable(enabled = !busy, onClickLabel = label, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { if (busy) LoadingIndicator(Modifier.size(36.dp)) }
+}
+
+/** Where the user metered last: a tap (fades away) or a hold (stays, AF/AE locked). */
+private data class FocusMark(val at: Offset, val locked: Boolean, val id: Long, val focused: Boolean? = null)
+
+/** About −1.3 EV for screens, snapped to the device's step and clamped to its range. */
+private fun screenIndex(step: Float, min: Int, max: Int): Int =
+    if (step <= 0f) 0 else (-1.3f / step).roundToInt().coerceIn(min, max)
+
+private fun formatEv(ev: Float): String =
+    if (kotlin.math.abs(ev) < 0.05f) "0" else String.format(Locale.getDefault(), "%+.1f", ev)
+
+private val FocusYellow = Color(0xFFFFD60A)
+
+@Composable
+private fun FocusRing(mark: FocusMark, onFaded: () -> Unit) {
+    val scale = remember(mark.id) { Animatable(1.35f) }
+    val alpha = remember(mark.id) { Animatable(1f) }
+    LaunchedEffect(mark.id) {
+        scale.animateTo(1f, tween(180))
+        if (!mark.locked) {
+            delay(1100)
+            alpha.animateTo(0f, tween(250))
+            onFaded()
+        }
+    }
+    val size = 72.dp
+    val half = with(LocalDensity.current) { (size / 2).roundToPx() }
+    val color = if (mark.locked || mark.focused == true) FocusYellow else Color.White
+    Box(
+        Modifier.offset { IntOffset(mark.at.x.roundToInt() - half, mark.at.y.roundToInt() - half) }
+            .size(size)
+            .graphicsLayer { scaleX = scale.value; scaleY = scale.value; this.alpha = alpha.value },
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.fillMaxSize()) {
+            drawCircle(color, radius = this.size.minDimension / 2 - 2.dp.toPx(), style = Stroke(2.dp.toPx()))
+        }
+        if (mark.locked) Icon(Icons.Rounded.Lock, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+        else Icon(Icons.Rounded.CenterFocusStrong, contentDescription = null, tint = color.copy(alpha = 0.7f), modifier = Modifier.size(16.dp))
+    }
+}
+
+/** Small translucent pill for the camera's toggles, matching the round gallery/flash buttons. */
+@Composable
+private fun CameraChip(active: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = CircleShape,
+        color = Color.White.copy(alpha = if (active) 0.9f else 0.18f),
+        contentColor = if (active) Color.Black else Color.White,
+        modifier = modifier,
+    ) {
+        Row(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) { content() }
+    }
+}
+
+@Composable
+private fun ExposureSlider(index: Int, min: Int, max: Int, onChange: (Int) -> Unit, onReset: () -> Unit) {
+    val label = stringResource(Res.string.camera_exposure)
+    Surface(shape = CircleShape, color = Color.Black.copy(alpha = 0.55f), contentColor = Color.White) {
+        Row(Modifier.padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Rounded.Exposure, contentDescription = null, modifier = Modifier.size(18.dp))
+            Slider(
+                value = index.toFloat(),
+                onValueChange = { v -> v.roundToInt().let { if (it != index) onChange(it) } },
+                valueRange = min.toFloat()..max.toFloat(),
+                steps = (max - min - 1).coerceAtLeast(0),
+                colors = SliderDefaults.colors(
+                    thumbColor = Color.White,
+                    activeTrackColor = Color.White,
+                    inactiveTrackColor = Color.White.copy(alpha = 0.3f),
+                    activeTickColor = Color.Transparent,
+                    inactiveTickColor = Color.Transparent,
+                ),
+                modifier = Modifier.width(220.dp).padding(horizontal = 12.dp).semantics { contentDescription = label },
+            )
+            IconButton(onClick = onReset) {
+                Icon(Icons.Rounded.RestartAlt, contentDescription = stringResource(Res.string.camera_exposure_reset))
+            }
+        }
+    }
 }
 
 /** What the camera read: open a link, copy text, join Wi-Fi by copying the password. */

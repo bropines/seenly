@@ -24,6 +24,8 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.automirrored.rounded.RotateRight
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.FilledTonalIconToggleButton
@@ -120,6 +122,7 @@ fun ViewerScreen(
     val searching by vm.searching.collectAsState()
     val searchError by vm.searchError.collectAsState()
     val objects by vm.objects.collectAsState()
+    val rotations by vm.rotations.collectAsState()
     val renders = remember { mutableStateMapOf<Int, PageRender>() }
     val scope = rememberCoroutineScope()
     val highlight = MaterialTheme.colorScheme.primary
@@ -184,6 +187,7 @@ fun ViewerScreen(
                     onZoomed = { if (index == pager.currentPage) zoomed = it },
                     onRender = { render -> if (render == null) renders.remove(index) else renders[index] = render },
                     selection = if (index == pager.currentPage) selection else null,
+                    rotation = rotations[items[index].key] ?: 0,
                 )
                 val render = renders[index]
                 if (searchMode && index == pager.currentPage && render != null) {
@@ -250,6 +254,22 @@ fun ViewerScreen(
                         modifier = Modifier.weight(1f),
                         onDark = true,
                     )
+                    // A sideways photo reads badly: turn it upright, a quarter per tap, and it is read again.
+                    FilledTonalIconButton(
+                        onClick = {
+                            selection.clear()
+                            tappedParagraph = null
+                            lastRegion = null
+                            vm.rotate(pager.currentPage)
+                        },
+                        modifier = Modifier.padding(start = 12.dp).size(56.dp),
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Rounded.RotateRight,
+                            contentDescription = stringResource(Res.string.viewer_rotate),
+                            modifier = Modifier.size(28.dp),
+                        )
+                    }
                     FilledTonalIconToggleButton(
                         checked = overlayHidden,
                         onCheckedChange = { overlayHidden = !overlayHidden; selection.clear() },

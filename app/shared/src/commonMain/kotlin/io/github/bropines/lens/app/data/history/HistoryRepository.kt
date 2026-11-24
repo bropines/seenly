@@ -46,11 +46,13 @@ class HistoryRepository(private val services: PlatformServices) {
     fun isOwnCopy(item: GalleryItem): Boolean = item.key.contains(dir.toString())
 
     @OptIn(ExperimentalTime::class)
-    suspend fun record(item: GalleryItem, imageBytes: ByteArray, settings: AppSettings, result: ScanResult) = withContext(Dispatchers.IO) {
+    /** [imageBytes] are what was scanned: the picture turned [rotation] quarter turns clockwise. */
+    suspend fun record(item: GalleryItem, imageBytes: ByteArray, settings: AppSettings, result: ScanResult, rotation: Int = 0) = withContext(Dispatchers.IO) {
         if (isOwnCopy(item) || result.paragraphs.isEmpty()) return@withContext
         SystemFileSystem.createDirectories(dir)
         val stem = stableName(item.key)
-        val image = Path(dir, "$stem.img")
+        // Each turn has its own copy: the result's boxes fit only the picture they were read from.
+        val image = Path(dir, if (rotation == 0) "$stem.img" else "$stem-r$rotation.img")
         if (!SystemFileSystem.exists(image)) SystemFileSystem.sink(image).buffered().use { it.write(imageBytes) }
         val resultFile = Path(dir, "$stem-${settings.targetLanguage}.json")
         SystemFileSystem.sink(resultFile).buffered().use { it.writeString(json.encodeToString(ScanResult.serializer(), result)) }
@@ -70,6 +72,11 @@ class HistoryRepository(private val services: PlatformServices) {
                 createdAt = Clock.System.now().toEpochMilliseconds(),
             ),
         )
+        // Re-read at another turn: the old copy goes once no other language's entry shows it.
+        val previous = existing?.imagePath
+        if (previous != null && previous != image.toString() && dao.everything().none { it.imagePath == previous }) {
+            runCatching { SystemFileSystem.delete(Path(previous), mustExist = false) }
+        }
     }
 
     suspend fun load(entry: HistoryEntry): ScanResult? = withContext(Dispatchers.IO) {

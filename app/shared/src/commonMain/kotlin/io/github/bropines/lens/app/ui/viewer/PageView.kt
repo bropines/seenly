@@ -12,6 +12,8 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import io.github.bropines.lens.app.platform.quarterTurns
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,12 +49,17 @@ fun PageView(
     onRender: (PageRender?) -> Unit,
     /** Text selection, for the visible page only. */
     selection: TextSelectionState? = null,
+    /** Clockwise quarter turns: the picture is shown, and was scanned, turned this far. */
+    rotation: Int = 0,
 ) {
-    val image by rememberImage(item.file)
+    val image by rememberImage(item.file, rotation)
     val result = (state as? PageState.Ready)?.result
-    // Keep the old translation up while a new language decodes: no blink to the bare image.
-    val overlay = rememberOverlayState(result, keepPrevious = true)
-    val zoom = rememberZoomState()
+    // A new turn starts the overlay and zoom afresh: the old boxes fit the old turn only.
+    // Within a turn, the old translation stays up while a new language decodes.
+    val decoded = key(rotation) { rememberOverlayState(result, keepPrevious = true) }
+    val zoom = key(rotation) { rememberZoomState() }
+    // While the turned bitmap is still being made, no overlay over the old one.
+    val overlay = decoded.takeIf { (image as? ImageState.Ready)?.rotation == quarterTurns(rotation) }
 
     LaunchedEffect(zoom) { snapshotFlow { zoom.isZoomed }.collect(onZoomed) }
     LaunchedEffect(image, overlay) { onRender((image as? ImageState.Ready)?.let { PageRender(it.bitmap, overlay) }) }

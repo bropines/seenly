@@ -184,6 +184,7 @@
     <!-- Viewer -->
     <string name="viewer_show_translation">Показать перевод</string>
     <string name="viewer_hide_translation">Скрыть перевод</string>
+    <string name="viewer_rotate">Повернуть на 90° по часовой</string>
     <string name="viewer_translating_to">Перевожу на %1$s…</string>
     <string name="viewer_recognising">Распознаю текст…</string>
     <string name="viewer_mode_search">Поиск</string>
@@ -228,6 +229,13 @@
     <string name="camera_capture_failed">Не удалось снять: %1$s</string>
     <string name="camera_shoot">Снять</string>
     <string name="camera_password">Пароль</string>
+    <string name="camera_exposure">Экспозиция</string>
+    <string name="camera_exposure_value">%1$s EV</string>
+    <string name="camera_exposure_reset">Сбросить экспозицию</string>
+    <string name="camera_screen_mode">Режим экрана</string>
+    <string name="camera_screen_mode_on">Режим экрана: темнее, для мониторов и телефонов</string>
+    <string name="camera_focus_locked">Фокус и экспозиция зафиксированы</string>
+    <string name="camera_focus_unlock">Снять фиксацию фокуса</string>
 
     <!-- Screen translation bubble menu -->
     <string name="bubble_mode_screen">Экран</string>

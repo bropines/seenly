@@ -6,6 +6,7 @@ import io.github.bropines.lens.app.data.AppSettings
 import io.github.bropines.lens.app.data.Gallery
 import io.github.bropines.lens.app.data.ScanRepository
 import io.github.bropines.lens.app.data.SettingsRepository
+import io.github.bropines.lens.app.platform.quarterTurns
 import io.github.bropines.lens.app.resources.*
 import io.github.bropines.lens.app.ui.UiText
 import io.github.bropines.lens.app.ui.uiText
@@ -96,6 +97,31 @@ class ViewerViewModel(
         if (index + 1 < gallery.items.size) ensure(index + 1)
     }
 
+    private val _rotations = MutableStateFlow(
+        gallery.items.associate { it.key to scans.rotation(it) }.filterValues { it != 0 },
+    )
+    /** Clockwise quarter turns per item key; a page missing here is upright. */
+    val rotations: StateFlow<Map<String, Int>> = _rotations.asStateFlow()
+
+    private fun rotationOf(index: Int): Int = _rotations.value[gallery.items[index].key] ?: 0
+
+    /**
+     * Turns page [index] a quarter clockwise and reads it again: Lens gets the
+     * turned pixels, and the old result (boxes for the old turn) is dropped
+     * at once so it is never drawn over the turned picture.
+     */
+    fun rotate(index: Int) {
+        val item = gallery.items[index]
+        val turns = quarterTurns(rotationOf(index) + 1)
+        scans.setRotation(item, turns)
+        _rotations.update { if (turns == 0) it - item.key else it + (item.key to turns) }
+        jobs.remove(index)?.cancel()
+        _pages.update { it - index }
+        _stale.update { it - index }
+        _objects.update { it - index }
+        ensure(index)
+    }
+
     fun retry(index: Int) {
         _pages.update { it - index }
         ensure(index)
@@ -114,9 +140,10 @@ class ViewerViewModel(
     /** Uploads page [index] for search in the background, so its dots appear and a search starts fast. */
     fun prepareSearch(index: Int) {
         if (_objects.value.containsKey(index)) return
+        val rotation = rotationOf(index)
         viewModelScope.launch {
-            runCatching { scans.searchSession(gallery.items[index], settings.value) }
-                .onSuccess { target -> _objects.update { it + (index to target.objects) } }
+            runCatching { scans.searchSession(gallery.items[index], settings.value, rotation) }
+                .onSuccess { target -> if (rotationOf(index) == rotation) _objects.update { it + (index to target.objects) } }
         }
     }
 
@@ -131,8 +158,9 @@ class ViewerViewModel(
             _searching.value = true
             _searchError.value = null
             try {
-                val target = scans.searchSession(gallery.items[index], settings.value)
-                _objects.update { it + (index to target.objects) }
+                val rotation = rotationOf(index)
+                val target = scans.searchSession(gallery.items[index], settings.value, rotation)
+                if (rotationOf(index) == rotation) _objects.update { it + (index to target.objects) }
                 open(build(target.session))
             } catch (e: CancellationException) {
                 throw e
@@ -158,9 +186,10 @@ class ViewerViewModel(
         if ((state is PageState.Ready && !isStale) || jobs[index]?.isActive == true) return
         // A stale page keeps its old result visible; only a page with nothing shows the spinner.
         if (!isStale) _pages.update { it + (index to PageState.Loading) }
+        val rotation = rotationOf(index)
         jobs[index] = viewModelScope.launch {
             val next = try {
-                PageState.Ready(scans.scan(gallery.items[index], settings.value))
+                PageState.Ready(scans.scan(gallery.items[index], settings.value, rotation))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: LensException.Http) {
@@ -170,6 +199,8 @@ class ViewerViewModel(
             } catch (e: Exception) {
                 PageState.Failed(friendlyError(e))
             }
+            // A result read at a turn the page no longer has must not land.
+            if (rotationOf(index) != rotation) return@launch
             _pages.update { it + (index to next) }
             _stale.update { it - index }
         }

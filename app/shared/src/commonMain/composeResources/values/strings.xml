@@ -179,6 +179,7 @@
     <!-- Viewer -->
     <string name="viewer_show_translation">Show translation</string>
     <string name="viewer_hide_translation">Hide translation</string>
+    <string name="viewer_rotate">Rotate 90° clockwise</string>
     <string name="viewer_translating_to">Translating into %1$s…</string>
     <string name="viewer_recognising">Recognising text…</string>
     <string name="viewer_mode_search">Search</string>
@@ -223,6 +224,13 @@
     <string name="camera_capture_failed">Couldn’t take the photo: %1$s</string>
     <string name="camera_shoot">Take photo</string>
     <string name="camera_password">Password</string>
+    <string name="camera_exposure">Exposure</string>
+    <string name="camera_exposure_value">%1$s EV</string>
+    <string name="camera_exposure_reset">Reset exposure</string>
+    <string name="camera_screen_mode">Screen mode</string>
+    <string name="camera_screen_mode_on">Screen mode: darker, for monitors and phones</string>
+    <string name="camera_focus_locked">Focus and exposure locked</string>
+    <string name="camera_focus_unlock">Unlock focus</string>
 
     <!-- Screen translation bubble menu -->
     <string name="bubble_mode_screen">Screen</string>
