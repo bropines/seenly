@@ -22,6 +22,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import coil3.ImageLoader
+import coil3.memory.MemoryCache
 import coil3.compose.setSingletonImageLoaderFactory
 import io.github.bropines.lens.app.data.AppSettings
 import io.github.bropines.lens.app.di.AppGraph
@@ -64,7 +65,13 @@ sealed interface Route {
 @Composable
 fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
     setSingletonImageLoaderFactory { context ->
-        ImageLoader.Builder(context).components { addPlatformFileSupport() }.build()
+        ImageLoader.Builder(context)
+            .components { addPlatformFileSupport() }
+            // Pages are decoded large (up to 3072 px, software bitmaps for the exporter), so a
+            // percentage of the heap like Coil's default holds a whole chapter. The pager keeps
+            // its neighbours itself; the cache only has to make paging back instant.
+            .memoryCache { MemoryCache.Builder().maxSizePercent(context, 0.1).build() }
+            .build()
     }
     val settings by graph.settings.settings.collectAsState(AppSettings())
     val backStack = remember { mutableStateListOf<Route>(Route.Main) }

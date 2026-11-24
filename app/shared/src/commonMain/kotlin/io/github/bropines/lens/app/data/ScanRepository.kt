@@ -27,6 +27,7 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
     private val lock = Mutex()
     /** Insertion-ordered; a hit is moved to the end, so the first key is the least recently used. */
     private val cache = LinkedHashMap<String, ScanResult>()
+    private var cachedBytes = 0L
     private val inFlight = mutableMapOf<String, CompletableDeferred<ScanResult>>()
     /** The last few pages uploaded for search; each session's upload stays searchable for ~30 minutes. */
     private val searchTargets = LinkedHashMap<String, SearchTarget>()
@@ -88,8 +89,37 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
     suspend fun prime(item: GalleryItem, settings: AppSettings, result: ScanResult) = put(cacheKey(item, settings), result)
 
     private suspend fun put(key: String, result: ScanResult) = lock.withLock {
+        cache.remove(key)?.let { cachedBytes -= it.weight() }
         cache[key] = result
-        if (cache.size > CACHE_SIZE) cache.remove(cache.keys.first())
+        cachedBytes += result.weight()
+        // A page's erase patches can be raw RGBA, megabytes each: bound the bytes, not just the count.
+        while (cache.size > 1 && (cache.size > CACHE_SIZE || cachedBytes > CACHE_BYTES)) {
+            val oldest = cache.keys.first()
+            cache.remove(oldest)?.let { cachedBytes -= it.weight() }
+        }
+    }
+
+    /** Drops the in-memory results (not the ones being fetched): the app is out of sight. */
+    fun trim() {
+        // Called from the main thread by the system; never wait on a scan for it.
+        if (!lock.tryLock()) return
+        try {
+            cache.clear()
+            cachedBytes = 0
+            searchTargets.clear()
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    /** Roughly what [this] holds in memory: its patches, plus a little for text and boxes. */
+    private fun ScanResult.weight(): Long {
+        var bytes = 4_096L
+        for (p in paragraphs) for (line in p.lines) {
+            val patch = line.translationStyle?.background ?: continue
+            bytes += patch.image.size + (patch.textMask?.size ?: 0)
+        }
+        return bytes
     }
 
     private fun cacheKey(item: GalleryItem, s: AppSettings) =
@@ -97,6 +127,8 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
 
     private companion object {
         const val CACHE_SIZE = 200
+        /** History keeps every result on disk; this is only the quick path for paging back. */
+        const val CACHE_BYTES = 32L * 1024 * 1024
         const val SESSIONS = 12
         /** The results page in the app's language. */
         val PAGE = SearchPageOptions(uiLanguage = "ru")

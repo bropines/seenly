@@ -107,7 +107,8 @@ internal class ScreenCapturer(
     }
 
     private fun newReader(width: Int, height: Int): ImageReader =
-        ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 3).also { reader ->
+        // Each image is a whole screen (14 MB at 1280x2772): the one we hold plus one arriving is enough.
+        ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2).also { reader ->
             reader.setOnImageAvailableListener({ onFrame(it) }, handler)
         }
 

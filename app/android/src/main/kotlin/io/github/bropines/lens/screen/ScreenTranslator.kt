@@ -458,7 +458,15 @@ internal class ScreenTranslator(
      * of the same size: only the pixels the translation changes are kept, so
      * everything else on screen stays live underneath.
      */
-    private suspend fun translate(frame: Bitmap, rect: Rect, settings: AppSettings): Layer {
+    private suspend fun translate(frame: Bitmap, rect: Rect, settings: AppSettings): Layer =
+        // The frame is a whole screen of pixels: give it back as soon as it has served.
+        try {
+            translateFrame(frame, rect, settings)
+        } finally {
+            frame.recycle()
+        }
+
+    private suspend fun translateFrame(frame: Bitmap, rect: Rect, settings: AppSettings): Layer {
         // In bands, so a tall screen reaches Lens at full resolution rather than shrunk to 1600 px.
         val raster = withContext(Dispatchers.Default) {
             val pixels = IntArray(frame.width * frame.height)
@@ -487,7 +495,19 @@ internal class ScreenTranslator(
                 // Sizes are real here: the frame is shown pixel for pixel.
                 minFontPx = style.minFontSp * ui.resources.displayMetrics.scaledDensity,
             ).asAndroidBitmap()
-            Layer(if (keepChanges(rendered, frame)) rendered else null, rect)
+            // Keep only the rectangle the translation changed: a screenful of mostly
+            // transparent pixels would cost as much memory as the screen itself.
+            val changed = keepChanges(rendered, frame)
+            if (changed == null) {
+                rendered.recycle()
+                return@withContext Layer(null, rect)
+            }
+            val kept = if (changed.width() == rendered.width && changed.height() == rendered.height) {
+                rendered
+            } else {
+                Bitmap.createBitmap(rendered, changed.left, changed.top, changed.width(), changed.height()).also { rendered.recycle() }
+            }
+            Layer(kept, Rect(changed).apply { offset(rect.left, rect.top) })
         }
     }
 
@@ -522,26 +542,41 @@ internal class ScreenTranslator(
         return base.withPrefs(settings.overlay)
     }
 
-    /** Makes every pixel of [rendered] that equals [frame]'s transparent. False if nothing is left. */
-    private fun keepChanges(rendered: Bitmap, frame: Bitmap): Boolean {
+    /**
+     * Makes every pixel of [rendered] that equals [frame]'s transparent and
+     * returns the bounds of what is left, or null if nothing is.
+     */
+    private fun keepChanges(rendered: Bitmap, frame: Bitmap): Rect? {
         val width = rendered.width
         val height = rendered.height
         val rows = 64
         val drawn = IntArray(width * rows)
         val original = IntArray(width * rows)
-        var any = false
+        var left = width
+        var top = height
+        var right = -1
+        var bottom = -1
         var y = 0
         while (y < height) {
             val n = min(rows, height - y)
             rendered.getPixels(drawn, 0, width, 0, y, width, n)
             frame.getPixels(original, 0, width, 0, y, width, n)
             for (i in 0 until width * n) {
-                if (drawn[i] == original[i]) drawn[i] = 0 else any = true
+                if (drawn[i] == original[i]) {
+                    drawn[i] = 0
+                } else {
+                    val x = i % width
+                    val row = y + i / width
+                    if (x < left) left = x
+                    if (x > right) right = x
+                    if (row < top) top = row
+                    if (row > bottom) bottom = row
+                }
             }
             rendered.setPixels(drawn, 0, width, 0, y, width, n)
             y += n
         }
-        return any
+        return if (right < 0) null else Rect(left, top, right + 1, bottom + 1)
     }
 
     private fun report(error: Throwable) {

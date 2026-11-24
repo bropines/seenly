@@ -98,6 +98,7 @@ internal class LayerView(
     private val location = IntArray(2)
     private var bitmap: Bitmap? = null
     private val target = Rect()
+    private val screen = Rect()
     private var attached = false
     private var passThrough = true
 
@@ -127,6 +128,9 @@ internal class LayerView(
         private set
 
     fun attach(size: Point) {
+        screen.set(0, 0, size.x, size.y)
+        params.x = 0
+        params.y = 0
         params.width = size.x
         params.height = size.y
         if (attached) wm.updateViewLayout(this, params) else wm.addView(this, params)
@@ -171,9 +175,26 @@ internal class LayerView(
             params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
         }
         val opacity = if (touchable) 1f else passThroughOpacity()
-        if (flags != params.flags || opacity != params.alpha) {
+        // The window's buffers are as big as the window: a whole screen of them is
+        // ~40 MB. Only a modal layer needs the whole screen (a tap anywhere dismisses);
+        // otherwise the window covers just what it draws.
+        val bounds = Rect()
+        if (touchable || empty) {
+            bounds.set(screen)
+        } else {
+            bitmap?.let { bounds.union(target) }
+            area?.let { bounds.union(it) }
+            if (!bounds.intersect(screen)) bounds.set(screen.left, screen.top, screen.left + 1, screen.top + 1)
+        }
+        val moved = bounds.left != params.x || bounds.top != params.y ||
+            bounds.width() != params.width || bounds.height() != params.height
+        if (flags != params.flags || opacity != params.alpha || moved) {
             params.flags = flags
             params.alpha = opacity
+            params.x = bounds.left
+            params.y = bounds.top
+            params.width = bounds.width()
+            params.height = bounds.height()
             wm.updateViewLayout(this, params)
         }
         invalidate()
