@@ -77,7 +77,8 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.FlashOff
 import androidx.compose.material.icons.rounded.FlashOn
-import androidx.compose.material.icons.rounded.OpenInNew
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material.icons.rounded.QrCode2
 import androidx.compose.material3.Button
@@ -539,7 +540,8 @@ private fun CodeCard(code: ScannedCode, services: PlatformServices, onDismiss: (
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Closing is a corner ×, not a third button: three labelled buttons do not fit a phone's width.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Rounded.QrCode2, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 val wifi = code.wifi
@@ -553,19 +555,22 @@ private fun CodeCard(code: ScannedCode, services: PlatformServices, onDismiss: (
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(start = 12.dp).weight(1f),
                 )
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Rounded.Close, contentDescription = stringResource(Res.string.hide))
+                }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.padding(end = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (code.isUrl) {
-                    Button(onClick = { services.openUrl(code.text) }) {
-                        Icon(Icons.Rounded.OpenInNew, null, Modifier.padding(end = 6.dp)); Text(stringResource(Res.string.open))
+                    Button(onClick = { services.openUrl(code.text) }, modifier = Modifier.weight(1f)) {
+                        Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, Modifier.padding(end = 6.dp))
+                        Text(stringResource(Res.string.open), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
                 val wifiPassword = code.wifi?.second
-                FilledTonalButton(onClick = { services.copyText(wifiPassword ?: code.text) }) {
+                FilledTonalButton(onClick = { services.copyText(wifiPassword ?: code.text) }, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Rounded.ContentCopy, null, Modifier.padding(end = 6.dp))
-                    Text(stringResource(if (wifiPassword != null) Res.string.camera_password else Res.string.copy))
+                    Text(stringResource(if (wifiPassword != null) Res.string.camera_password else Res.string.copy), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                FilledTonalButton(onClick = onDismiss) { Text(stringResource(Res.string.hide)) }
             }
         }
     }
