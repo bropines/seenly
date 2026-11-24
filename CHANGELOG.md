@@ -6,6 +6,8 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-25
+
 ### Added
 
 - Colour presets in Settings → Appearance: from the wallpaper (Android 12+), violet, blue, teal, green, amber, red, pink or monochrome; the screen-translation menu follows them.
