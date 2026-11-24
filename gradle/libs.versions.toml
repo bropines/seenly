@@ -71,6 +71,17 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.19.1" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version = "1.2.0" }
 
+# ML Kit, google flavor only. The recognizers are the "unbundled" ones: their models come from
+# Google Play services, not the APK. Translation has no such variant; its models are downloaded.
+mlkit-text-latin = { module = "com.google.android.gms:play-services-mlkit-text-recognition", version = "19.0.2" }
+mlkit-text-chinese = { module = "com.google.android.gms:play-services-mlkit-text-recognition-chinese", version = "16.0.2" }
+mlkit-text-japanese = { module = "com.google.android.gms:play-services-mlkit-text-recognition-japanese", version = "16.0.2" }
+mlkit-text-korean = { module = "com.google.android.gms:play-services-mlkit-text-recognition-korean", version = "16.0.2" }
+mlkit-text-devanagari = { module = "com.google.android.gms:play-services-mlkit-text-recognition-devanagari", version = "16.0.2" }
+mlkit-language-id = { module = "com.google.android.gms:play-services-mlkit-language-id", version = "17.0.0" }
+mlkit-translate = { module = "com.google.mlkit:translate", version = "17.0.3" }
+play-services-base = { module = "com.google.android.gms:play-services-base", version = "18.11.1" }
+
 # Plugin artifacts, for build-logic's classpath.
 gradlePlugin-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 gradlePlugin-android = { module = "com.android.tools.build:gradle", version.ref = "agp" }

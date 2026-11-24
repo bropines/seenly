@@ -146,6 +146,7 @@ private val DESCRIPTIONS: Map<String, StringResource> = mapOf(
     "yandex-cloud" to Res.string.engine_yandex_cloud,
     "libretranslate" to Res.string.engine_libretranslate,
     "openai" to Res.string.engine_openai,
+    "ondevice" to Res.string.engine_ondevice,
 )
 
 @Composable

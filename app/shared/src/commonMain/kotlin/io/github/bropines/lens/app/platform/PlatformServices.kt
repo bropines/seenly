@@ -34,12 +34,31 @@ interface PlatformServices {
 
     /** The floating screen translator, where the platform has one (Android). */
     val screenTranslate: io.github.bropines.lens.app.screen.ScreenTranslate? get() = null
+
+    /**
+     * How this copy installs an update, or null when it must not replace itself:
+     * a debug build, a copy a store keeps up to date, the desktop. An update is
+     * then only a link to its release page.
+     */
+    val updateInstaller: io.github.bropines.lens.app.update.UpdateInstaller? get() = null
+
+    /** True when the app was updated over an older copy, false for a fresh install or where that cannot be told. */
+    val wasUpdated: Boolean get() = false
+
+    /** Recognition and translation on the device, where the build has them (Android's `google` flavor). */
+    val onDevice: io.github.bropines.lens.app.ondevice.OnDeviceMl? get() = null
+
+    /**
+     * Where secrets (the Google account's cookies) are kept. Android encrypts
+     * them with a key in the Keystore; the default is a private file in [dataDir].
+     */
+    val secrets: io.github.bropines.lens.app.data.SecretStore get() = io.github.bropines.lens.app.data.FileSecretStore(dataDir)
 }
 
-/** PNG bytes of the bitmap, for exporting a translated page. */
 /** The version of a build that cannot tell its own (desktop, previews). */
 const val APP_VERSION = "0.1.0"
 
+/** PNG bytes of the bitmap, for exporting a translated page. */
 expect fun androidx.compose.ui.graphics.ImageBitmap.encodePng(): ByteArray
 
 /** The wallpaper-based scheme where the platform has one (Android 12+), else null. */

@@ -207,11 +207,19 @@ public object LensRequests {
      * The headers Chromium sends. Transport headers (`Accept-Encoding`,
      * `Content-Length`) belong to the HTTP client: one that advertises gzip
      * without decompressing hands back bytes that fail to parse.
+     *
+     * With [credentials] the request is also signed in as that account at
+     * [nowSeconds] (Unix time), the way a Google web page signs its API calls;
+     * without them it is exactly the anonymous request.
      */
-    public fun headers(apiKey: String = LensDefaults.API_KEY): List<Pair<String, String>> = listOf(
+    public fun headers(
+        apiKey: String = LensDefaults.API_KEY,
+        credentials: GoogleCredentials? = null,
+        nowSeconds: Long = 0,
+    ): List<Pair<String, String>> = listOf(
         "Content-Type" to "application/x-protobuf",
         "Accept" to "*/*",
         "User-Agent" to LensDefaults.USER_AGENT,
         "X-Goog-Api-Key" to apiKey,
-    )
+    ) + credentials?.headers(nowSeconds).orEmpty()
 }

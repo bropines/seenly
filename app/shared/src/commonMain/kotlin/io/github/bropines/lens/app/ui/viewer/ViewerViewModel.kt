@@ -6,6 +6,7 @@ import io.github.bropines.lens.app.data.AppSettings
 import io.github.bropines.lens.app.data.Gallery
 import io.github.bropines.lens.app.data.ScanRepository
 import io.github.bropines.lens.app.data.SettingsRepository
+import io.github.bropines.lens.app.ondevice.OnDeviceException
 import io.github.bropines.lens.app.platform.quarterTurns
 import io.github.bropines.lens.app.resources.*
 import io.github.bropines.lens.app.ui.UiText
@@ -42,9 +43,18 @@ internal fun friendlyError(e: Throwable): UiText {
 /** Lens's own message when it gave one. */
 private fun lensError(e: LensException): UiText = e.message?.let(UiText::Plain) ?: uiText(Res.string.error_lens)
 
+/** Why the device could not scan, in terms of what to do about it. */
+private fun onDeviceError(e: OnDeviceException): UiText = when (e.reason) {
+    OnDeviceException.Reason.ModelMissing -> uiText(Res.string.error_on_device_model)
+    OnDeviceException.Reason.Unsupported -> uiText(Res.string.error_on_device_unsupported)
+    OnDeviceException.Reason.Failed -> uiText(Res.string.error_on_device, e.message.orEmpty())
+}
+
 sealed interface PageState {
     data object Loading : PageState
-    data class Ready(val result: ScanResult) : PageState
+
+    /** [offline]: scanned on the device, not by Lens, so the page says so. */
+    data class Ready(val result: ScanResult, val offline: Boolean = false) : PageState
     data class Failed(val message: UiText) : PageState
 }
 
@@ -189,15 +199,16 @@ class ViewerViewModel(
         val rotation = rotationOf(index)
         jobs[index] = viewModelScope.launch {
             val next = try {
-                PageState.Ready(scans.scan(gallery.items[index], settings.value, rotation))
+                scans.scan(gallery.items[index], settings.value, rotation).let { PageState.Ready(it.result, it.offline) }
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: LensException.Http) {
-                PageState.Failed(if (e.status == 429) uiText(Res.string.error_lens_rate_limited) else uiText(Res.string.error_lens_http, e.status))
-            } catch (e: LensException) {
-                PageState.Failed(lensError(e))
+            } catch (e: OnDeviceException) {
+                PageState.Failed(onDeviceError(e))
             } catch (e: Exception) {
-                PageState.Failed(friendlyError(e))
+                // Lens failed and the on-device stand-in could not help for want of a language
+                // model: that is the one thing the user can fix before the next time offline.
+                val missing = e.suppressedExceptions.any { it is OnDeviceException && it.reason == OnDeviceException.Reason.ModelMissing }
+                if (missing) PageState.Failed(uiText(Res.string.error_offline_no_model)) else scanError(e)
             }
             // A result read at a turn the page no longer has must not land.
             if (rotationOf(index) != rotation) return@launch
@@ -205,4 +216,12 @@ class ViewerViewModel(
             _stale.update { it - index }
         }
     }
+
+    private fun scanError(e: Exception): PageState.Failed =
+        when (e) {
+            is LensException.Http ->
+                PageState.Failed(if (e.status == 429) uiText(Res.string.error_lens_rate_limited) else uiText(Res.string.error_lens_http, e.status))
+            is LensException -> PageState.Failed(lensError(e))
+            else -> PageState.Failed(friendlyError(e))
+        }
 }

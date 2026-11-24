@@ -188,7 +188,7 @@ private fun HistoryRow(entry: HistoryEntry, onClick: () -> Unit) {
 
 @OptIn(ExperimentalTime::class)
 @Composable
-private fun ago(millis: Long): String {
+internal fun ago(millis: Long): String {
     val minutes = (Clock.System.now() - Instant.fromEpochMilliseconds(millis)).inWholeMinutes
     return when {
         minutes < 1 -> stringResource(Res.string.ago_now)

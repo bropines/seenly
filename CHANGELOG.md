@@ -6,6 +6,19 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-25
+
+### Added
+
+- In-app updates: the app checks GitHub for a newer release on start (at most twice a day; can be turned off) and from Settings, shows the release notes, downloads the APK for your build, verifies it against the release's SHA256SUMS and hands it to the system installer. Betas are offered only if you ask for them.
+- "What's new": after an update the app shows the changes of the new version once, in the interface language; it is also in Settings.
+- The `google` build now has on-device recognition and translation (Google ML Kit): an automatic fallback when Lens cannot be reached or refuses, an "always on-device" mode in which images never leave the phone, and an "On-device (ML Kit)" text translator. Language models are downloaded on demand (over Wi-Fi only, if you wish) and can be deleted. A page scanned this way is marked, since it reads and translates less well than Lens.
+- Optional Google account: sign in inside the app, or import cookies exported from a browser, and Lens requests go out signed in. The cookies are stored encrypted on the device, sent only to Google, and left out of a settings export unless you tick the box. If Google refuses the session, the app goes back to anonymous requests and says so once.
+
+### Changed
+
+- The `foss` build is checked on release to contain no ML Kit, Google Play services or Firebase code. Until now the two builds were the same.
+
 ## [0.1.0] - 2026-11-24
 
 ### Added

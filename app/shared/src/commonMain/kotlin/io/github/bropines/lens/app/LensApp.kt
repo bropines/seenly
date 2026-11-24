@@ -38,6 +38,12 @@ import io.github.bropines.lens.app.data.GalleryItem
 import io.github.bropines.lens.app.ui.camera.CameraScreen
 import io.github.bropines.lens.app.ui.about.AboutScreen
 import io.github.bropines.lens.app.ui.settings.TranslatorsScreen
+import io.github.bropines.lens.app.ui.account.AccountRefusedDialog
+import io.github.bropines.lens.app.ui.account.AccountScreen
+import io.github.bropines.lens.app.ui.account.GoogleSignInScreen
+import io.github.bropines.lens.app.ui.ondevice.OnDeviceScreen
+import io.github.bropines.lens.app.ui.update.UpdateDialog
+import io.github.bropines.lens.app.ui.update.WhatsNewDialog
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import io.github.vinceglb.filekit.dialogs.FileKitMode
@@ -57,6 +63,9 @@ sealed interface Route {
     data object Camera : Route
     data object About : Route
     data object Translators : Route
+    data object OnDevice : Route
+    data object Account : Route
+    data object GoogleSignIn : Route
     data class TextTranslate(val initial: String) : Route
 }
 
@@ -89,7 +98,13 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
         }
     }
 
+    // The update check and "What's new" belong to the app coming up, not to any one screen.
+    LaunchedEffect(Unit) { graph.updates.onAppStart() }
+
     LensTheme(settings.theme) {
+        UpdateDialog(graph.updates)
+        WhatsNewDialog(graph.updates, graph.services)
+        AccountRefusedDialog(graph.account, onOpen = { if (backStack.lastOrNull() != Route.Account) backStack.add(Route.Account) })
         NavDisplay(
             backStack = backStack,
             onBack = ::pop,
@@ -117,6 +132,8 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
                         onOpenCamera = { backStack.add(Route.Camera) },
                         onOpenAbout = { backStack.add(Route.About) },
                         onOpenTranslators = { backStack.add(Route.Translators) },
+                        onOpenAccount = { backStack.add(Route.Account) },
+                        onOpenOnDevice = { backStack.add(Route.OnDevice) },
                         onOpenHistory = { entry ->
                             scope.launch {
                                 val item = GalleryItem(PlatformFile(entry.imagePath), entry.title)
@@ -132,6 +149,25 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
                 }
                 entry<Route.About> { AboutScreen(graph.services, onBack = ::pop) }
                 entry<Route.Translators> { TranslatorsScreen(graph.settings, settings, graph.translator, onBack = ::pop) }
+                entry<Route.OnDevice> {
+                    graph.services.onDevice?.let { OnDeviceScreen(graph.settings, settings, it, onBack = ::pop) }
+                }
+                entry<Route.Account> {
+                    AccountScreen(
+                        account = graph.account,
+                        repository = graph.settings,
+                        settings = settings,
+                        onSignIn = { backStack.add(Route.GoogleSignIn) },
+                        onBack = ::pop,
+                    )
+                }
+                entry<Route.GoogleSignIn> {
+                    GoogleSignInScreen(
+                        // The page's cookies are a signed-in session or nothing: connect() tells which.
+                        onCookies = { cookies -> graph.account.connect(cookies).also { if (it) pop() } },
+                        onBack = ::pop,
+                    )
+                }
                 entry<Route.Camera> {
                     val pick = rememberFilePickerLauncher(type = FileKitType.Image, mode = FileKitMode.Multiple()) { files ->
                         if (!files.isNullOrEmpty()) {

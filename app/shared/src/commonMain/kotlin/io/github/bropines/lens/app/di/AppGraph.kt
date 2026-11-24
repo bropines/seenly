@@ -6,6 +6,9 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.createGraphFactory
 import io.github.bropines.lens.app.data.GalleryRepository
+import io.github.bropines.lens.app.data.GoogleAccount
+import io.github.bropines.lens.app.ondevice.OnDeviceProvider
+import io.github.bropines.lens.app.update.UpdateController
 import io.github.bropines.lens.app.data.ScanRepository
 import io.github.bropines.lens.app.data.SettingsRepository
 import io.github.bropines.lens.app.platform.PlatformServices
@@ -28,6 +31,8 @@ interface AppGraph {
     val lens: LensClient
     val translator: TextTranslator
     val history: io.github.bropines.lens.app.data.history.HistoryRepository
+    val updates: UpdateController
+    val account: GoogleAccount
 
     /** One HTTP client for the app; the engine (OkHttp) comes from the classpath. */
     @SingleIn(AppScope::class)
@@ -40,13 +45,17 @@ interface AppGraph {
         }
     }
 
+    /** Anonymous unless the user connected a Google account and left "use for Lens" on. */
     @SingleIn(AppScope::class)
     @Provides
-    fun lensClient(http: HttpClient): LensClient = LensClient(http)
+    fun lensClient(http: HttpClient, account: GoogleAccount): LensClient = LensClient(http, credentials = account)
 
+    /** The built-in engines, plus the on-device one where the build has it. */
     @SingleIn(AppScope::class)
     @Provides
-    fun translatorRegistry(): TranslatorRegistry = TranslatorRegistry()
+    fun translatorRegistry(services: PlatformServices, settings: SettingsRepository): TranslatorRegistry = TranslatorRegistry().apply {
+        services.onDevice?.let { ml -> register(OnDeviceProvider(ml) { settings.current.value.onDevice.wifiOnly }) }
+    }
 
     @SingleIn(AppScope::class)
     @Provides

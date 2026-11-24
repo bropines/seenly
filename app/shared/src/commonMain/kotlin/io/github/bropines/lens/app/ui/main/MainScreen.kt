@@ -27,7 +27,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ShortNavigationBar
 import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Text
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -67,9 +75,24 @@ fun MainScreen(
     onOpenHistory: (HistoryEntry) -> Unit,
     onOpenAbout: () -> Unit,
     onOpenTranslators: () -> Unit,
+    onOpenAccount: () -> Unit = {},
+    onOpenOnDevice: () -> Unit = {},
 ) {
     val textVm = viewModel { TextTranslateViewModel(graph.translator, graph.settings, "") }
+    // An update found on start is offered in passing: a snackbar that waits, with the notes one tap away.
+    val snackbar = remember { SnackbarHostState() }
+    val offered by graph.updates.prompt.collectAsState()
+    val offer = offered?.let { stringResource(Res.string.update_available, it.version) }
+    val details = stringResource(Res.string.update_details)
+    LaunchedEffect(offer) {
+        if (offer == null) return@LaunchedEffect
+        when (snackbar.showSnackbar(offer, actionLabel = details, withDismissAction = true, duration = SnackbarDuration.Indefinite)) {
+            SnackbarResult.ActionPerformed -> graph.updates.showDetails()
+            SnackbarResult.Dismissed -> graph.updates.dismissPrompt()
+        }
+    }
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
             ShortNavigationBar {
                 DockItem(Tab.Images, tab, onTab)
@@ -103,6 +126,10 @@ fun MainScreen(
                         graph.settings, settings, onBack = null, onAbout = onOpenAbout, onTranslators = onOpenTranslators,
                         translatorsSummary = settings.translators.enabled.joinToString(" → ") { graph.translator.nameOf(it) }.ifEmpty { stringResource(Res.string.translators_none) },
                         screen = graph.services.screenTranslate,
+                        updates = graph.updates,
+                        account = graph.account,
+                        onAccount = onOpenAccount,
+                        onOnDevice = onOpenOnDevice.takeIf { graph.services.onDevice != null },
                     )
                 }
             }

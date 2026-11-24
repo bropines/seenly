@@ -5,6 +5,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
@@ -22,12 +23,18 @@ import kotlin.time.ExperimentalTime
  * proxy, timeouts and logging), or use [LensClient.create] for a default one.
  * The client must hand back decompressed bodies: OkHttp does that on its own,
  * and a plain `Accept-Encoding: gzip` header without decoding would not.
+ *
+ * Requests are anonymous unless [credentials] offers a Google session. One
+ * that Google refuses (401 or 403) is reported back and the request repeated
+ * anonymously, so an expired session never costs a scan. Chromium does the
+ * same on a 401 (`ShouldRetryRequestWithoutAuthOn401`).
  */
 public class LensClient(
     private val http: HttpClient,
     private val apiKey: String = LensDefaults.API_KEY,
     private val endpoint: String = LensDefaults.CRUPLOAD_ENDPOINT,
     private val clusterInfoEndpoint: String = LensDefaults.CLUSTER_INFO_ENDPOINT,
+    private val credentials: LensCredentialsSource? = null,
 ) {
     private val log = Logger.withTag("LensClient")
 
@@ -83,17 +90,27 @@ public class LensClient(
         // The query string is the session id: the path is enough to tell requests apart.
         val path = url.substringBefore('?')
         log.d { "POST $path, ${body.size} bytes" }
-        val response = withContext(Dispatchers.IO) {
-            http.post(url) {
-                headers { LensRequests.headers(apiKey).forEach { (name, value) -> append(name, value) } }
-                setBody(body)
-            }
+        val account = credentials?.current()
+        var response = send(url, body, account)
+        if (account != null && (response.status.value == 401 || response.status.value == 403)) {
+            log.w { "HTTP ${response.status.value} from $path with the account; repeating without it" }
+            credentials.rejected(response.status.value)
+            response = send(url, body, null)
         }
         log.d { "HTTP ${response.status.value} from $path" }
         if (!response.status.isSuccess()) {
             throw LensException.Http(response.status.value, runCatching { response.bodyAsText() }.getOrDefault(""))
         }
         return response.bodyAsBytes()
+    }
+
+    @OptIn(ExperimentalTime::class)
+    private suspend fun send(url: String, body: ByteArray, account: GoogleCredentials?): HttpResponse = withContext(Dispatchers.IO) {
+        val signed = LensRequests.headers(apiKey, account, Clock.System.now().epochSeconds)
+        http.post(url) {
+            headers { signed.forEach { (name, value) -> append(name, value) } }
+            setBody(body)
+        }
     }
 
     public companion object {

@@ -102,10 +102,20 @@ dependencies {
     add("kspJvm", libs.androidx.room.compiler)
 }
 
+// "What's new" shows the changelog of the commit the app was built from: the two files at the
+// repository root are added to the Compose resources (as files/CHANGELOG*.md) at build time
+// instead of being copied into the source tree, where a copy would go stale.
+val bundleChangelog = tasks.register<Sync>("bundleChangelog") {
+    from("src/commonMain/composeResources")
+    from(rootProject.files("CHANGELOG.md", "CHANGELOG_RU.md")) { into("files") }
+    into(layout.buildDirectory.dir("generated/changelogResources"))
+}
+
 compose.resources {
     packageOfResClass = "io.github.bropines.lens.app.resources"
     // Public: the Android app's screen-translator menu shows the same strings.
     publicResClass = true
+    customDirectory(sourceSetName = "commonMain", directoryProvider = layout.dir(bundleChangelog.map { it.destinationDir }))
 }
 
 // The README screenshots (src/androidHostTest/.../readme): the real screens

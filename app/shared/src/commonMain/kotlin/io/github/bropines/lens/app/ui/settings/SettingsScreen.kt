@@ -85,6 +85,20 @@ import io.github.bropines.lens.app.data.TextEngine
 import io.github.bropines.lens.app.data.ThemeMode
 import io.github.bropines.lens.app.ui.components.LanguagePickerSheet
 import io.github.bropines.lens.app.ui.components.languageName
+import io.github.bropines.lens.app.data.GoogleAccount
+import io.github.bropines.lens.app.ui.asString
+import io.github.bropines.lens.app.update.UpdateController
+import io.github.bropines.lens.app.update.UpdateStatus
+import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.CloudOff
+import androidx.compose.material.icons.rounded.NewReleases
+import androidx.compose.material.icons.rounded.Science
+import androidx.compose.material.icons.rounded.SystemUpdate
+import androidx.compose.material.icons.rounded.Update
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Switch
+import androidx.compose.material3.TextButton
 import io.github.bropines.lens.app.resources.*
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -99,15 +113,25 @@ fun SettingsScreen(
     onTranslators: () -> Unit = {},
     translatorsSummary: String = "",
     screen: ScreenTranslate? = null,
+    updates: UpdateController? = null,
+    account: GoogleAccount? = null,
+    onAccount: () -> Unit = {},
+    /** Opens the on-device scanning page; null where the build has none (foss, desktop). */
+    onOnDevice: (() -> Unit)? = null,
 ) {
     val scope = rememberCoroutineScope()
     fun update(transform: (AppSettings) -> AppSettings) = scope.launch { repository.update(transform) }
     var picker by remember { mutableStateOf<String?>(null) }
     val snackbar = remember { SnackbarHostState() }
+    val accountState = account?.state?.collectAsState()?.value
+    // Whether the export about to be saved carries the account's cookies: asked each time, never the default.
+    var exportCookies by remember { mutableStateOf(false) }
+    var askExport by remember { mutableStateOf(false) }
     val exporter = rememberFileSaverLauncher(dialogSettings = FileKitDialogSettings.createDefault()) { file: PlatformFile? ->
         if (file == null) return@rememberFileSaverLauncher
         scope.launch {
-            val message = runCatching { file.writeString(repository.exportJson()) }
+            val cookies = if (exportCookies) account?.exportCookies() else null
+            val message = runCatching { file.writeString(repository.exportJson(cookies)) }
                 .fold({ getString(Res.string.settings_saved) }, { getString(Res.string.settings_save_failed, it.message.orEmpty()) })
             snackbar.showSnackbar(message)
         }
@@ -118,7 +142,14 @@ fun SettingsScreen(
         scope.launch {
             val message = runCatching { repository.importJson(file.readString()) }
                 .fold(
-                    { getString(Res.string.settings_loaded) },
+                    { cookies ->
+                        // A backup made with the account in it brings the account along.
+                        if (cookies != null && account?.connect(cookies) == true) {
+                            getString(Res.string.settings_loaded_with_account)
+                        } else {
+                            getString(Res.string.settings_loaded)
+                        }
+                    },
                     {
                         if (it is IllegalArgumentException) {
                             getString(Res.string.settings_not_a_backup)
@@ -150,6 +181,35 @@ fun SettingsScreen(
                 stringResource(Res.string.settings_ocr_hint),
                 if (settings.ocrLanguage.isEmpty()) stringResource(Res.string.settings_ocr_hint_none) else languageName(settings.ocrLanguage),
             ) { picker = "ocr" }
+            if (onOnDevice != null) {
+                Setting(
+                    Icons.Rounded.CloudOff,
+                    stringResource(Res.string.on_device_title),
+                    stringResource(
+                        when {
+                            settings.onDevice.always -> Res.string.on_device_summary_always
+                            settings.onDevice.fallback -> Res.string.on_device_summary_fallback
+                            else -> Res.string.on_device_summary_off
+                        },
+                    ),
+                    onOnDevice,
+                )
+            }
+            if (accountState != null) {
+                Setting(
+                    Icons.Rounded.AccountCircle,
+                    stringResource(Res.string.account_title),
+                    stringResource(
+                        when {
+                            !accountState.connected -> Res.string.account_summary_none
+                            accountState.rejected -> Res.string.account_summary_rejected
+                            !settings.account.useForLens -> Res.string.account_summary_unused
+                            else -> Res.string.account_summary_connected
+                        },
+                    ),
+                    onAccount,
+                )
+            }
 
             Section(stringResource(Res.string.settings_section_overlay))
             Choice(Icons.Rounded.AutoAwesome, stringResource(Res.string.layout_auto), stringResource(Res.string.layout_auto_desc), settings.readingLayout == ReadingLayout.Auto) {
@@ -247,14 +307,58 @@ fun SettingsScreen(
                 Choice(icon, label, null, settings.theme == mode) { update { it.copy(theme = mode) } }
             }
 
+            if (updates != null) UpdateSettings(updates, settings) { transform -> update { it.copy(updates = transform(it.updates)) } }
+
             Section(stringResource(Res.string.settings_section_app))
             Setting(
                 Icons.Rounded.Upload, stringResource(Res.string.settings_export),
                 stringResource(Res.string.settings_export_desc),
-            ) { exporter.launch(suggestedName = "lens-settings", extension = "json") }
+            ) {
+                // With an account connected, ask first whether its cookies go into the file.
+                if (accountState?.connected == true) {
+                    exportCookies = false
+                    askExport = true
+                } else {
+                    exportCookies = false
+                    exporter.launch(suggestedName = "lens-settings", extension = "json")
+                }
+            }
             Setting(Icons.Rounded.Download, stringResource(Res.string.settings_import), stringResource(Res.string.settings_import_desc)) { importer.launch() }
             Setting(Icons.Rounded.Info, stringResource(Res.string.about_title), stringResource(Res.string.settings_about_desc), onAbout)
         }
+    }
+
+    if (askExport) {
+        AlertDialog(
+            onDismissRequest = { askExport = false },
+            title = { Text(stringResource(Res.string.settings_export)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(Res.string.settings_export_desc))
+                    Row(
+                        Modifier.fillMaxWidth().clickable { exportCookies = !exportCookies },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Checkbox(checked = exportCookies, onCheckedChange = { exportCookies = it })
+                        Text(stringResource(Res.string.settings_export_account))
+                    }
+                    if (exportCookies) {
+                        Text(
+                            stringResource(Res.string.settings_export_account_warning),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    askExport = false
+                    exporter.launch(suggestedName = "lens-settings", extension = "json")
+                }) { Text(stringResource(Res.string.settings_export_save)) }
+            },
+            dismissButton = { TextButton(onClick = { askExport = false }) { Text(stringResource(Res.string.cancel)) } },
+        )
     }
 
     when (picker) {
@@ -274,7 +378,7 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun Section(title: String) {
+internal fun Section(title: String) {
     Text(
         title,
         style = MaterialTheme.typography.titleSmall,
@@ -283,8 +387,50 @@ private fun Section(title: String) {
     )
 }
 
+/** The updater: whether it asks on its own, which channel, and the check itself. */
 @Composable
-private fun SettingIcon(icon: ImageVector) {
+private fun UpdateSettings(updates: UpdateController, settings: AppSettings, update: ((io.github.bropines.lens.app.data.UpdatePrefs) -> io.github.bropines.lens.app.data.UpdatePrefs) -> Unit) {
+    val status by updates.status.collectAsState()
+    Section(stringResource(Res.string.settings_section_updates))
+    Setting(
+        Icons.Rounded.SystemUpdate,
+        stringResource(Res.string.update_check),
+        when (val s = status) {
+            UpdateStatus.Unknown -> stringResource(Res.string.update_installed, updates.installedVersion)
+            UpdateStatus.Checking -> stringResource(Res.string.update_checking)
+            UpdateStatus.UpToDate -> stringResource(Res.string.update_up_to_date, updates.installedVersion)
+            is UpdateStatus.Available -> stringResource(Res.string.update_available, s.release.version)
+            is UpdateStatus.Failed -> s.message.asString()
+        },
+    ) {
+        // An update already found is shown again; otherwise ask.
+        if (status is UpdateStatus.Available) updates.showDetails() else updates.check()
+    }
+    Toggle(
+        Icons.Rounded.Update, stringResource(Res.string.update_auto), stringResource(Res.string.update_auto_desc),
+        settings.updates.autoCheck,
+    ) { on -> update { it.copy(autoCheck = on) } }
+    Toggle(
+        Icons.Rounded.Science, stringResource(Res.string.update_beta), stringResource(Res.string.update_beta_desc),
+        settings.updates.beta,
+    ) { on -> update { it.copy(beta = on) } }
+    Setting(Icons.Rounded.NewReleases, stringResource(Res.string.whats_new), stringResource(Res.string.whats_new_desc), updates::showWhatsNew)
+}
+
+/** A setting that is on or off. */
+@Composable
+internal fun Toggle(icon: ImageVector, title: String, subtitle: String?, checked: Boolean, onChange: (Boolean) -> Unit) {
+    ListItem(
+        headlineContent = { Text(title) },
+        supportingContent = subtitle?.let { { Text(it) } },
+        leadingContent = { SettingIcon(icon) },
+        trailingContent = { Switch(checked = checked, onCheckedChange = onChange) },
+        modifier = Modifier.clickable { onChange(!checked) },
+    )
+}
+
+@Composable
+internal fun SettingIcon(icon: ImageVector) {
     Box(
         Modifier.size(40.dp).background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
         contentAlignment = Alignment.Center,
@@ -292,7 +438,7 @@ private fun SettingIcon(icon: ImageVector) {
 }
 
 @Composable
-private fun Setting(icon: ImageVector, title: String, value: String, onClick: () -> Unit) {
+internal fun Setting(icon: ImageVector, title: String, value: String, onClick: () -> Unit) {
     ListItem(
         headlineContent = { Text(title) },
         supportingContent = { Text(value) },

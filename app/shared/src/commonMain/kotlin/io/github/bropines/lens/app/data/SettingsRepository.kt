@@ -3,6 +3,7 @@ package io.github.bropines.lens.app.data
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -47,6 +48,36 @@ data class AppSettings(
     val lastFolder: String? = null,
     val overlay: OverlayPrefs = OverlayPrefs(),
     val translators: TranslatorPrefs = TranslatorPrefs(),
+    val updates: UpdatePrefs = UpdatePrefs(),
+    val onDevice: OnDevicePrefs = OnDevicePrefs(),
+    val account: AccountPrefs = AccountPrefs(),
+)
+
+/** The in-app updater's preferences. When it last asked is state, not a preference, and lives elsewhere. */
+@Serializable
+data class UpdatePrefs(
+    /** Ask GitHub for a newer release when the app starts, at most twice a day. */
+    val autoCheck: Boolean = true,
+    /** Also offer betas of the next version. */
+    val beta: Boolean = false,
+)
+
+/** On-device recognition and translation (the `google` flavor); ignored where the build has none. */
+@Serializable
+data class OnDevicePrefs(
+    /** Scan on the device when Lens cannot be reached or refuses. */
+    val fallback: Boolean = true,
+    /** Never send images to Lens: scan on the device only. */
+    val always: Boolean = false,
+    /** Download language models over Wi-Fi only. */
+    val wifiOnly: Boolean = true,
+)
+
+/** The optional Google account. The cookies themselves are a secret and are not kept here. */
+@Serializable
+data class AccountPrefs(
+    /** Send Lens requests signed in when an account is connected. */
+    val useForLens: Boolean = true,
 )
 
 /**
@@ -129,6 +160,12 @@ class SettingsRepository(services: PlatformServices) {
             p[FONT] = next.overlay.font.name
             p[VERTICAL] = next.overlay.vertical.name
             p[TRANSLATORS] = json.encodeToString(TranslatorPrefs.serializer(), next.translators)
+            p[UPDATE_AUTO] = next.updates.autoCheck
+            p[UPDATE_BETA] = next.updates.beta
+            p[LOCAL_FALLBACK] = next.onDevice.fallback
+            p[LOCAL_ALWAYS] = next.onDevice.always
+            p[LOCAL_WIFI] = next.onDevice.wifiOnly
+            p[ACCOUNT_LENS] = next.account.useForLens
         }
     }
 
@@ -136,12 +173,21 @@ class SettingsRepository(services: PlatformServices) {
      * Every setting as JSON, translator keys included (in plain text: the
      * file is the user's to guard). The last folder is left out: it is a
      * permission on this device and means nothing on another.
+     *
+     * [googleCookies] is the Google account's session, and goes in only when
+     * the user asked for it: whoever reads the file is signed in as them.
      */
-    suspend fun exportJson(): String =
-        backupJson.encodeToString(Backup.serializer(), Backup(settings = settings.first().copy(lastFolder = null)))
+    suspend fun exportJson(googleCookies: String? = null): String = backupJson.encodeToString(
+        Backup.serializer(),
+        Backup(settings = settings.first().copy(lastFolder = null), googleCookies = googleCookies),
+    )
 
-    /** Replaces the settings with a file [exportJson] wrote. Throws [IllegalArgumentException] on anything else. */
-    suspend fun importJson(text: String) {
+    /**
+     * Replaces the settings with a file [exportJson] wrote, and returns the
+     * Google cookies it carried, if any, for the caller to connect.
+     * Throws [IllegalArgumentException] on anything else.
+     */
+    suspend fun importJson(text: String): String? {
         val backup = try {
             backupJson.decodeFromString(Backup.serializer(), text)
         } catch (e: SerializationException) {
@@ -149,10 +195,16 @@ class SettingsRepository(services: PlatformServices) {
         }
         require(backup.format == BACKUP_FORMAT) { "not a settings file" }
         update { backup.settings.copy(lastFolder = it.lastFolder) }
+        return backup.googleCookies
     }
 
     @Serializable
-    private data class Backup(val format: String = BACKUP_FORMAT, val version: Int = 1, val settings: AppSettings)
+    private data class Backup(
+        val format: String = BACKUP_FORMAT,
+        val version: Int = 1,
+        val settings: AppSettings,
+        val googleCookies: String? = null,
+    )
 
     private val backupJson = Json {
         prettyPrint = true
@@ -180,6 +232,13 @@ class SettingsRepository(services: PlatformServices) {
         translators = this[TRANSLATORS]
             ?.let { runCatching { json.decodeFromString(TranslatorPrefs.serializer(), it) }.getOrNull() }
             ?: TranslatorPrefs(),
+        updates = UpdatePrefs(autoCheck = this[UPDATE_AUTO] ?: true, beta = this[UPDATE_BETA] ?: false),
+        onDevice = OnDevicePrefs(
+            fallback = this[LOCAL_FALLBACK] ?: true,
+            always = this[LOCAL_ALWAYS] ?: false,
+            wifiOnly = this[LOCAL_WIFI] ?: true,
+        ),
+        account = AccountPrefs(useForLens = this[ACCOUNT_LENS] ?: true),
     )
 
     private inline fun <reified E : Enum<E>> String?.toEnum(default: E): E =
@@ -202,5 +261,11 @@ class SettingsRepository(services: PlatformServices) {
         val FONT = stringPreferencesKey("overlay_font")
         val TRANSLATORS = stringPreferencesKey("translators")
         val VERTICAL = stringPreferencesKey("overlay_vertical")
+        val UPDATE_AUTO = booleanPreferencesKey("update_auto_check")
+        val UPDATE_BETA = booleanPreferencesKey("update_beta")
+        val LOCAL_FALLBACK = booleanPreferencesKey("on_device_fallback")
+        val LOCAL_ALWAYS = booleanPreferencesKey("on_device_always")
+        val LOCAL_WIFI = booleanPreferencesKey("on_device_wifi_only")
+        val ACCOUNT_LENS = booleanPreferencesKey("account_use_for_lens")
     }
 }

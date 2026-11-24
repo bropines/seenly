@@ -46,6 +46,7 @@ import androidx.compose.material.icons.rounded.Notes
 import androidx.compose.material.icons.rounded.SelectAll
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.TextFields
@@ -240,6 +241,7 @@ fun ViewerScreen(
                 current,
                 refreshingTo = if (pager.currentPage in stale) languageName(settings.targetLanguage) else null,
                 onRetry = { vm.retry(pager.currentPage) },
+                retryOnline = !settings.onDevice.always,
             )
             SearchStatus(searching, searchError, onDismiss = vm::dismissSearchError)
             AnimatedVisibility(chrome, enter = FastIn + slideInVertically(tween(160)) { it / 3 }, exit = FastOut + slideOutVertically(tween(120)) { it / 3 }) {
@@ -362,21 +364,31 @@ private fun ViewerTopBar(
     }
 }
 
-/** The scan state of the visible page: a spinner, an error with retry, or nothing once done. */
+/** The scan state of the visible page: a spinner, an error with retry, a note on an on-device scan, or nothing once done. */
 @Composable
-private fun ScanStatus(state: PageState?, refreshingTo: String?, onRetry: () -> Unit) {
+private fun ScanStatus(state: PageState?, refreshingTo: String?, onRetry: () -> Unit, retryOnline: Boolean = true) {
     // Hold the language name through the fade-out, when refreshingTo is already null.
     var language by remember { mutableStateOf("") }
     if (refreshingTo != null) language = refreshingTo
-    AnimatedVisibility(state !is PageState.Ready || refreshingTo != null, enter = FastIn, exit = FastOut) {
-        when (state) {
-            is PageState.Ready -> Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.padding(12.dp)) {
+    val offline = state is PageState.Ready && state.offline && refreshingTo == null
+    AnimatedVisibility(state !is PageState.Ready || refreshingTo != null || offline, enter = FastIn, exit = FastOut) {
+        when {
+            // Scanned on the device: say so, since it reads and translates less well than Lens.
+            offline -> Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.tertiaryContainer, modifier = Modifier.padding(12.dp)) {
+                Row(Modifier.padding(start = 16.dp, end = if (retryOnline) 8.dp else 16.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Rounded.CloudOff, contentDescription = null)
+                    Text(stringResource(Res.string.viewer_offline), maxLines = 2, modifier = Modifier.weight(1f, fill = false))
+                    // Pointless when the user chose to stay on the device.
+                    if (retryOnline) TextButton(onClick = onRetry) { Text(stringResource(Res.string.viewer_offline_retry)) }
+                }
+            }
+            state is PageState.Ready -> Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.padding(12.dp)) {
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     LoadingIndicator(Modifier.size(28.dp))
                     Text(stringResource(Res.string.viewer_translating_to, language), Modifier.padding(start = 8.dp))
                 }
             }
-            is PageState.Failed -> Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.padding(12.dp)) {
+            state is PageState.Failed -> Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.padding(12.dp)) {
                 Row(Modifier.padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Rounded.ErrorOutline, contentDescription = null)
                     Text(state.message.asString(), maxLines = 2, modifier = Modifier.weight(1f, fill = false))

@@ -77,6 +77,9 @@ jobs:
             echo "$certs" | grep "certificate DN"
             if echo "$certs" | grep -q "CN=lens-kmp development"; then echo "::error::$apk is signed with the dev key"; exit 1; fi
           done
+          # The foss APK promises nothing proprietary; the google one is where ML Kit lives.
+          bash scripts/check-foss-apk.sh "out/Seenly-v$VERSION-foss-release.apk"
+          # The in-app updater picks its APK by these names and verifies it against SHA256SUMS.
           (cd out && sha256sum *.apk > SHA256SUMS)
           rm -f "$RUNNER_TEMP/release.jks"
 

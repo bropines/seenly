@@ -26,7 +26,19 @@ Seenly is an Android app (with a desktop build) written with Kotlin Multiplatfor
 - **Select and copy text** on the image, copy the original or the translation, export the translated picture.
 - **Visual search**: circle something, or tap a dot Lens found, to search for it.
 - **Text translators** for typed and selected text: Google, Bing, Yandex, DeepL, LibreTranslate, OpenAI-compatible and more, in your order, with fail-over.
+- **Works offline** (the `google` build): recognition and translation on the device with Google ML Kit, as a fallback when Lens is unreachable or as the only mode.
+- **Optional Google account**: sign in, or import browser cookies, to send Lens requests signed in. The cookies stay encrypted on the device and go only to Google.
+- **Updates itself**: checks GitHub for a new release, verifies the download and shows what is new.
 - History, Material 3 Expressive design, light and dark themes, settings export and import.
+
+## Which APK
+
+Each [release](https://github.com/bropines/seenly/releases) has two APKs. They are different apps to Android and can be installed side by side.
+
+- `Seenly-v…-google-release.apk`: everything, including on-device recognition and translation through Google ML Kit. ML Kit is closed-source and needs Google Play services on the phone. Pick this one unless you have a reason not to. It is the larger file (ML Kit's translator) and is built for ARM phones only.
+- `Seenly-v…-foss-release.apk`: open-source code only, with no ML Kit and no Play services; it works on a phone without Google's apps. Everything goes through Lens and the online translators, so there is no offline mode.
+
+Both update themselves from GitHub releases, each with its own file, checked against the release's `SHA256SUMS`.
 
 ## Screenshots
 
@@ -68,9 +80,9 @@ You need JDK 21 and the Android SDK (compile SDK 37.1).
 ./gradlew :lens-cli:installDist              # the CLI
 ```
 
-The app comes in two flavors:
-- `google`: may use Google Play services;
-- `foss`: nothing proprietary on the device.
+The app comes in two flavors (see [Which APK](#which-apk)):
+- `google`: adds on-device recognition and translation with Google ML Kit (`app/android/src/google`), which needs Google Play services;
+- `foss`: nothing proprietary on the device. `scripts/check-foss-apk.sh` checks a built APK for stray ML Kit, Play services or Firebase code.
 
 A release build is signed with the key described by these entries, read from `~/.gradle/gradle.properties` or the environment:
 

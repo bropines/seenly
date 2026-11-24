@@ -18,7 +18,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import io.github.bropines.lens.app.data.AppSettings
 import io.github.bropines.lens.app.data.ReadingLayout
-import io.github.bropines.lens.app.data.toScanOptions
 import io.github.bropines.lens.app.di.AppGraph
 import io.github.bropines.lens.app.ui.viewer.withPrefs
 import io.github.bropines.lens.overlay.OverlayStyle
@@ -503,7 +502,8 @@ internal class ScreenTranslator(
         }
         val scanned = Tiling.scan(raster) { band ->
             val prepared = withContext(Dispatchers.Default) { ImagePreparer.prepare(band) }
-            graph.lens.scan(prepared, settings.toScanOptions())
+            // Lens, or the device where the build and the settings have it stand in.
+            graph.scans.scanFrame(prepared, settings)
         }
         // The frame is the screen pixel for pixel, so the status bar is its top rows.
         val statusBar = (wm.barInsets(density).top - rect.top).toFloat() / frame.height

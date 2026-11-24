@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Merged over the main manifest for the foss flavor. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <!-- FileKit declares this so that Google Play services installs its photo picker on old
+             Android versions. It is only a request to Play services, with no code behind it, but
+             this flavor asks Play services for nothing; the system's own picker is used instead. -->
+        <service
+            android:name="com.google.android.gms.metadata.ModuleDependencies"
+            tools:node="remove" />
+    </application>
+</manifest>

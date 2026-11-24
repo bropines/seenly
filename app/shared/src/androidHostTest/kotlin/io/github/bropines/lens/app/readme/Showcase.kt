@@ -94,7 +94,9 @@ class DemoGraph(override val services: DemoServices) : AppGraph {
 
     /** Scans come primed from the saved results, so history never records one and its database stays shut. */
     override val history: HistoryRepository = allocateUnconstructed(HistoryRepository::class.java)
-    override val scans = ScanRepository(lens, history)
+    override val scans = ScanRepository(lens, history, services)
+    override val updates = io.github.bropines.lens.app.update.UpdateController(offline, settings, services)
+    override val account = io.github.bropines.lens.app.data.GoogleAccount(services, settings)
     override val translator = TextTranslator(
         pipeline = TranslationPipeline(registry, offline, settings = { settings.current.value.translators.toSettings() }),
         registry = registry,

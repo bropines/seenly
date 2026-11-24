@@ -19,7 +19,11 @@ import io.github.bropines.lens.app.data.history.LensDatabase
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
+import io.github.bropines.lens.app.data.SecretStore
+import io.github.bropines.lens.app.ondevice.OnDeviceMl
 import io.github.bropines.lens.app.platform.PlatformServices
+import io.github.bropines.lens.app.update.UpdateInstaller
+import io.github.bropines.lens.ondevice.createOnDeviceMl
 import io.github.vinceglb.filekit.AndroidFile
 import io.github.vinceglb.filekit.PlatformFile
 import java.io.File
@@ -122,6 +126,19 @@ class AndroidPlatformServices(private val context: Context) : PlatformServices {
     }
 
     override val screenTranslate = io.github.bropines.lens.screen.AndroidScreenTranslate(context) { activity?.get() }
+
+    override val updateInstaller: UpdateInstaller? = AndroidUpdateInstaller.forThisCopy(context)
+
+    /** An update leaves the first install time behind; a fresh install has the two equal. */
+    override val wasUpdated: Boolean by lazy {
+        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).let { it.lastUpdateTime > it.firstInstallTime } }
+            .getOrDefault(false)
+    }
+
+    /** ML Kit in the google flavor, nothing in foss: each flavor's source set has its own [createOnDeviceMl]. */
+    override val onDevice: OnDeviceMl? = createOnDeviceMl(context)
+
+    override val secrets: SecretStore = KeystoreSecretStore(context)
 
     override fun persistAccess(folder: PlatformFile) {
         val uri = (folder.androidFile as? AndroidFile.UriWrapper)?.uri ?: return

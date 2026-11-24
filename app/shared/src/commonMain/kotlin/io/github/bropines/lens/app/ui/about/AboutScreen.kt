@@ -72,6 +72,8 @@ fun AboutScreen(services: PlatformServices, onBack: () -> Unit) {
                 Text(stringResource(Res.string.about_data_4))
                 Text(stringResource(Res.string.about_data_5))
                 Text(stringResource(Res.string.about_data_6))
+                Text(stringResource(Res.string.about_data_7))
+                Text(stringResource(Res.string.about_data_8))
             }
             Block(Icons.Rounded.Code, stringResource(Res.string.about_source)) {
                 Text(stringResource(Res.string.about_author))

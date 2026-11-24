@@ -4,7 +4,8 @@
     python3 scripts/release/notes.py <tag> [output]
 
 The highlights in docs/releases/<tag>.md, when that file exists, then "📋 Changelog" with the
-tag's own section of CHANGELOG.md (`## [0.1.0] - date`, without the heading). Run from the
+tag's own section of CHANGELOG.md (`## [0.1.0] - date`, without the heading; a beta tag with
+no section of its own gets [Unreleased]). Run from the
 repository's root, as .github/workflows/release.yml does; the output is release_notes.md
 unless named.
 """
@@ -31,7 +32,11 @@ def read(path: str) -> str:
 
 def notes(tag: str) -> str:
     highlights = read(os.path.join('docs', 'releases', f'{tag}.md'))
-    changes = section(read('CHANGELOG.md'), tag.lstrip('v'))
+    changelog = read('CHANGELOG.md')
+    changes = section(changelog, tag.lstrip('v'))
+    # A beta (v0.2.0-beta.1) goes out while its changes are still under [Unreleased].
+    if not changes and '-' in tag:
+        changes = section(changelog, 'Unreleased')
     parts = [highlights]
     if changes:
         parts.append('## 📋 Changelog\n\n' + changes)
