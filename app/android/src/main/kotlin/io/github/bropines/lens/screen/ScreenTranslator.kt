@@ -471,7 +471,13 @@ internal class ScreenTranslator(
         }
         // The frame is the screen pixel for pixel, so the status bar is its top rows.
         val statusBar = (wm.barInsets(density).top - rect.top).toFloat() / frame.height
-        val result = scanned.copy(paragraphs = scanned.paragraphs.filter { p -> worthTranslating(p, statusBar) })
+        // Inside an area, text running into the frame is a piece of a line the frame cuts.
+        val cut = rect.width() < screen.x || rect.height() < screen.y
+        val result = scanned.copy(
+            paragraphs = scanned.paragraphs.filter { p ->
+                worthTranslating(p, statusBar) && !(cut && touchesEdge(p, frame.width, frame.height))
+            },
+        )
         if (result.paragraphs.none { it.translation != null }) return Layer(null, rect)
         val decoded = decodeOverlay(result, fonts)
         return withContext(Dispatchers.Default) {
@@ -494,6 +500,15 @@ internal class ScreenTranslator(
         if (p.text.trim().length <= 1) return false
         val box = p.box ?: return true
         return box.centerY + box.height / 2 > statusBar
+    }
+
+    /** Whether [p]'s box reaches within a few pixels of the frame's edge. */
+    private fun touchesEdge(p: Paragraph, width: Int, height: Int): Boolean {
+        val box = p.box ?: return false
+        val mx = EDGE_PX / width
+        val my = EDGE_PX / height
+        return box.centerX - box.width / 2 < mx || box.centerX + box.width / 2 > 1 - mx ||
+            box.centerY - box.height / 2 < my || box.centerY + box.height / 2 > 1 - my
     }
 
     /** The same choice the viewer makes: bubbles reflow, everything else is set in place. */
@@ -539,6 +554,8 @@ internal class ScreenTranslator(
 
     private companion object {
         const val TAG = "ScreenTranslator"
+        /** How close to an area's edge counts as cut by it. */
+        const val EDGE_PX = 6f
         const val POLL_MS = 24L
         /** How long the picture must hold still before it is translated. */
         const val STILL_MS = 200L
