@@ -71,6 +71,8 @@ android {
     }
 
     buildFeatures { compose = true }
+    // The README render of the screen translator's menu (src/test) reads resources through Robolectric.
+    testOptions { unitTests.isIncludeAndroidResources = true }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 }
 
@@ -95,4 +97,28 @@ dependencies {
     implementation(libs.compose.material3)
     // The menu shows app/shared's localized strings (its public Res).
     implementation(libs.compose.resources)
+
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.kotlinx.serialization.json)
+}
+
+// The README screenshot of the bubble menu, beside app/shared's (see its readmeShots):
+//   ./gradlew readmeShots
+val renderReadme = gradle.startParameter.taskNames.any { it.substringAfterLast(':') == "readmeShots" }
+tasks.withType<Test>().configureEach {
+    systemProperty("robolectric.pixelCopyRenderMode", "hardware")
+    if (renderReadme) {
+        filter.includeTestsMatching("io.github.bropines.lens.screen.BubbleMenuShots*")
+        outputs.upToDateWhen { false }
+    } else {
+        exclude("**/BubbleMenuShots*")
+        // The render is the only unit test; a plain test run then has nothing to do.
+        failOnNoDiscoveredTests = false
+    }
+}
+tasks.register("readmeShots") {
+    group = "documentation"
+    description = "Renders the README screenshot of the bubble menu into build/readme-shots."
+    dependsOn("testGoogleDebugUnitTest")
 }

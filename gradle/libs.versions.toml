@@ -34,6 +34,10 @@ slf4j-nop = { module = "org.slf4j:slf4j-nop", version = "2.0.17" }
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
 kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+robolectric = { module = "org.robolectric:robolectric", version = "4.16" }
+# The README renders (app/shared host tests); the version follows the Compose that CMP resolves to.
+androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version = "1.13.0-rc01" }
+androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version = "1.13.0-rc01" }
 
 # Compose Multiplatform
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }

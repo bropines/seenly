@@ -208,7 +208,7 @@ private enum class Picking { Source, Target }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MenuSheet(
+internal fun MenuSheet(
     settings: SettingsRepository,
     mode: ScreenMode,
     bottomInset: Dp,

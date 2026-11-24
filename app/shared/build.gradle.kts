@@ -26,7 +26,9 @@ kotlin {
             version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
         }
         minSdk = libs.versions.android.minSdk.get().toInt()
-        withHostTest {}
+        // Host tests see the merged resources and manifest: the README renders
+        // (ReadmeShots) start a real activity and read Compose resources.
+        withHostTest { isIncludeAndroidResources = true }
         androidResources { enable = true }
     }
 
@@ -76,6 +78,14 @@ kotlin {
             // QR and barcodes: plain Java, no Play services, so one decoder serves both flavors.
             implementation(libs.zxing.core)
         }
+        named("androidHostTest").dependencies {
+            // The README screenshots: real screens rendered by Robolectric's
+            // native graphics, captured through Compose's test rule.
+            implementation(libs.robolectric)
+            implementation(libs.androidx.compose.ui.test.junit4)
+            implementation(libs.androidx.compose.ui.test.manifest)
+            implementation(libs.ktor.client.mock)
+        }
         jvmMain.dependencies {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.kotlinx.coroutines.swing)
@@ -98,8 +108,30 @@ compose.resources {
     publicResClass = true
 }
 
+// The README screenshots (src/androidHostTest/.../readme): the real screens
+// rendered from made-up data into build/readme-shots, in English and Russian.
+// They run only through this task; scripts/readme_shots.py frames them.
+//   ./gradlew :app:shared:readmeShots
+val renderReadme = gradle.startParameter.taskNames.any { it.substringAfterLast(':') == "readmeShots" }
+
 tasks.withType<Test>().configureEach {
     systemProperty("java.awt.headless", "true")
+    // Draw through Robolectric's hardware renderer: shadows and elevation as on a phone.
+    systemProperty("robolectric.pixelCopyRenderMode", "hardware")
+    if (renderReadme) {
+        filter.includeTestsMatching("io.github.bropines.lens.app.readme.*")
+        outputs.upToDateWhen { false }
+    } else {
+        exclude("**/readme/**")
+        // The renders may be the only host tests; a plain test run then has nothing to do.
+        failOnNoDiscoveredTests = false
+    }
+}
+
+tasks.register("readmeShots") {
+    group = "documentation"
+    description = "Renders the README screenshots into build/readme-shots."
+    dependsOn(tasks.withType<Test>().matching { it.name.contains("AndroidHostTest", ignoreCase = true) })
 }
 
 // Open-source licences shown in "About": collected from the dependency graph into a

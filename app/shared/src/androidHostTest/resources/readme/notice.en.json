@@ -1,0 +1,730 @@
+{
+    "paragraphs": [
+        {
+            "text": "Hinweis",
+            "lines": [
+                {
+                    "text": "Hinweis",
+                    "words": [
+                        {
+                            "text": "Hinweis",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.48934054,
+                                "centerY": 0.2194548,
+                                "width": 0.30185184,
+                                "height": 0.044736844,
+                                "rotation": -0.014877579
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.48934054,
+                        "centerY": 0.2194548,
+                        "width": 0.30185184,
+                        "height": 0.044736844,
+                        "rotation": -0.014877579
+                    },
+                    "translation": "Notice",
+                    "translationStyle": {
+                        "textColor": -6612960,
+                        "backgroundColor": -789009,
+                        "background": {
+                            "image": "UklGRsABAABXRUJQVlA4WAoAAAAQAAAAjAAAJwAAQUxQSJIAAAABDzD/ERECVm3bqpsdvJ/PQZ6UGKMHAiLhSQkJgVYAc+/o+rncCojo/wToDzcmx8pjAxhJjRH4GiZSQ5OgzdVXajiGnZdquKWpHo3kOG5dcNlalr81X4w8YIE9MInAF+qKHv1/Q4JdiElzLeYhKnIS9JFrAHjxHVx77n2N7+YY+b4GjmxdwlKhGlkDtVQrfqECAVZQOCAIAQAAUAcAnQEqjQAoAD4xGIpEIiGhISEoUEAGCWls0Fu4U1ti4qtpIALNgbUnjQ+tToUqkBTEZUkdz4S/Rny9pByQbh6j8AD+/f9HtEnHP2KkW4w5eFw0JZJNDq6dKIgg16FL39h/asDBGSwAeHZzhDJDhYEjwrvaiZ1AYh2gAxl/aaxa9Q3tgRDaMdf2F5Yi1WdXUzZ6NgHQ34DHgcX7ZiblqWk8ObPg513WyQErb5/dUygiFhABR4Wc+zMyTQCXNki7yPesVs1XTDIuf6F5i1ZJ0ktsCBqfMl4pWWZRMDP5hsjc0Q8exrlJXzcfwcqmAko8IETOIeimhTONhyw4qp+1LUZmrZdikAAA",
+                            "format": "Webp",
+                            "width": 141,
+                            "height": 40,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.42000625
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.48934054,
+                "centerY": 0.2194548,
+                "width": 0.30185184,
+                "height": 0.044736844,
+                "rotation": -0.014877579
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "Notice",
+                "sourceLanguage": "de",
+                "targetLanguage": "en",
+                "writingDirection": "LeftToRight",
+                "alignment": "Center",
+                "justified": false
+            }
+        },
+        {
+            "text": "Liebe Gäste,\nunser Café bleibt am\nMontag wegen Renovierung\ngeschlossen.",
+            "lines": [
+                {
+                    "text": "Liebe Gäste,",
+                    "words": [
+                        {
+                            "text": "Liebe",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.24738123,
+                                "centerY": 0.32304987,
+                                "width": 0.096296296,
+                                "height": 0.025657894,
+                                "rotation": -0.008912343
+                            }
+                        },
+                        {
+                            "text": "Gäste",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.35710335,
+                                "centerY": 0.32237145,
+                                "width": 0.10277778,
+                                "height": 0.025657894,
+                                "rotation": -0.008912343
+                            }
+                        },
+                        {
+                            "text": ",",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.41219366,
+                                "centerY": 0.32168657,
+                                "width": 0.0074074073,
+                                "height": 0.025,
+                                "rotation": -0.0089123435
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.30756405,
+                        "centerY": 0.32266873,
+                        "width": 0.21666667,
+                        "height": 0.025657894,
+                        "rotation": -0.008912343
+                    },
+                    "translation": "Dear guests, our ",
+                    "translationStyle": {
+                        "textColor": -13224143,
+                        "backgroundColor": -789266,
+                        "background": {
+                            "image": "UklGRhABAABXRUJQVlA4WAoAAAAQAAAAZwAAFwAAQUxQSGcAAAABDzD/ERHCbW07cvJtAwopYRphKW3ojNAhJdhUgEMWHf1A0rA1ENH/CQBwL0gXgTrr3FjMUQDYrdhUZ1LUTQxHCpgxuGQc2CzWtNUm3v/Pmmobv3eNlGeynsiqJADMwL3B77Acj1kIAFZQOCCCAAAAkAQAnQEqaAAYAD4xGItEIiGhESQAIAMEtLWnrkiBdlDmb6hpSGo5xd9dDNkAAP79/0cZpAa8Pg9GpmSe0T1MOqj703Gs7DOIyvHamtsAITA4kixmWt3Gwvc/4neAgO0mhRrrnBnKv2GdI+rx4BUbfgE/Di/7B45Iy0aeKtxnio9AAA==",
+                            "format": "Webp",
+                            "width": 104,
+                            "height": 24,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.42857125
+                        }
+                    }
+                },
+                {
+                    "text": "unser Café bleibt am",
+                    "words": [
+                        {
+                            "text": "unser",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.24895921,
+                                "centerY": 0.384135,
+                                "width": 0.10092592,
+                                "height": 0.025,
+                                "rotation": -0.020383885
+                            }
+                        },
+                        {
+                            "text": "Café",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.34941512,
+                                "centerY": 0.38265795,
+                                "width": 0.07777778,
+                                "height": 0.024342105,
+                                "rotation": -0.020383885
+                            }
+                        },
+                        {
+                            "text": "bleibt",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.45034763,
+                                "centerY": 0.38146988,
+                                "width": 0.10555556,
+                                "height": 0.025,
+                                "rotation": -0.020383885
+                            }
+                        },
+                        {
+                            "text": "am",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.5415568,
+                                "centerY": 0.3798784,
+                                "width": 0.05277778,
+                                "height": 0.025,
+                                "rotation": -0.020383885
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.38319057,
+                        "centerY": 0.38219061,
+                        "width": 0.36944443,
+                        "height": 0.025,
+                        "rotation": -0.020383885
+                    },
+                    "translation": "café will be closed on ",
+                    "translationStyle": {
+                        "textColor": -10329251,
+                        "backgroundColor": -723471,
+                        "background": {
+                            "image": "UklGRqwBAABXRUJQVlA4WAoAAAAQAAAAqAAAFgAAQUxQSJMAAAABDzD/ERHCba1tS/PhHf8CyCQhK9Gl/Ff7uqzxUaV0wd/Ijy8Q0f8JoGEO2KIZWYmjKB8nsEpcTopyGVXC6tEjLfWYllqkhnZEqFoY+yZtdekM9SZghFgZRuv2iDSlHpPPgCbMu7J+VeWYZiPWMu+ZikmXMZXh/Cd4M1Dc4YQlzjs0FmNPRMSHSMQhuryd6CLEQUYAVlA4IPIAAADQBwCdASqpABcAPjEYi0QiIaEQxAAgAwS0tS0upZ7qAWF6y8HYlWPDJmZ5DX3ryfMIljjozGhVU4wTWqhUiOVemoUQSFCQ0AD+/f8a6+pN5DfHCqM/CiKQBtbIKnNqUDcN2b/TJi+V9IDINqmScZakjWuBDuOnJSOMG/e969ipKW3U9HF3KCxEAql7++M8FLg05mMJpq9Oj28wWIxlyGAR1cjGjnaKOIvEafMbCok6qwHxMHkLJwzXZS+a5FLhh4+3wJwOeFzaArQpUymf1WhR+Iyke262y661+vSIs4RYzHNohPmj+6tUxQ4PdL96Vv3QAA==",
+                            "format": "Webp",
+                            "width": 169,
+                            "height": 23,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.43117404
+                        }
+                    }
+                },
+                {
+                    "text": "Montag wegen Renovierung",
+                    "words": [
+                        {
+                            "text": "Montag",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.26884192,
+                                "centerY": 0.4284056,
+                                "width": 0.1388889,
+                                "height": 0.026973683,
+                                "rotation": -0.017605428
+                            }
+                        },
+                        {
+                            "text": "wegen",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.40541822,
+                                "centerY": 0.4266114,
+                                "width": 0.11018518,
+                                "height": 0.026973683,
+                                "rotation": -0.017605428
+                            }
+                        },
+                        {
+                            "text": "Renovierung",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.5882795,
+                                "centerY": 0.4245602,
+                                "width": 0.22777778,
+                                "height": 0.026973683,
+                                "rotation": -0.017605424
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.45075816,
+                        "centerY": 0.42612976,
+                        "width": 0.50277776,
+                        "height": 0.026973683,
+                        "rotation": -0.017605426
+                    },
+                    "translation": "Monday for renovations.",
+                    "translationStyle": {
+                        "textColor": -13618901,
+                        "backgroundColor": -789266,
+                        "background": {
+                            "image": "UklGRgoCAABXRUJQVlA4WAoAAAAQAAAA5QAAGAAAQUxQSJsAAAABDzD/ERHCcW3banLxYTogpbyimEZwmtIZZSQd4BC/yBd0HtH/CcCHdwD0RbMW3boB7GiWRCFQKXYEkhf0qesmnPUS6Yca2pGch3G/g52b8NkpqE5pLCrDN10tdjbb/+cWNpZvEqvrt4WviJ6OT1JxE1EofQfod2K6QEEAHvqjTr8BABQoTZQ2fTpAEerUlasCG0AiNkVD8xzDHgBWUDggSAEAABAJAJ0BKuYAGQA+MRiLRCIhoRCUACADBLS2B+Vkzom8kCNEswmtAH94XI9fVhIvTUy/DZDtysCZYGbN6HAEvXdfenzQN8xyqMQy+EVG5/bxAAD+/fmC1sUDUQLki/87FjTD/YVqFRdlKpfkgGYruBratPxJZNGplXUgB+ZlduimDD8DkzJGUaJROB/Z0wUckXdb3MvIPJDT92qctqVUxY+2ZZW3jq+199QEPVCbViS6zWU0HglGjtZZNDDD0RIGuvsHbJEBWVwE2nG9uydBZs7PgADoIs8hjrwBkZhUXDdOVx2tQplpGdMvSBYYMpftPdo5BU0gknmUgi/ICCCJorp88b8exmZKlU4FuGujD6EureN3mS7UUCsrsHNL+F28oZUU9ZjF8vyQjBGEQwRS2lDcMeNse+n3r/WG3Pl7pof9ym06v1rgAAA=",
+                            "format": "Webp",
+                            "width": 230,
+                            "height": 25,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.43339574
+                        }
+                    }
+                },
+                {
+                    "text": "geschlossen.",
+                    "words": [
+                        {
+                            "text": "geschlossen",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.3073947,
+                                "centerY": 0.467691,
+                                "width": 0.21018519,
+                                "height": 0.029605264,
+                                "rotation": -0.022942375
+                            }
+                        },
+                        {
+                            "text": ".",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.42083696,
+                                "centerY": 0.4657404,
+                                "width": 0.0055555557,
+                                "height": 0.028947368,
+                                "rotation": -0.022942375
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.3129488,
+                        "centerY": 0.46760046,
+                        "width": 0.2212963,
+                        "height": 0.029605264,
+                        "rotation": -0.022942375
+                    },
+                    "translation": null,
+                    "translationStyle": {
+                        "textColor": -10526630,
+                        "backgroundColor": -657680,
+                        "background": {
+                            "image": "UklGRjwBAABXRUJQVlA4WAoAAAAQAAAAawAAGwAAQUxQSFkAAAABDzD/ERGCUSTZTpZ8/BK+EbyBgy8BKUj5SHhHcmYfSUBE/ycAj+eK0RVcxbWeE78QEjGysBFaymL8hSVSZJpWMX4lGhdnIRNMMy4G42IMJMC5pq0zsKXltABWUDggvAAAAHAFAJ0BKmwAHAA+MRiLRCIhoREkACADBLS2aC8PQWbA0qcc5ioY7GCCQLFbY/K+3jcpZQAA/v3Yf/SWAwr0oaBc2h57v9tdZb5bIXkCz+owAVKxUCOZTjrdZi5orCDy2N3Vse0F0WAKdEQQfHAfZWKt1PB+ies7srnlQ5dzW7VEscknBDIkaG6D09vnUw/QU4t/vGxb8vEc7AzCLt74zH8Zm2AmcBChC+vsntQjoZxazq+ZlCT4FF+02AAA",
+                            "format": "Webp",
+                            "width": 108,
+                            "height": 28,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.4251526
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.4497388,
+                "centerY": 0.39430076,
+                "width": 0.50277776,
+                "height": 0.17368421,
+                "rotation": -0.017104017
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "Dear guests, our café will be closed on Monday for renovations.",
+                "sourceLanguage": "de",
+                "targetLanguage": "en",
+                "writingDirection": "LeftToRight",
+                "alignment": "Start",
+                "justified": false
+            }
+        },
+        {
+            "text": "Ab Dienstag sind wir\nwieder für Sie da.",
+            "lines": [
+                {
+                    "text": "Ab Dienstag sind wir",
+                    "words": [
+                        {
+                            "text": "Ab",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.2262751,
+                                "centerY": 0.5322367,
+                                "width": 0.05185185,
+                                "height": 0.028289475,
+                                "rotation": -0.017745685
+                            }
+                        },
+                        {
+                            "text": "Dienstag",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.34340456,
+                                "centerY": 0.53057855,
+                                "width": 0.15833333,
+                                "height": 0.028947368,
+                                "rotation": -0.017745683
+                            }
+                        },
+                        {
+                            "text": "sind",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.47349542,
+                                "centerY": 0.5287955,
+                                "width": 0.075925924,
+                                "height": 0.028289475,
+                                "rotation": -0.017745685
+                            }
+                        },
+                        {
+                            "text": "wir",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.549431,
+                                "centerY": 0.5279253,
+                                "width": 0.05740741,
+                                "height": 0.028947368,
+                                "rotation": -0.017745685
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.3892206,
+                        "centerY": 0.52985305,
+                        "width": 0.37777779,
+                        "height": 0.028947368,
+                        "rotation": -0.017745685
+                    },
+                    "translation": "We will be back for you ",
+                    "translationStyle": {
+                        "textColor": -13487566,
+                        "backgroundColor": -723473,
+                        "background": {
+                            "image": "UklGRuABAABXRUJQVlA4WAoAAAAQAAAArwAAGgAAQUxQSLIAAAABDzD/ERECbrb/jZPfPQ7qfCNoE2slk0uJBfAIjGJRMUYOJUd3+St0CVggov8ToF88LBJWvZsSVgOBFeRSzCSVq4jkJHgEK8VVYiIqWE2xU/JpO7UmDASGn1448QBfvgc7NjHxEfwcgKVKcP+kG2sX6MEvQDt0mjBYLef+lG3hfs4P2BKOvAG2hMb3EBpsAYbsIEkFKw2WZuD2YoZUfCc3yTOZGTs6lXcmCV5jId9LQ9IEVlA4IAgBAACwBgCdASqwABsAPjEYikQiIYhiGBABglpawldzwHeaL48PmQ5qbzvVI7nMexVwmwbo93P3V1VyGLh/kKE7SAD+/fpbQdneGQeRQTxSlZtrugE3UsviBeS9tpVOiKrEhC4OGgDu8MGDIaqAITPVdokQ4rVfkjBYHqjksrGg7Zk/UsjJ+plHyn6KtoVZzeAO7kJRjW8RvBu5Xam/M2T5SpRStMq0egH9ggPTew1khikZrJuWu4oSSLAfA7uSwkU1IUwm09Y26K/oUFQfPegiH6qaHLZ4iQADG/Q9t/TvYUdzg7D4qSt+pN1GX0RlOx9xpsfo2rl4oa+BLM5u640cUX0G9MbVyRdAAAA=",
+                            "format": "Webp",
+                            "width": 176,
+                            "height": 27,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.40384674
+                        }
+                    }
+                },
+                {
+                    "text": "wieder für Sie da.",
+                    "words": [
+                        {
+                            "text": "wieder",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.26370868,
+                                "centerY": 0.5695899,
+                                "width": 0.121296294,
+                                "height": 0.022368422,
+                                "rotation": -0.0186332
+                            }
+                        },
+                        {
+                            "text": "für",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.36139143,
+                                "centerY": 0.56841713,
+                                "width": 0.05,
+                                "height": 0.021710526,
+                                "rotation": -0.0186332
+                            }
+                        },
+                        {
+                            "text": "Sie",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.42528862,
+                                "centerY": 0.56740576,
+                                "width": 0.053703703,
+                                "height": 0.022368422,
+                                "rotation": -0.0186332
+                            }
+                        },
+                        {
+                            "text": "da",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.48500308,
+                                "centerY": 0.56648636,
+                                "width": 0.043518517,
+                                "height": 0.021710526,
+                                "rotation": -0.0186332
+                            }
+                        },
+                        {
+                            "text": ".",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.5123212,
+                                "centerY": 0.56607974,
+                                "width": 0.0055555557,
+                                "height": 0.021710526,
+                                "rotation": -0.0186332
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.3590625,
+                        "centerY": 0.5683273,
+                        "width": 0.31203705,
+                        "height": 0.022368422,
+                        "rotation": -0.0186332
+                    },
+                    "translation": "on Tuesday.",
+                    "translationStyle": {
+                        "textColor": -11908534,
+                        "backgroundColor": -723471,
+                        "background": {
+                            "image": "UklGRoYBAABXRUJQVlA4WAoAAAAQAAAAkQAAFAAAQUxQSIsAAAABDzD/ERHCUW3bTnNJ+8PvIE8KluIAUBAJSKk20tufZlZf/h3QURDR/wmIxQe5oP40uQGAGgXwc6grjBoAayYUxIyg3BoNAWwY91MmlLxosKidlBVT103Z6Eh6MlBa+KbWlANkpHT7N4S9SEZDcN6pdTIcyfd5dfIdIk+mtVOTa5JaHtaqKw121qIOAFZQOCDUAAAAUAcAnQEqkgAVAD4xGItEIiGhENQAIAMEtLXtrvW3mdf8BOjxF4zT1mR5EGFm7rgW65JbBqifrLo4IOwpYBEbN4lGIAD+/ffVmojYh1L8ZwKdydHZ8Di80PqC+SQY+UUZgNo3LAljBHQuykPy+TzRAHJAF1S7oQ7gqvDkXwLQCYg8QVx0UxhZ3JEUmwOecEgFLx4EMd3uuljW22s6+ghiQKgItaHAbl3T3TGBAzRgBhgYZy3e7t4e2cYhw5asGdiNhWoTF1N2ydNQv7vI63r4KPDAAAA=",
+                            "format": "Webp",
+                            "width": 146,
+                            "height": 21,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.42921805
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.38967037,
+                "centerY": 0.54723793,
+                "width": 0.37777779,
+                "height": 0.06381579,
+                "rotation": -0.018091457
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "We will be back for you on Tuesday.",
+                "sourceLanguage": "de",
+                "targetLanguage": "en",
+                "writingDirection": "LeftToRight",
+                "alignment": "Start",
+                "justified": false
+            }
+        },
+        {
+            "text": "Vielen Dank für Ihr\nVerständnis!",
+            "lines": [
+                {
+                    "text": "Vielen Dank für Ihr",
+                    "words": [
+                        {
+                            "text": "Vielen",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.26193684,
+                                "centerY": 0.6329592,
+                                "width": 0.117592596,
+                                "height": 0.024342105,
+                                "rotation": -0.022010192
+                            }
+                        },
+                        {
+                            "text": "Dank",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.3795319,
+                                "centerY": 0.6311448,
+                                "width": 0.097222224,
+                                "height": 0.024342105,
+                                "rotation": -0.022010192
+                            }
+                        },
+                        {
+                            "text": "für",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.46424943,
+                                "centerY": 0.62985486,
+                                "width": 0.05185185,
+                                "height": 0.023684211,
+                                "rotation": -0.022010192
+                            }
+                        },
+                        {
+                            "text": "Ihr",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.52999014,
+                                "centerY": 0.6285391,
+                                "width": 0.05185185,
+                                "height": 0.023684211,
+                                "rotation": -0.022010192
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.37950096,
+                        "centerY": 0.6311203,
+                        "width": 0.35277778,
+                        "height": 0.024342105,
+                        "rotation": -0.022010192
+                    },
+                    "translation": "Thank you for your ",
+                    "translationStyle": {
+                        "textColor": -11842490,
+                        "backgroundColor": -723473,
+                        "background": {
+                            "image": "UklGRmYBAABXRUJQVlA4WAoAAAAQAAAApQAAFgAAQUxQSIcAAAABDzD/ERHCba1tT/Kay38DWMPMaD8uonPYMYnn7yi1I/MQzQNE9H8CJE9v9ZRKoX3lFjMbcE7WKERSSM/1uBLozEwlJMz0YCJHhhWselCSEstRwewpQCk897L/nuAz9/9QjETPjY69+Cb/TeFLtqc32XcYrctg70iCFC74WtecjAbTyDijJwEAVlA4ILgAAABQBgCdASqmABcAPjEYi0QiIaEhIYgAQAYJaWytXbSB47sHYaPCFifg5z9pCA1GBPglfOjgWGCGmCwoAAD+/gB2NrQt3xSQ7ibxJIZNFhjMpwFi85ghVCAmIwry3BK9vUoXA4yXmDxd2wG3AwWd0tUqypOPjUF0G4CRoBPAWOtFtCIhjCnNMkY3zDLX1xVgRHnvk/ah0yCWtDQ0N+4En5L67wMwYXDX3uAcfTRA496uu6Ged9P/+AAA",
+                            "format": "Webp",
+                            "width": 166,
+                            "height": 23,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.40807775
+                        }
+                    }
+                },
+                {
+                    "text": "Verständnis!",
+                    "words": [
+                        {
+                            "text": "Verständnis",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.31232753,
+                                "centerY": 0.6725368,
+                                "width": 0.21666667,
+                                "height": 0.023026315,
+                                "rotation": -0.019153705
+                            }
+                        },
+                        {
+                            "text": "!",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.43085653,
+                                "centerY": 0.6710128,
+                                "width": 0.0055555557,
+                                "height": 0.022368422,
+                                "rotation": -0.019153705
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.3188078,
+                        "centerY": 0.67244864,
+                        "width": 0.22962964,
+                        "height": 0.023026315,
+                        "rotation": -0.019153705
+                    },
+                    "translation": "understanding!",
+                    "translationStyle": {
+                        "textColor": -9408149,
+                        "backgroundColor": -723473,
+                        "background": {
+                            "image": "UklGRhwBAABXRUJQVlA4WAoAAAAQAAAAaQAAFAAAQUxQSFUAAAABDzD/ERGCUWxbbV768ktACs5iLUj5EsgO0u4uTUFE/ydA33onuSmHZNLBpOIoB7fSHJgKsIId3fXMLqACdBe3v2nyA/9Rutf9ankQbzWKxywQEFIDAFZQOCCgAAAAsAUAnQEqagAVAD4xGItEIiGhESQAIAMEtLYbSCKkRY64IG8UDvx+W75L/et11rgQCa7hedugAP7999zXh4XSrycKZzVa7AuWcbnulljksUIt3KvbsWZ5BFZO9CKeTVEew8YFL4z6y5OnIQgIh/Re+cRQoinZZYjADL2guDf0gZapsODG1stwWUa0HQenIXo6SPZCnjiuQdPrtqzNosAAAA==",
+                            "format": "Webp",
+                            "width": 106,
+                            "height": 21,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.41663992
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.3800772,
+                "centerY": 0.6513184,
+                "width": 0.35277778,
+                "height": 0.06447368,
+                "rotation": -0.020921625
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "Thank you for your understanding!",
+                "sourceLanguage": "de",
+                "targetLanguage": "en",
+                "writingDirection": "LeftToRight",
+                "alignment": "Start",
+                "justified": false
+            }
+        },
+        {
+            "text": "Ihr Team vom Café Linde",
+            "lines": [
+                {
+                    "text": "Ihr Team vom Café Linde",
+                    "words": [
+                        {
+                            "text": "Ihr",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.2392785,
+                                "centerY": 0.7433423,
+                                "width": 0.05740741,
+                                "height": 0.028289475,
+                                "rotation": -0.019857172
+                            }
+                        },
+                        {
+                            "text": "Team",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.3295428,
+                                "centerY": 0.7420485,
+                                "width": 0.10092592,
+                                "height": 0.027631579,
+                                "rotation": -0.019857172
+                            }
+                        },
+                        {
+                            "text": "vom",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.43140602,
+                                "centerY": 0.7405604,
+                                "width": 0.0787037,
+                                "height": 0.028289475,
+                                "rotation": -0.019857172
+                            }
+                        },
+                        {
+                            "text": "Café",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.52399844,
+                                "centerY": 0.73923165,
+                                "width": 0.08055556,
+                                "height": 0.028289475,
+                                "rotation": -0.019857172
+                            }
+                        },
+                        {
+                            "text": "Linde",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.62631136,
+                                "centerY": 0.73777866,
+                                "width": 0.1,
+                                "height": 0.028289475,
+                                "rotation": -0.019857174
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.4434049,
+                        "centerY": 0.7404618,
+                        "width": 0.46574074,
+                        "height": 0.028289475,
+                        "rotation": -0.019857172
+                    },
+                    "translation": "Your Café Linde Team",
+                    "translationStyle": {
+                        "textColor": -13027015,
+                        "backgroundColor": -789266,
+                        "background": {
+                            "image": "UklGRigCAABXRUJQVlA4WAoAAAAQAAAA0wAAGQAAQUxQSLYAAAABDzD/ERECciRJkqLk7OeI0IpgVqJxCYAIiILxQgzmx/fc3TkrH11TPbAKRPR/AjB6GXCfAB1nY62gDK5yAohB8VWc3Pk4rlEVqCigb6Z8nNax4sAtOEJC0YSR/MuoHfa643DNNDjYO1qj+BLv60vUUEfrsT/irY3QkZJnByVF/wFJ4Qei1Y8SrC7RRI1ZRU6UPHByP0fgfqKsuyv3nAGlALwUGK4EaTUDNnnRMCMyq8KTvZkNAVZQOCBMAQAAkAgAnQEq1AAaAD4xGItEIiGhEJQAIAMEtLWPKcKlDY2tXLAi1ErVo4uf7Oh3JItlmy9dM75LWDVvVttiB7xaTvkn0tG1jJbDPuqovlAA/v4FWDh3/w3apYI0F/tnhspWcBsFbJ/CRNeFjHDfNtEmGuHciJHDnJBfMwPtyeZnFUfz9Ev21j/4zWzQNZFf1edfC04F2/z80b044qVIMmSAgDE+11hv+kyM8O3Liy4QU5uWO7SabUMtAF/neO75O8Srh1n3AO7VJNReoDYV6wGStvE+2/JKwitQc4a6JP1LEPMcqJZGztG4qJr7EIY5ThJmwsxI45n64m8j7wFfnidbJ/+TSpA9i6Ugdmunx2/LqK4u28OG+rqZ27jVlZJwIGEOdVYBlxzpe+r1rsiVeE2Bco4z9lMQzSZvYttGXKV67XBCt6bhpu0/H9BAAAA=",
+                            "format": "Webp",
+                            "width": 212,
+                            "height": 26,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.41196033
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.4434049,
+                "centerY": 0.7404618,
+                "width": 0.46574074,
+                "height": 0.028289475,
+                "rotation": -0.019857172
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "Your Café Linde Team",
+                "sourceLanguage": "de",
+                "targetLanguage": "en",
+                "writingDirection": "LeftToRight",
+                "alignment": "Start",
+                "justified": false
+            }
+        }
+    ],
+    "language": "de",
+    "imageWidth": 1080,
+    "imageHeight": 1520
+}

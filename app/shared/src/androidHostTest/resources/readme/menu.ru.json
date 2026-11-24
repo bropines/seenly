@@ -1,0 +1,1047 @@
+{
+    "paragraphs": [
+        {
+            "text": "本日のおすすめ",
+            "lines": [
+                {
+                    "text": "本日のおすすめ",
+                    "words": [
+                        {
+                            "text": "本日",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.31416598,
+                                "centerY": 0.21081744,
+                                "width": 0.14444445,
+                                "height": 0.04868421,
+                                "rotation": 0.01857669
+                            }
+                        },
+                        {
+                            "text": "の",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.43455133,
+                                "centerY": 0.2126313,
+                                "width": 0.07037037,
+                                "height": 0.048026316,
+                                "rotation": 0.01857669
+                            }
+                        },
+                        {
+                            "text": "おすすめ",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.6238834,
+                                "centerY": 0.21479845,
+                                "width": 0.29907408,
+                                "height": 0.048026316,
+                                "rotation": 0.01857669
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.5076511,
+                        "centerY": 0.2133716,
+                        "width": 0.5314815,
+                        "height": 0.04868421,
+                        "rotation": 0.01857669
+                    },
+                    "translation": "Сегодняшняя рекомендация",
+                    "translationStyle": {
+                        "textColor": -2702204,
+                        "backgroundColor": -14603224,
+                        "background": {
+                            "image": "UklGRooCAABXRUJQVlA4WAoAAAAQAAAA2wAAJwAAQUxQSG8AAAABDzD/ERHCcSNJilR71M8zYdxY72ZNbQ+OGfJgGb8R/Z8AQaorUUH5rswkR9KWylfAtm+C13UBuKzf1cp2iLZtGimeNptG/ntn05nc/nn10n8Hbp0p7M68EWtuW8MtZxue0XMicMiLDripdGYqm0oAVlA4IPQBAAAQCwCdASrcACgAPjEYikQiIZCQZBggAwS0tTqOi/SDk1lvwMiR7sdN325IDQAvKHCfYbgpku/ultEPo1bllkbBoYiWumswByS92AsAGfHJoDTpARqtP90NjA6JnbLxt2AAAP78zXREPnSJ3uWikIpAnVFQ854LbqYR6+ET34oGB8WOea1/7/L0lhHvlp7iA6k8X04w9iH1k5omWcRSuLYUyjewpenoTvTT9EnP7sR5SWuREda0gZudCrEoRPCl/tyaHOjiDf/U6c4BI/vvDHIFwPAQdtSUiBwSBNkD4/16/r0MiANXZNHPdwDJUxg2uh0FKBrBsBXkLYL5uDnO/UrspcyBVOvJ08Z9CeyJ5quGKZForu7L4jH8dXuEyGL0y4aCJbEWdlXFNx3BdCUqjaARbmpip7aPAiYcJr0H77TA/ql3Bsp3LU2T20skI6ADY86KmrZdjIe/Vk7Th/EIjy/raX51RdBHpcXLXvqMvL3LBxP4NayKPl/2onTGEtEBpADn1W6EB/Spb1GJQxMRz8gGgkOqyxq9mH1RKDkFcmSHcSr65tok5TDvhKlkVn+BUPC6CiQyIiQJVcF9TSsmcAXQnWOg9qhy5gqOwDAL1D6+cDIlbbMvR4gPFmgJOUhoOshCt2L9c5+Oc7OpGmRdXUyTq6AAAA==",
+                            "format": "Webp",
+                            "width": 220,
+                            "height": 40,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.40258378
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.5076511,
+                "centerY": 0.2133716,
+                "width": 0.5314815,
+                "height": 0.04868421,
+                "rotation": 0.01857669
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "Сегодняшняя рекомендация",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "LeftToRight",
+                "alignment": "Center",
+                "justified": false
+            }
+        },
+        {
+            "text": "醤油ラーメン",
+            "lines": [
+                {
+                    "text": "醤油ラーメン",
+                    "words": [
+                        {
+                            "text": "醤油",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.22123158,
+                                "centerY": 0.33763605,
+                                "width": 0.10092592,
+                                "height": 0.032894738,
+                                "rotation": 0.02225791
+                            }
+                        },
+                        {
+                            "text": "ラーメン",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.3809319,
+                                "centerY": 0.34002012,
+                                "width": 0.19444445,
+                                "height": 0.03355263,
+                                "rotation": 0.02225791
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.32443646,
+                        "centerY": 0.33893958,
+                        "width": 0.3074074,
+                        "height": 0.03355263,
+                        "rotation": 0.02225791
+                    },
+                    "translation": "Рамен с соевым соусом",
+                    "translationStyle": {
+                        "textColor": -4208962,
+                        "backgroundColor": -14866396,
+                        "background": {
+                            "image": "UklGRuQAAABXRUJQVlA4WAoAAAAQAAAAiwAAHQAAQUxQSC4AAAABDzD/ERFCTW2rjYQvGgHIQg4r6b1MORkj+j8BVpZUpkBcLRnlWC6UD6QXygMAVlA4IJAAAABwBQCdASqMAB4APjEYi0QiIaEjIcgAYAYJaQDScAT5PCB+ZjpfcpdSX/dNL/Y4he2plUDgAP788yLBvSXS5A4h7eTTHQ1WtSiP3EtQFv7gAYMnniWLqwaK13JTHp38UxOkNQEt8PqIVeQHcE+UZhVGEcyDs5eIgGg6JVheH3TjIDKyrRa8iy8qf5WB13hAAAA=",
+                            "format": "Webp",
+                            "width": 140,
+                            "height": 30,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.41327262
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.32443646,
+                "centerY": 0.33893958,
+                "width": 0.3074074,
+                "height": 0.03355263,
+                "rotation": 0.02225791
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "Рамен с соевым соусом",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "LeftToRight",
+                "alignment": "Start",
+                "justified": false
+            }
+        },
+        {
+            "text": "850円",
+            "lines": [
+                {
+                    "text": "850円",
+                    "words": [
+                        {
+                            "text": "850",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.7472191,
+                                "centerY": 0.34924018,
+                                "width": 0.11018518,
+                                "height": 0.028289475,
+                                "rotation": 0.022701455
+                            }
+                        },
+                        {
+                            "text": "円",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.807885,
+                                "centerY": 0.35042953,
+                                "width": 0.053703703,
+                                "height": 0.027631579,
+                                "rotation": 0.022701457
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.7634186,
+                        "centerY": 0.34950152,
+                        "width": 0.1425926,
+                        "height": 0.028289475,
+                        "rotation": 0.022701455
+                    },
+                    "translation": "850 иен",
+                    "translationStyle": {
+                        "textColor": -3946041,
+                        "backgroundColor": -14669274,
+                        "background": {
+                            "image": "UklGRnAAAABXRUJQVlA4IGQAAAAQBACdASpDABkAPjEYi0QiIaEhI0gAQAYJaWv+AAs7VFr9cz4bp5v3QAD+/QDof0nEBV+s1YHLV+5KqRTZck8y1qq27pE4Ks2Zuoie5A1mpr1YehH+ksvPSdD4ezUa1FdCEAAA",
+                            "format": "Webp",
+                            "width": 67,
+                            "height": 25,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.42064932
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.7634186,
+                "centerY": 0.34950152,
+                "width": 0.1425926,
+                "height": 0.028289475,
+                "rotation": 0.022701455
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "850 иен",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "LeftToRight",
+                "alignment": "End",
+                "justified": false
+            }
+        },
+        {
+            "text": "味噌ラーメン",
+            "lines": [
+                {
+                    "text": "味噌ラーメン",
+                    "words": [
+                        {
+                            "text": "味噌",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.22272886,
+                                "centerY": 0.42398468,
+                                "width": 0.098148145,
+                                "height": 0.03223684,
+                                "rotation": 0.018127946
+                            }
+                        },
+                        {
+                            "text": "ラーメン",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.37782204,
+                                "centerY": 0.42624363,
+                                "width": 0.19351852,
+                                "height": 0.031578947,
+                                "rotation": 0.018127946
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.3241011,
+                        "centerY": 0.42529052,
+                        "width": 0.30092594,
+                        "height": 0.03223684,
+                        "rotation": 0.018127946
+                    },
+                    "translation": "Мисо Рамен",
+                    "translationStyle": {
+                        "textColor": -3287860,
+                        "backgroundColor": -14603224,
+                        "background": {
+                            "image": "UklGRvgAAABXRUJQVlA4WAoAAAAQAAAAhAAAGwAAQUxQSCsAAAABDzD/ERFCaQCgCY3ICZzK4czdVyP6PwG+m+e4vuI60ue91776b1EfnoABAFZQOCCmAAAAkAUAnQEqhQAcAD4xGItEIiGhEOQAIAMEtLZ5r3lBI/QhHsFqFVDB31eBj+L7HyI51QOp9uAA/vxtSLK9hhMHFqWGvR/x+V6Ug48KmISmQHR62oTdH8Dk/Ng9OCDr5z9XIHMsqN3QIObzgHxEFcxxbY8uRtE9w5VHtSEneRay5RkvjH9lZbIkMgTrV7RM0dm/WzNydVFMyZyrzI8S6lDtV2uABzyAAA==",
+                            "format": "Webp",
+                            "width": 133,
+                            "height": 28,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.42161903
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.3241011,
+                "centerY": 0.42529052,
+                "width": 0.30092594,
+                "height": 0.03223684,
+                "rotation": 0.018127946
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "Мисо Рамен",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "LeftToRight",
+                "alignment": "Start",
+                "justified": false
+            }
+        },
+        {
+            "text": "900円",
+            "lines": [
+                {
+                    "text": "900円",
+                    "words": [
+                        {
+                            "text": "900",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.7392512,
+                                "centerY": 0.4354494,
+                                "width": 0.098148145,
+                                "height": 0.029605264,
+                                "rotation": 0.026245074
+                            }
+                        },
+                        {
+                            "text": "円",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8068639,
+                                "centerY": 0.4366626,
+                                "width": 0.05185185,
+                                "height": 0.028947368,
+                                "rotation": 0.026245074
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.7614658,
+                        "centerY": 0.43586373,
+                        "width": 0.1425926,
+                        "height": 0.029605264,
+                        "rotation": 0.026245074
+                    },
+                    "translation": "900 иен",
+                    "translationStyle": {
+                        "textColor": -3748924,
+                        "backgroundColor": -14537946,
+                        "background": {
+                            "image": "UklGRrIAAABXRUJQVlA4WAoAAAAQAAAAQgAAGQAAQUxQSBkAAAABDzD/ERGCSIAk+n+wksjWiP5PAJoratggAFZQOCByAAAAcAQAnQEqQwAaAD4xGItEIiGhEaQAIAMEtIBqCgShlH/9fO1UdaCT7paBgAAA/vzpLhsSXsMJg2/ATPaeMKjHMspZlk6VKwyFtQSMdPK6wFgk0XCSwfrj2yEXZKe8Ap1EeP9D8+MbmSAaNBmBbBZs5IAA",
+                            "format": "Webp",
+                            "width": 67,
+                            "height": 26,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.40195382
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.7614658,
+                "centerY": 0.43586373,
+                "width": 0.1425926,
+                "height": 0.029605264,
+                "rotation": 0.026245074
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "900 иен",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "LeftToRight",
+                "alignment": "End",
+                "justified": false
+            }
+        },
+        {
+            "text": "つけ麺",
+            "lines": [
+                {
+                    "text": "つけ麺",
+                    "words": [
+                        {
+                            "text": "つけ麺",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.24198529,
+                                "centerY": 0.5125207,
+                                "width": 0.15648147,
+                                "height": 0.03223684,
+                                "rotation": 0.0062949723
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.24198529,
+                        "centerY": 0.5125207,
+                        "width": 0.15648147,
+                        "height": 0.03223684,
+                        "rotation": 0.0062949723
+                    },
+                    "translation": "Цукемен",
+                    "translationStyle": {
+                        "textColor": -3487543,
+                        "backgroundColor": -14275029,
+                        "background": {
+                            "image": "UklGRrQAAABXRUJQVlA4WAoAAAAQAAAASAAAGwAAQUxQSCMAAAABDzD/ERFCTdtIjI4/yCfS6/Y/R/R/AszIWtj8Al3wwo7QAQBWUDggagAAADAEAJ0BKkkAHAA+MRiLRCIhoSIjSABABglpANAYCWGwMQo+rufcAtjkoAD+/LDevGE0ky4+efhTfLg78UwsVaQTNrukp1dsKDbTyqzr52Z3zd004h0/aELO7/x8JopjHLc3Oibg+JGeUAA=",
+                            "format": "Webp",
+                            "width": 73,
+                            "height": 28,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.42632902
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.24198529,
+                "centerY": 0.5125207,
+                "width": 0.15648147,
+                "height": 0.03223684,
+                "rotation": 0.0062949723
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "Цукемен",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "LeftToRight",
+                "alignment": "Start",
+                "justified": false
+            }
+        },
+        {
+            "text": "950円",
+            "lines": [
+                {
+                    "text": "950円",
+                    "words": [
+                        {
+                            "text": "950",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.73602086,
+                                "centerY": 0.5226317,
+                                "width": 0.09907407,
+                                "height": 0.028947368,
+                                "rotation": 0.026317604
+                            }
+                        },
+                        {
+                            "text": "円",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.80317116,
+                                "centerY": 0.5238178,
+                                "width": 0.05,
+                                "height": 0.028289475,
+                                "rotation": 0.026317604
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.7573098,
+                        "centerY": 0.52302986,
+                        "width": 0.14166667,
+                        "height": 0.028947368,
+                        "rotation": 0.026317604
+                    },
+                    "translation": "950 иен",
+                    "translationStyle": {
+                        "textColor": -3748411,
+                        "backgroundColor": -14537944,
+                        "background": {
+                            "image": "UklGRrYAAABXRUJQVlA4WAoAAAAQAAAAQwAAGQAAQUxQSB4AAAABDzD/ERFCSQAgSCTyf6s7kRrR/wmwXtDGL8CFzABWUDggcgAAAFAEAJ0BKkQAGgA+MRiLRCIhoRGkACADBLSAaRoE47BR/O7KYYigxK33YAAA/vzW6b/MfpLpccw5g1iGzygnW+QJXVrMJ+u3/m9OwJgZZM2VLQs0dXlAFIItBsK7RTgEqcUR35K9XquYgilMTq7/DgAAAA==",
+                            "format": "Webp",
+                            "width": 68,
+                            "height": 26,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.40010002
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.7573098,
+                "centerY": 0.52302986,
+                "width": 0.14166667,
+                "height": 0.028947368,
+                "rotation": 0.026317604
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "950 иен",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "LeftToRight",
+                "alignment": "End",
+                "justified": false
+            }
+        },
+        {
+            "text": "餃子(6個)",
+            "lines": [
+                {
+                    "text": "餃子(6個)",
+                    "words": [
+                        {
+                            "text": "餃子",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.21142134,
+                                "centerY": 0.59829485,
+                                "width": 0.10925926,
+                                "height": 0.035526317,
+                                "rotation": 0.024000622
+                            }
+                        },
+                        {
+                            "text": "(",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.30911893,
+                                "centerY": 0.59953433,
+                                "width": 0.023148147,
+                                "height": 0.035526317,
+                                "rotation": 0.024000622
+                            }
+                        },
+                        {
+                            "text": "6",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.33365503,
+                                "centerY": 0.6002475,
+                                "width": 0.02962963,
+                                "height": 0.035526317,
+                                "rotation": 0.024000622
+                            }
+                        },
+                        {
+                            "text": "個",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.37022525,
+                                "centerY": 0.60047644,
+                                "width": 0.05648148,
+                                "height": 0.035526317,
+                                "rotation": 0.024000622
+                            }
+                        },
+                        {
+                            "text": ")",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.40865612,
+                                "centerY": 0.60150015,
+                                "width": 0.022222223,
+                                "height": 0.035526317,
+                                "rotation": 0.024000622
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.28823996,
+                        "centerY": 0.5992762,
+                        "width": 0.26296297,
+                        "height": 0.03618421,
+                        "rotation": 0.024000622
+                    },
+                    "translation": "Гёдза (6 штук)",
+                    "translationStyle": {
+                        "textColor": -4010551,
+                        "backgroundColor": -14405845,
+                        "background": {
+                            "image": "UklGRiYBAABXRUJQVlA4WAoAAAAQAAAAdwAAHwAAQUxQSD4AAAABDzD/ERGCTWxbjaQgBWlIRAIlJbQ5/kDY7SP6PwENVL6BCmoBwtOhLy+HPrVwuI5jMQ0QDZQQlPWDsgIiI1ZQOCDCAAAAsAUAnQEqeAAgAD4xGItEIyGhEQQAMAMEtLVhr1GBOiUbf19Qt0Nldr7V43OGP6pPbN6YE1RAAP78r/r4rn7DCYJsm0zHaH9jR6n9RBvecQALWFA4eHHr6/Q9zYNq4FN+YK9pT07AZvzv2TxZSgeFWu4JTi2N3qTxAuWCg0lc45bLGubZWZEfoAGVLliq2c468GfRhWxqbO+VzVjpGIUl9hSqqA9oUWPx7Id+RJ15XCsglSGVOVx+ZRrgomgDMbb2AAA=",
+                            "format": "Webp",
+                            "width": 120,
+                            "height": 32,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.41977984
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.28823996,
+                "centerY": 0.5992762,
+                "width": 0.26296297,
+                "height": 0.03618421,
+                "rotation": 0.024000622
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "Гёдза (6 штук)",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "LeftToRight",
+                "alignment": "Start",
+                "justified": false
+            }
+        },
+        {
+            "text": "400円",
+            "lines": [
+                {
+                    "text": "400円",
+                    "words": [
+                        {
+                            "text": "400",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.7324224,
+                                "centerY": 0.61032104,
+                                "width": 0.10092592,
+                                "height": 0.028289475,
+                                "rotation": 0.021893784
+                            }
+                        },
+                        {
+                            "text": "円",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.798642,
+                                "centerY": 0.61159855,
+                                "width": 0.053703703,
+                                "height": 0.027631579,
+                                "rotation": 0.021893786
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.75371367,
+                        "centerY": 0.61065227,
+                        "width": 0.14351852,
+                        "height": 0.028289475,
+                        "rotation": 0.021893784
+                    },
+                    "translation": "400 иен",
+                    "translationStyle": {
+                        "textColor": -3419697,
+                        "backgroundColor": -14800603,
+                        "background": {
+                            "image": "UklGRq4AAABXRUJQVlA4WAoAAAAQAAAAQwAAGAAAQUxQSB8AAAABDzD/ERFCSSRJjoTzj07KSWv0OeCI/gdAfK9WsjUHAFZQOCBoAAAAMAQAnQEqRAAZAD4xGItEIiGhISNIAEAGCWkA0FQJYbAjCPri4esaLAAAAP78+6mH4wmknMlNgh5oK2y+ipZhBgFCE/j2w4vMD1Vd3FrTGIwR4tUGZlPbPOQAAy/pU0ckq0ApnqegoAA=",
+                            "format": "Webp",
+                            "width": 68,
+                            "height": 25,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.43189365
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.75371367,
+                "centerY": 0.61065227,
+                "width": 0.14351852,
+                "height": 0.028289475,
+                "rotation": 0.021893784
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "400 иен",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "LeftToRight",
+                "alignment": "End",
+                "justified": false
+            }
+        },
+        {
+            "text": "生ビール",
+            "lines": [
+                {
+                    "text": "生ビール",
+                    "words": [
+                        {
+                            "text": "生ビール",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.26115713,
+                                "centerY": 0.6852375,
+                                "width": 0.20833333,
+                                "height": 0.030921053,
+                                "rotation": 0.018356334
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.26115713,
+                        "centerY": 0.6852375,
+                        "width": 0.20833333,
+                        "height": 0.030921053,
+                        "rotation": 0.018356334
+                    },
+                    "translation": "разливное пиво",
+                    "translationStyle": {
+                        "textColor": -3945273,
+                        "backgroundColor": -14734810,
+                        "background": {
+                            "image": "UklGRswAAABXRUJQVlA4WAoAAAAQAAAAXgAAGgAAQUxQSCEAAAABDzD/ERFCTSMpkAQkYPMH6XRbU0b0fwIOihFlRW7Q/gEAVlA4IIQAAACwBACdASpfABsAPjEYi0QiIaERVAAgAwS0tcqABONRylOODMzfRapreSs9BFwAAP786ohyZ8v3uWijSVewQhTlTyZ+ZXBlKLYL1EMm/46Jh87hYcCykf6fYUg0XHF5CIGkqUlYKl+qPy+m+OGfv4fjddZ7noB9SXyz4sG+2mZcPtoEAAA=",
+                            "format": "Webp",
+                            "width": 95,
+                            "height": 27,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.42085558
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.26115713,
+                "centerY": 0.6852375,
+                "width": 0.20833333,
+                "height": 0.030921053,
+                "rotation": 0.018356334
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "разливное пиво",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "LeftToRight",
+                "alignment": "Start",
+                "justified": false
+            }
+        },
+        {
+            "text": "500円",
+            "lines": [
+                {
+                    "text": "500円",
+                    "words": [
+                        {
+                            "text": "500",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.7302797,
+                                "centerY": 0.69648,
+                                "width": 0.094444446,
+                                "height": 0.030263158,
+                                "rotation": 0.012773145
+                            }
+                        },
+                        {
+                            "text": "円",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.79602814,
+                                "centerY": 0.69726515,
+                                "width": 0.05,
+                                "height": 0.029605264,
+                                "rotation": 0.012773145
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.75203717,
+                        "centerY": 0.69667745,
+                        "width": 0.13796297,
+                        "height": 0.030263158,
+                        "rotation": 0.012773145
+                    },
+                    "translation": "500 иен",
+                    "translationStyle": {
+                        "textColor": -2895406,
+                        "backgroundColor": -14472664,
+                        "background": {
+                            "image": "UklGRrQAAABXRUJQVlA4WAoAAAAQAAAAQQAAGgAAQUxQSCAAAAABDzD/ERFCbSNJDab/GijTw0SQkkb0PwAlXz5SOfd6A1ZQOCBuAAAAcAQAnQEqQgAbAD4xGItEIiGhISNIAEAGCWkAzYQJaigYRrr+3Zu/1PvNggAA/vzf7FlbjCaS2RbyCm+CGUbozr+jMtUMsA0Dnj94X4INJ9N88MTIDwhswS4EpIS9vedVQSSo2qObvAYR87wAAAA=",
+                            "format": "Webp",
+                            "width": 66,
+                            "height": 27,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.40515998
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.75203717,
+                "centerY": 0.69667745,
+                "width": 0.13796297,
+                "height": 0.030263158,
+                "rotation": 0.012773145
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "500 иен",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "LeftToRight",
+                "alignment": "End",
+                "justified": false
+            }
+        },
+        {
+            "text": "営業時間 11:00~22:00",
+            "lines": [
+                {
+                    "text": "営業時間 11:00~22:00",
+                    "words": [
+                        {
+                            "text": "営",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.17275338,
+                                "centerY": 0.79170614,
+                                "width": 0.031481482,
+                                "height": 0.023684211,
+                                "rotation": 0.02342883
+                            }
+                        },
+                        {
+                            "text": "業",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.20840114,
+                                "centerY": 0.7917293,
+                                "width": 0.03425926,
+                                "height": 0.023684211,
+                                "rotation": 0.02342883
+                            }
+                        },
+                        {
+                            "text": "時間",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.26117486,
+                                "centerY": 0.7926337,
+                                "width": 0.06388889,
+                                "height": 0.023684211,
+                                "rotation": 0.023428828
+                            }
+                        },
+                        {
+                            "text": "11",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.32553068,
+                                "centerY": 0.79371065,
+                                "width": 0.035185184,
+                                "height": 0.023684211,
+                                "rotation": 0.023428828
+                            }
+                        },
+                        {
+                            "text": ":",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.35007188,
+                                "centerY": 0.79411423,
+                                "width": 0.0046296297,
+                                "height": 0.023684211,
+                                "rotation": 0.02342883
+                            }
+                        },
+                        {
+                            "text": "00",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.37506756,
+                                "centerY": 0.79503417,
+                                "width": 0.036111113,
+                                "height": 0.023684211,
+                                "rotation": 0.023428828
+                            }
+                        },
+                        {
+                            "text": "~",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.41303104,
+                                "centerY": 0.7956612,
+                                "width": 0.032407407,
+                                "height": 0.023684211,
+                                "rotation": 0.02342883
+                            }
+                        },
+                        {
+                            "text": "22",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.4500567,
+                                "centerY": 0.7960209,
+                                "width": 0.036111113,
+                                "height": 0.024342105,
+                                "rotation": 0.023428828
+                            }
+                        },
+                        {
+                            "text": ":",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.47368312,
+                                "centerY": 0.7960802,
+                                "width": 0.0037037036,
+                                "height": 0.023684211,
+                                "rotation": 0.02342883
+                            }
+                        },
+                        {
+                            "text": "00",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.49867854,
+                                "centerY": 0.79701555,
+                                "width": 0.037037037,
+                                "height": 0.023684211,
+                                "rotation": 0.023428828
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.3370493,
+                        "centerY": 0.79411274,
+                        "width": 0.36018518,
+                        "height": 0.024342105,
+                        "rotation": 0.023428828
+                    },
+                    "translation": "Часы работы: с 11:00 до 22:00.",
+                    "translationStyle": {
+                        "textColor": -8025207,
+                        "backgroundColor": -14998495,
+                        "background": {
+                            "image": "UklGRsoAAABXRUJQVlA4WAoAAAAQAAAAmgAAFAAAQUxQSB4AAAABDzD/ERHCSNtI8PyrPA2Hip89jOh/AAWAAAB8eEdWUDgghgAAAPAEAJ0BKpsAFQA+MRiLRCIhoSEhqABABglpbRZeiIIGpAkS48wer2qguFDu+ZdgAAD+/Qkc+wwmCN+uCPv/EFAl/ktbIJb0pL/tVPGNfj6zyP6NM9BjwGLa5Mbu8hxba4D8F84n8UypoonRey0waQCo/Fs/cMtaQFxFcgkBFbZGcmnhGAQA",
+                            "format": "Webp",
+                            "width": 155,
+                            "height": 21,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.43243244
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.3370493,
+                "centerY": 0.79411274,
+                "width": 0.36018518,
+                "height": 0.024342105,
+                "rotation": 0.023428828
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "Часы работы: с 11:00 до 22:00.",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "LeftToRight",
+                "alignment": "Start",
+                "justified": false
+            }
+        },
+        {
+            "text": "水曜日は定休日です",
+            "lines": [
+                {
+                    "text": "水曜日は定休日です",
+                    "words": [
+                        {
+                            "text": "水曜日",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.20326445,
+                                "centerY": 0.83053523,
+                                "width": 0.098148145,
+                                "height": 0.022368422,
+                                "rotation": 0.026790388
+                            }
+                        },
+                        {
+                            "text": "は",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.279203,
+                                "centerY": 0.8318393,
+                                "width": 0.027777778,
+                                "height": 0.022368422,
+                                "rotation": 0.026790392
+                            }
+                        },
+                        {
+                            "text": "定休",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.3301216,
+                                "centerY": 0.83288485,
+                                "width": 0.06851852,
+                                "height": 0.022368422,
+                                "rotation": 0.02679039
+                            }
+                        },
+                        {
+                            "text": "日",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.38290805,
+                                "centerY": 0.8337425,
+                                "width": 0.02037037,
+                                "height": 0.022368422,
+                                "rotation": 0.026790392
+                            }
+                        },
+                        {
+                            "text": "です",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.43614128,
+                                "centerY": 0.83479685,
+                                "width": 0.062037036,
+                                "height": 0.022368422,
+                                "rotation": 0.02679039
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.3106333,
+                        "centerY": 0.8325795,
+                        "width": 0.31296295,
+                        "height": 0.022368422,
+                        "rotation": 0.02679039
+                    },
+                    "translation": "Закрыто по средам",
+                    "translationStyle": {
+                        "textColor": -7828085,
+                        "backgroundColor": -14800860,
+                        "background": {
+                            "image": "UklGRrAAAABXRUJQVlA4WAoAAAAQAAAAiwAAEwAAQUxQSB4AAAABDzD/ERHCTNs2EAqp4EdrkynsjOh/4OgCRgAAvghWUDggbAAAABAFAJ0BKowAFAA+MRiLRCIhoSEhyABABglpAAANhw1b/uywj1sxAksuqbc2nAyRdAAA/vzx6B/SXS47UL96qQ2RyDEUZxYQdsLzCYP+OBvy5V21mrJ+h0u6ZTmhcyJACvtsXuw7LY5+QAAAAA==",
+                            "format": "Webp",
+                            "width": 140,
+                            "height": 20,
+                            "verticalPadding": 0.484375,
+                            "horizontalPadding": 0.44343835
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.3106333,
+                "centerY": 0.8325795,
+                "width": 0.31296295,
+                "height": 0.022368422,
+                "rotation": 0.02679039
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "Закрыто по средам",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "LeftToRight",
+                "alignment": "Start",
+                "justified": false
+            }
+        }
+    ],
+    "language": "ja",
+    "imageWidth": 1080,
+    "imageHeight": 1520
+}
