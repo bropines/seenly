@@ -51,7 +51,10 @@ fun LanguageBar(
     modifier: Modifier = Modifier,
     /** Over a dark image rather than the theme's surface. */
     onDark: Boolean = false,
+    /** Shares its row with other buttons: no icons, tighter padding, so the names fit. */
+    compact: Boolean = false,
 ) {
+    val padding = PaddingValues(horizontal = if (compact) 8.dp else 12.dp)
     var picking by remember { mutableStateOf<Side?>(null) }
     val content = if (onDark) Color.White else MaterialTheme.colorScheme.onSurface
     // Two wide, tall buttons that share the row: easy targets for a thumb.
@@ -64,11 +67,11 @@ fun LanguageBar(
         FilledTonalButton(
             onClick = { picking = Side.Source },
             colors = colors,
-            contentPadding = PaddingValues(horizontal = 12.dp),
+            contentPadding = padding,
             modifier = Modifier.weight(1f).heightIn(min = 52.dp),
         ) {
-            Icon(Icons.Rounded.Language, contentDescription = null, modifier = Modifier.size(20.dp))
-            Text(languageName(source), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 8.dp))
+            if (!compact) Icon(Icons.Rounded.Language, contentDescription = null, modifier = Modifier.size(20.dp))
+            Text(languageName(source), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = if (compact) 0.dp else 8.dp))
         }
         // With a fixed source the arrow swaps the pair; with "auto" there is nothing to swap.
         IconButton(
@@ -84,11 +87,11 @@ fun LanguageBar(
         FilledTonalButton(
             onClick = { picking = Side.Target },
             colors = colors,
-            contentPadding = PaddingValues(horizontal = 12.dp),
+            contentPadding = padding,
             modifier = Modifier.weight(1f).heightIn(min = 52.dp),
         ) {
-            Icon(Icons.Rounded.Translate, contentDescription = null, modifier = Modifier.size(20.dp))
-            Text(languageName(target), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 8.dp))
+            if (!compact) Icon(Icons.Rounded.Translate, contentDescription = null, modifier = Modifier.size(20.dp))
+            Text(languageName(target), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = if (compact) 0.dp else 8.dp))
         }
     }
     when (picking) {

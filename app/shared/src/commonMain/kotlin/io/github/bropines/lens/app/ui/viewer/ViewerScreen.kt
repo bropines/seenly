@@ -253,6 +253,7 @@ fun ViewerScreen(
                         settings.sourceLanguage, settings.targetLanguage, vm::setSource, vm::setTarget,
                         modifier = Modifier.weight(1f),
                         onDark = true,
+                        compact = true,
                     )
                     // A sideways photo reads badly: turn it upright, a quarter per tap, and it is read again.
                     FilledTonalIconButton(
@@ -262,7 +263,7 @@ fun ViewerScreen(
                             lastRegion = null
                             vm.rotate(pager.currentPage)
                         },
-                        modifier = Modifier.padding(start = 12.dp).size(56.dp),
+                        modifier = Modifier.padding(start = 8.dp).size(56.dp),
                     ) {
                         Icon(
                             Icons.AutoMirrored.Rounded.RotateRight,
@@ -273,7 +274,7 @@ fun ViewerScreen(
                     FilledTonalIconToggleButton(
                         checked = overlayHidden,
                         onCheckedChange = { overlayHidden = !overlayHidden; selection.clear() },
-                        modifier = Modifier.padding(start = 12.dp).size(56.dp),
+                        modifier = Modifier.padding(start = 8.dp).size(56.dp),
                     ) {
                         Icon(
                             if (overlayHidden) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
