@@ -25,6 +25,11 @@ class AndroidScreenTranslate(
 
     override fun start() {
         if (ScreenTranslateState.running.value) return
+        if (ScreenOverlayHost.service.value != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            // The accessibility service draws and takes screenshots: no permission to ask for.
+            context.startService(Intent(context, ScreenTranslateService::class.java).setAction(ScreenTranslateService.ACTION_START_TRUSTED))
+            return
+        }
         val front = frontActivity()
         val intent = Intent(context, ScreenPermissionActivity::class.java)
         if (front != null) front.startActivity(intent) else context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))

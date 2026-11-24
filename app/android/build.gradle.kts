@@ -28,6 +28,22 @@ android {
             keyAlias = "lens-dev"
             keyPassword = "lens-dev"
         }
+        // The real release key stays out of the repository: its path, alias and
+        // passwords come from ~/.gradle/gradle.properties or the environment
+        // (LENS_RELEASE_STORE_FILE and so on, for CI). Without them a release
+        // build is signed with the dev key, which is fine for testing it.
+        val releaseStore = providers.gradleProperty("lens.release.storeFile")
+            .orElse(providers.environmentVariable("LENS_RELEASE_STORE_FILE")).orNull
+        if (releaseStore != null) {
+            create("release") {
+                fun secret(property: String, env: String) =
+                    providers.gradleProperty(property).orElse(providers.environmentVariable(env)).get()
+                storeFile = file(releaseStore)
+                storePassword = secret("lens.release.storePassword", "LENS_RELEASE_STORE_PASSWORD")
+                keyAlias = secret("lens.release.keyAlias", "LENS_RELEASE_KEY_ALIAS")
+                keyPassword = secret("lens.release.keyPassword", "LENS_RELEASE_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
@@ -36,7 +52,7 @@ android {
             applicationIdSuffix = ".dev"
         }
         release {
-            signingConfig = signingConfigs.getByName("dev")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("dev")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

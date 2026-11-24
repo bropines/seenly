@@ -57,7 +57,7 @@ internal class ScreenTranslator(
     /** A context that may own windows (a window context on Android 11+). */
     private val ui: Context,
     private val graph: AppGraph,
-    private val capturer: ScreenCapturer,
+    private val capturer: FrameSource,
     private val stop: () -> Unit,
 ) : BubbleView.Listener, AreaHandles.Listener, BubbleMenu.Listener {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -143,6 +143,8 @@ internal class ScreenTranslator(
             capturer.roi = null
         }
         capturer.touch()
+        // Screenshots cost something each: "this screen" takes one only when tapped.
+        capturer.continuous = mode != ScreenMode.Screen
         if (mode != ScreenMode.Screen) live = scope.launch { liveLoop() }
         updateBubble(busy = false)
     }
@@ -258,6 +260,7 @@ internal class ScreenTranslator(
                 val clean = max(dirtyUntil, layer.clearedAt + SETTLE_OWN_MS)
                 delay((clean - SystemClock.uptimeMillis()).coerceIn(0, SETTLE_OWN_MS))
                 val current = graph.settings.settings.first()
+                capturer.refresh()
                 val frame = grabClean(null)
                 if (frame == null) {
                     toast("Не удалось снять экран")

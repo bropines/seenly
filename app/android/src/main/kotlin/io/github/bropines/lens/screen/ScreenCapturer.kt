@@ -61,7 +61,7 @@ internal class ScreenCapturer(
     dpi: Int,
     /** The user (or the system, e.g. on lock) ended the capture. Called on the main thread. */
     private val onStopped: () -> Unit,
-) {
+) : FrameSource {
     private val thread = HandlerThread("lens-screen-capture").apply { start() }
     private val handler = Handler(thread.looper)
     private val main = Handler(Looper.getMainLooper())
@@ -71,22 +71,22 @@ internal class ScreenCapturer(
     private var latest: Image? = null
     private var closed = false
 
-    @Volatile var width: Int = width
+    @Volatile override var width: Int = width
         private set
-    @Volatile var height: Int = height
+    @Volatile override var height: Int = height
         private set
 
     /** The part of the screen the signature watches; null is all of it. */
-    @Volatile var roi: Rect? = null
+    @Volatile override var roi: Rect? = null
 
     /** A rectangle that never counts as motion: the bubble, which is ours. */
-    @Volatile var exclude: Rect? = null
+    @Volatile override var exclude: Rect? = null
 
-    @Volatile var signature: Signature? = null
+    @Volatile override var signature: Signature? = null
         private set
 
     /** `SystemClock.uptimeMillis()` of the last frame that differed from the one before it. */
-    @Volatile var lastMotionAt: Long = SystemClock.uptimeMillis()
+    @Volatile override var lastMotionAt: Long = SystemClock.uptimeMillis()
         private set
 
     private val callback = object : MediaProjection.Callback() {
@@ -164,12 +164,18 @@ internal class ScreenCapturer(
     }
 
     /** Restarts the stillness clock, as if the picture had just moved. */
-    fun touch() {
+    /** The recording delivers every change anyway: nothing to switch. */
+    override var continuous: Boolean = false
+
+    /** The latest frame is always current: the system sends one whenever the screen changes. */
+    override suspend fun refresh() = Unit
+
+    override fun touch() {
         lastMotionAt = SystemClock.uptimeMillis()
     }
 
     /** A mutable copy of the latest frame, or of [crop] out of it. Null before the first frame. */
-    fun grab(crop: Rect? = null): Bitmap? = synchronized(lock) {
+    override fun grab(crop: Rect?): Bitmap? = synchronized(lock) {
         val image = latest ?: return null
         try {
             val plane = image.planes[0]
@@ -199,7 +205,7 @@ internal class ScreenCapturer(
     }
 
     /** The display changed size (a rotation): keep the same projection, swap the surface. */
-    fun resize(width: Int, height: Int, dpi: Int) {
+    override fun resize(width: Int, height: Int, dpi: Int) {
         synchronized(lock) {
             if (closed || (width == this.width && height == this.height)) return
             val old = reader
@@ -219,7 +225,7 @@ internal class ScreenCapturer(
         }
     }
 
-    fun close() {
+    override fun close() {
         synchronized(lock) {
             if (closed) return
             closed = true

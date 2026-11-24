@@ -12,7 +12,10 @@ kotlin {
     jvm()
     android {
         namespace = "io.github.bropines.lens.overlay"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        compileSdk {
+            // Compose 1.13 libraries need the 37.1 minor SDK (checked in release builds).
+            version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+        }
         minSdk = libs.versions.android.minSdk.get().toInt()
         withHostTest {}
     }
