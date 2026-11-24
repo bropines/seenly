@@ -22,6 +22,7 @@ import io.github.bropines.lens.overlay.OverlayStyle
 import io.github.bropines.lens.overlay.decodeOverlay
 import io.github.bropines.lens.overlay.renderTranslatedBitmap
 import io.github.bropines.lens.protocol.ImagePreparer
+import io.github.bropines.lens.protocol.Paragraph
 import io.github.bropines.lens.protocol.Tiling
 import io.github.bropines.lens.protocol.Raster
 import io.github.bropines.lens.protocol.ScanResult
@@ -190,6 +191,8 @@ internal class ScreenTranslator(
         prefs.mode = mode
         paused = false
         applyMode()
+        // The area grips come in their own window, which would cover the menu.
+        if (menu.isShown) menu.raise()
     }
 
     override fun onPrimary() {
@@ -462,10 +465,13 @@ internal class ScreenTranslator(
             frame.getPixels(pixels, 0, frame.width, 0, 0, frame.width, frame.height)
             Raster(frame.width, frame.height, pixels)
         }
-        val result = Tiling.scan(raster) { band ->
+        val scanned = Tiling.scan(raster) { band ->
             val prepared = withContext(Dispatchers.Default) { ImagePreparer.prepare(band) }
             graph.lens.scan(prepared, settings.toScanOptions())
         }
+        // The frame is the screen pixel for pixel, so the status bar is its top rows.
+        val statusBar = (wm.barInsets(density).top - rect.top).toFloat() / frame.height
+        val result = scanned.copy(paragraphs = scanned.paragraphs.filter { p -> worthTranslating(p, statusBar) })
         if (result.paragraphs.none { it.translation != null }) return Layer(null, rect)
         val decoded = decodeOverlay(result, fonts)
         return withContext(Dispatchers.Default) {
@@ -477,6 +483,17 @@ internal class ScreenTranslator(
             ).asAndroidBitmap()
             Layer(if (keepChanges(rendered, frame)) rendered else null, rect)
         }
+    }
+
+    /**
+     * Not the status bar ("VoLTE", "4G+" made into words) and not a lone
+     * character, which on a screen is nearly always an icon (an "i" that
+     * came back as "я", the 文 of a translate icon).
+     */
+    private fun worthTranslating(p: Paragraph, statusBar: Float): Boolean {
+        if (p.text.trim().length <= 1) return false
+        val box = p.box ?: return true
+        return box.centerY + box.height / 2 > statusBar
     }
 
     /** The same choice the viewer makes: bubbles reflow, everything else is set in place. */

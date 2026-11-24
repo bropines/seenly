@@ -85,7 +85,8 @@ internal class BubbleMenu(
     val isShown: Boolean get() = root != null
 
     fun show(current: ScreenMode, bottomInset: Int) {
-        if (root != null) return
+        // A window the system took away without hide() must not block the menu for good.
+        root?.let { if (!it.isAttachedToWindow) forget() else return }
         mode = current
         val density = context.resources.displayMetrics.density
         val owner = Owner().also { this.owner = it }
@@ -128,13 +129,27 @@ internal class BubbleMenu(
         root = view
     }
 
+    /** Puts the menu back over windows added after it, such as the area grips. */
+    fun raise() {
+        val view = root?.takeIf { it.isAttachedToWindow } ?: return
+        val params = view.layoutParams
+        runCatching {
+            wm.removeViewImmediate(view)
+            wm.addView(view, params)
+        }
+    }
+
     fun hide() {
         val view = root ?: return
-        root = null
+        forget()
         runCatching { wm.removeViewImmediate(view) }
+        listener.onMenuClosed()
+    }
+
+    private fun forget() {
+        root = null
         owner?.destroy()
         owner = null
-        listener.onMenuClosed()
     }
 
     /** Takes "back" for the menu: the key on old systems, the back callback on new ones. */
