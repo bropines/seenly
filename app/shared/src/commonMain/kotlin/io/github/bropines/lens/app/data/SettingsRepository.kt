@@ -29,6 +29,9 @@ import okio.Path.Companion.toPath
 
 enum class ThemeMode { System, Light, Dark }
 
+/** The palette's seed: the wallpaper's colours (Android 12+), or one of Seenly's presets. */
+enum class ThemeColor { Wallpaper, Violet, Blue, Teal, Green, Amber, Red, Pink, Mono }
+
 /** Which engine translates typed or copied text (images always go through Lens). */
 enum class TextEngine { Google, Lens }
 
@@ -42,6 +45,9 @@ data class AppSettings(
     val readingLayout: ReadingLayout = ReadingLayout.Auto,
     val textEngine: TextEngine = TextEngine.Google,
     val theme: ThemeMode = ThemeMode.System,
+    val themeColor: ThemeColor = ThemeColor.Wallpaper,
+    /** Pure black backgrounds in the dark theme, for OLED screens. */
+    val amoled: Boolean = false,
     /** The UI language as a BCP 47 tag ("en", "ru"); null follows the system. */
     val uiLanguage: String? = null,
     /** The last folder opened, as FileKit's serialised PlatformFile, so it can be reopened. */
@@ -151,6 +157,8 @@ class SettingsRepository(services: PlatformServices) {
             p[LAYOUT] = next.readingLayout.name
             p[ENGINE] = next.textEngine.name
             p[THEME] = next.theme.name
+            p[THEME_COLOR] = next.themeColor.name
+            p[AMOLED] = next.amoled
             if (next.uiLanguage != null) p[UI_LANGUAGE] = next.uiLanguage else p.remove(UI_LANGUAGE)
             if (next.lastFolder != null) p[LAST_FOLDER] = next.lastFolder else p.remove(LAST_FOLDER)
             p[ERASE] = next.overlay.erase.name
@@ -219,6 +227,8 @@ class SettingsRepository(services: PlatformServices) {
         readingLayout = this[LAYOUT].toEnum(ReadingLayout.Auto),
         textEngine = this[ENGINE].toEnum(TextEngine.Google),
         theme = this[THEME].toEnum(ThemeMode.System),
+        themeColor = this[THEME_COLOR].toEnum(ThemeColor.Wallpaper),
+        amoled = this[AMOLED] ?: false,
         uiLanguage = this[UI_LANGUAGE]?.ifEmpty { null },
         lastFolder = this[LAST_FOLDER],
         overlay = OverlayPrefs(
@@ -252,6 +262,8 @@ class SettingsRepository(services: PlatformServices) {
         val LAYOUT = stringPreferencesKey("reading_layout")
         val ENGINE = stringPreferencesKey("text_engine")
         val THEME = stringPreferencesKey("theme")
+        val THEME_COLOR = stringPreferencesKey("theme_color")
+        val AMOLED = booleanPreferencesKey("theme_amoled")
         val UI_LANGUAGE = stringPreferencesKey("ui_language")
         val LAST_FOLDER = stringPreferencesKey("last_folder")
         val ERASE = stringPreferencesKey("overlay_erase")

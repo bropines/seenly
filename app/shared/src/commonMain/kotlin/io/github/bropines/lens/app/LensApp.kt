@@ -101,7 +101,7 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
     // The update check and "What's new" belong to the app coming up, not to any one screen.
     LaunchedEffect(Unit) { graph.updates.onAppStart() }
 
-    LensTheme(settings.theme) {
+    LensTheme(settings.theme, settings.themeColor, settings.amoled) {
         UpdateDialog(graph.updates)
         WhatsNewDialog(graph.updates, graph.services)
         AccountRefusedDialog(graph.account, onOpen = { if (backStack.lastOrNull() != Route.Account) backStack.add(Route.Account) })

@@ -29,6 +29,7 @@ import androidx.compose.material.icons.rounded.BrightnessAuto
 import androidx.compose.material.icons.rounded.ChatBubbleOutline
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.Contrast
 import androidx.compose.material.icons.rounded.DocumentScanner
 import androidx.compose.material.icons.rounded.GTranslate
 import androidx.compose.material.icons.rounded.Info
@@ -306,6 +307,11 @@ fun SettingsScreen(
                 }
                 Choice(icon, label, null, settings.theme == mode) { update { it.copy(theme = mode) } }
             }
+            ThemeColorPicker(settings.themeColor) { c -> update { it.copy(themeColor = c) } }
+            Toggle(
+                Icons.Rounded.Contrast, stringResource(Res.string.theme_amoled),
+                stringResource(Res.string.theme_amoled_desc), settings.amoled,
+            ) { on -> update { it.copy(amoled = on) } }
 
             if (updates != null) UpdateSettings(updates, settings) { transform -> update { it.copy(updates = transform(it.updates)) } }
 

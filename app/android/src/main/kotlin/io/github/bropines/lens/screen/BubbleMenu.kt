@@ -220,7 +220,7 @@ internal fun MenuSheet(
 ) {
     val current by settings.settings.collectAsState(AppSettings())
     var picking by remember { mutableStateOf<Picking?>(null) }
-    LensTheme(current.theme) {
+    LensTheme(current.theme, current.themeColor, current.amoled) {
         Box(
             Modifier.fillMaxSize().clickable(remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
             contentAlignment = Alignment.BottomCenter,
