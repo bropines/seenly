@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -118,7 +119,15 @@ fun AccountScreen(
                 },
                 supportingContent = if (!state.connected) null else ({
                     val used = state.lastUsed
-                    Text(if (used == null) stringResource(Res.string.account_never_used) else stringResource(Res.string.account_last_used, ago(used)))
+                    Column {
+                        Text(if (used == null) stringResource(Res.string.account_never_used) else stringResource(Res.string.account_last_used, ago(used)))
+                        // Google's own words, selectable, so they can be copied into a bug report.
+                        if (state.rejected && state.refusal.isNotEmpty()) {
+                            SelectionContainer {
+                                Text(state.refusal, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                            }
+                        }
+                    }
                 }),
             )
 
@@ -176,11 +185,21 @@ fun AccountScreen(
 @Composable
 fun AccountRefusedDialog(account: GoogleAccount, onOpen: () -> Unit) {
     val refused by account.refused.collectAsState()
+    val state by account.state.collectAsState()
     if (!refused) return
     AlertDialog(
         onDismissRequest = account::refusalShown,
         title = { Text(stringResource(Res.string.account_refused_title)) },
-        text = { Text(stringResource(Res.string.account_refused)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(Res.string.account_refused))
+                if (state.refusal.isNotEmpty()) {
+                    SelectionContainer {
+                        Text(state.refusal, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        },
         confirmButton = {
             TextButton(onClick = {
                 account.refusalShown()

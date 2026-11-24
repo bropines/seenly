@@ -11,6 +11,11 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 - Colour presets in Settings → Appearance: from the wallpaper (Android 12+), violet, blue, teal, green, amber, red, pink or monochrome; the screen-translation menu follows them.
 - AMOLED black: a pure black background in the dark theme.
 
+### Fixed
+
+- Camera: the viewfinder showed a tighter frame than the photo it took; it now shows the whole 4:3 frame.
+- Google account: when Google refuses the session, the app now shows Google's own reason on the account page and in the notice.
+
 ## [0.2.0] - 2026-11-25
 
 ### Added

@@ -80,9 +80,10 @@ public interface LensCredentialsSource {
     /**
      * Google answered a signed request with [status] (401 or 403): the session
      * has expired or was revoked. The client has already repeated the request
-     * anonymously; [current] should stop offering this session.
+     * anonymously; [current] should stop offering this session. [detail] is
+     * Google's own explanation from the response body, when it gave one.
      */
-    public fun rejected(status: Int)
+    public fun rejected(status: Int, detail: String = "")
 }
 
 /**

@@ -18,6 +18,10 @@ import kotlinx.io.readString
 import kotlinx.io.writeString
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.ExperimentalTime
@@ -72,10 +76,17 @@ class GoogleAccount(services: PlatformServices, private val settings: SettingsRe
         val lastUsed: Long? = null,
         /** Google refused the session: requests are anonymous until the user signs in again or retries. */
         val rejected: Boolean = false,
+        /** What Google answered when it refused, e.g. `HTTP 401: …`; empty when it has not. */
+        val refusal: String = "",
     )
 
     @Serializable
-    private data class Stored(val cookies: Map<String, String>, val lastUsed: Long? = null, val rejected: Boolean = false)
+    private data class Stored(
+        val cookies: Map<String, String>,
+        val lastUsed: Long? = null,
+        val rejected: Boolean = false,
+        val refusal: String = "",
+    )
 
     private val log = Logger.withTag("GoogleAccount")
     private val store = services.secrets
@@ -117,7 +128,7 @@ class GoogleAccount(services: PlatformServices, private val settings: SettingsRe
 
     /** Offers a refused session again: the refusal may have been Google's passing mood. */
     fun retry() {
-        stored.value?.let { save(it.copy(rejected = false)) }
+        stored.value?.let { save(it.copy(rejected = false, refusal = "")) }
     }
 
     /** The session as a `Cookie:` header value, for an export the user asked to include it in. */
@@ -132,10 +143,10 @@ class GoogleAccount(services: PlatformServices, private val settings: SettingsRe
         return GoogleCredentials(s.cookies)
     }
 
-    override fun rejected(status: Int) {
-        log.w { "Google refused the account session (HTTP $status); continuing anonymously" }
+    override fun rejected(status: Int, detail: String) {
+        log.w { "Google refused the account session (HTTP $status); continuing anonymously: $detail" }
         stored.value?.takeUnless { it.rejected }?.let {
-            save(it.copy(rejected = true))
+            save(it.copy(rejected = true, refusal = "HTTP $status" + summarize(detail).let { d -> if (d.isEmpty()) "" else ": $d" }))
             _refused.value = true
         }
     }
@@ -147,7 +158,22 @@ class GoogleAccount(services: PlatformServices, private val settings: SettingsRe
         _state.value = stateOf(next)
     }
 
-    private fun stateOf(s: Stored?) = State(connected = s != null, lastUsed = s?.lastUsed, rejected = s?.rejected == true)
+    private fun stateOf(s: Stored?) =
+        State(connected = s != null, lastUsed = s?.lastUsed, rejected = s?.rejected == true, refusal = s?.refusal.orEmpty())
+
+    /**
+     * Google's error body, shortened to what a person can read: the `message`
+     * and `status` (and a `reason`) of a Google API error, else the raw text.
+     */
+    private fun summarize(body: String): String {
+        val error = runCatching { json.parseToJsonElement(body).jsonObject["error"]?.jsonObject }.getOrNull()
+            ?: return body.trim().take(200)
+        fun field(name: String) = (error[name] as? JsonPrimitive)?.contentOrNull
+        val reason = runCatching {
+            error["details"]?.jsonArray?.firstNotNullOfOrNull { (it.jsonObject["reason"] as? JsonPrimitive)?.contentOrNull }
+        }.getOrNull()
+        return listOfNotNull(field("status"), reason, field("message")).distinct().joinToString(" · ")
+    }
 
     private companion object {
         const val SECRET = "google-account"

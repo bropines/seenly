@@ -16,6 +16,11 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceOrientedMeteringPointFactory
 import androidx.camera.core.SurfaceRequest
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import android.content.res.Configuration
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
 import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
@@ -150,8 +155,16 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
     var code by remember { mutableStateOf<ScannedCode?>(null) }
     // What went wrong taking the last photo; the UI words it.
     var error by remember { mutableStateOf<String?>(null) }
+    // Preview and photo both 4:3, the sensor's own shape: the viewfinder below is
+    // sized to the frame instead of cropped to the screen, so what it shows is the photo.
+    val fourByThree = remember {
+        ResolutionSelector.Builder().setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY).build()
+    }
     val capture = remember {
-        ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build()
+        ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .setResolutionSelector(fourByThree)
+            .build()
     }
     // Maps viewfinder taps to surface coordinates, whatever the crop and rotation.
     val transformer = remember { MutableCoordinateTransformer() }
@@ -164,7 +177,7 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
     val exposure = camera?.cameraInfo?.exposureState?.takeIf { it.isExposureCompensationSupported }
 
     LaunchedEffect(lifecycleOwner) {
-        val preview = Preview.Builder().build().apply { setSurfaceProvider { surfaceRequest = it } }
+        val preview = Preview.Builder().setResolutionSelector(fourByThree).build().apply { setSurfaceProvider { surfaceRequest = it } }
         val analysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
@@ -222,10 +235,17 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
 
     Box(Modifier.fillMaxSize()) {
         surfaceRequest?.let { request ->
+            // The frame's shape as it appears on screen: the buffer is in sensor
+            // orientation (landscape), so a portrait screen sees it the other way round.
+            val portrait = LocalConfiguration.current.orientation != Configuration.ORIENTATION_LANDSCAPE
+            val long = maxOf(request.resolution.width, request.resolution.height).toFloat()
+            val short = minOf(request.resolution.width, request.resolution.height).toFloat()
+            val frame = if (portrait) short / long else long / short
             CameraXViewfinder(
                 surfaceRequest = request,
                 coordinateTransformer = transformer,
-                modifier = Modifier.fillMaxSize().pointerInput(camera) {
+                // Fitted, not cropped to the screen: a cropped viewfinder looked closer than the photo it took.
+                modifier = Modifier.align(Alignment.Center).aspectRatio(frame, matchHeightConstraintsFirst = !portrait).pointerInput(camera) {
                     detectTransformGestures { _, _, zoom, _ ->
                         val state = camera?.cameraInfo?.zoomState?.value ?: return@detectTransformGestures
                         val next = (state.zoomRatio * zoom).coerceIn(state.minZoomRatio, state.maxZoomRatio)

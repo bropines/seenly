@@ -54,7 +54,7 @@ class GoogleCredentialsTest {
     private class Source(var session: GoogleCredentials?) : LensCredentialsSource {
         var rejectedWith: Int? = null
         override fun current() = session
-        override fun rejected(status: Int) {
+        override fun rejected(status: Int, detail: String) {
             rejectedWith = status
             session = null
         }

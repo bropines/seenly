@@ -93,8 +93,11 @@ public class LensClient(
         val account = credentials?.current()
         var response = send(url, body, account)
         if (account != null && (response.status.value == 401 || response.status.value == 403)) {
-            log.w { "HTTP ${response.status.value} from $path with the account; repeating without it" }
-            credentials.rejected(response.status.value)
+            // Google's error body says why (wrong credential type, origin not allowed, expired…):
+            // the one clue there is to how a signed request should look.
+            val detail = runCatching { response.bodyAsText() }.getOrDefault("").take(REFUSAL_DETAIL_CHARS)
+            log.w { "HTTP ${response.status.value} from $path with the account; repeating without it: $detail" }
+            credentials.rejected(response.status.value, detail)
             response = send(url, body, null)
         }
         log.d { "HTTP ${response.status.value} from $path" }
@@ -114,6 +117,8 @@ public class LensClient(
     }
 
     public companion object {
+        private const val REFUSAL_DETAIL_CHARS = 600
+
         /** A client on the platform's default engine (OkHttp on Android and JVM). */
         public fun create(apiKey: String = LensDefaults.API_KEY): LensClient = LensClient(defaultHttpClient(), apiKey)
     }
