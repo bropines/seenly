@@ -17,6 +17,11 @@ import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceOrientedMeteringPointFactory
 import androidx.camera.core.SurfaceRequest
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionStrategy
+import android.util.Size
+import androidx.compose.ui.graphics.StrokeCap
+import kotlin.math.max
+import kotlin.math.min
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.aspectRatio
@@ -153,6 +158,11 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
     var torch by remember { mutableStateOf(false) }
     var capturing by remember { mutableStateOf(false) }
     var code by remember { mutableStateOf<ScannedCode?>(null) }
+    // Where the last code was seen in the frame; cleared shortly after it leaves the view.
+    var codeBox by remember { mutableStateOf<CodeBox?>(null) }
+    LaunchedEffect(codeBox?.seenAt) {
+        if (codeBox != null) { delay(CODE_BOX_LINGER_MS); codeBox = null }
+    }
     // What went wrong taking the last photo; the UI words it.
     var error by remember { mutableStateOf<String?>(null) }
     // Preview and photo both 4:3, the sensor's own shape: the viewfinder below is
@@ -178,10 +188,25 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
 
     LaunchedEffect(lifecycleOwner) {
         val preview = Preview.Builder().setResolutionSelector(fourByThree).build().apply { setSurfaceProvider { surfaceRequest = it } }
+        // 4:3 like the preview, so a code's place in the frame is its place in the
+        // viewfinder; and larger than the 640×480 default, or small codes are a few pixels.
+        val analysisSize = ResolutionSelector.Builder()
+            .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+            .setResolutionStrategy(ResolutionStrategy(Size(1280, 960), ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER))
+            .build()
         val analysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .setResolutionSelector(analysisSize)
             .build()
-            .apply { setAnalyzer(executor, CodeAnalyzer { found -> if (found != code) code = found }) }
+            .apply {
+                setAnalyzer(executor, CodeAnalyzer { found, corners ->
+                    // Called on the analysis thread; state is read by the UI.
+                    ContextCompat.getMainExecutor(context).execute {
+                        if (found != code) code = found
+                        codeBox = CodeBox(corners, System.nanoTime())
+                    }
+                })
+            }
         val provider = ProcessCameraProvider.awaitInstance(context)
         provider.unbindAll()
         val bound = provider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, capture, analysis)
@@ -241,11 +266,13 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
             val long = maxOf(request.resolution.width, request.resolution.height).toFloat()
             val short = minOf(request.resolution.width, request.resolution.height).toFloat()
             val frame = if (portrait) short / long else long / short
+            // Fitted, not cropped to the screen: a cropped viewfinder looked closer than the photo it took.
+            // Everything drawn at a place in the picture lives in this box, in its coordinates.
+            Box(Modifier.align(Alignment.Center).aspectRatio(frame, matchHeightConstraintsFirst = !portrait)) {
             CameraXViewfinder(
                 surfaceRequest = request,
                 coordinateTransformer = transformer,
-                // Fitted, not cropped to the screen: a cropped viewfinder looked closer than the photo it took.
-                modifier = Modifier.align(Alignment.Center).aspectRatio(frame, matchHeightConstraintsFirst = !portrait).pointerInput(camera) {
+                modifier = Modifier.fillMaxSize().pointerInput(camera) {
                     detectTransformGestures { _, _, zoom, _ ->
                         val state = camera?.cameraInfo?.zoomState?.value ?: return@detectTransformGestures
                         val next = (state.zoomRatio * zoom).coerceIn(state.minZoomRatio, state.maxZoomRatio)
@@ -259,9 +286,10 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
                     )
                 },
             )
+            codeBox?.let { CodeFrame(it) }
+            focus?.let { mark -> FocusRing(mark, onFaded = { if (focus?.id == mark.id) focus = null }) }
+            }
         }
-
-        focus?.let { mark -> FocusRing(mark, onFaded = { if (focus?.id == mark.id) focus = null }) }
 
         if (focus?.locked == true) {
             Surface(
@@ -391,6 +419,47 @@ private fun formatEv(ev: Float): String =
     if (kotlin.math.abs(ev) < 0.05f) "0" else String.format(Locale.getDefault(), "%+.1f", ev)
 
 private val FocusYellow = Color(0xFFFFD60A)
+
+/** A code's corner points in the frame (fractions, upright) and when it was last seen there. */
+private class CodeBox(val corners: List<Offset>, val seenAt: Long)
+
+/** How long the frame stays on a code after the last sighting: analysis runs about 10 times a second. */
+private const val CODE_BOX_LINGER_MS = 500L
+
+/**
+ * Brackets around a code the analyzer found, the way Lens marks one: the
+ * bounding box of ZXing's points, padded, since a QR code's points are the
+ * centres of its finder squares and a barcode's two ends of its scan line.
+ */
+@Composable
+private fun CodeFrame(box: CodeBox) {
+    if (box.corners.isEmpty()) return
+    Canvas(Modifier.fillMaxSize()) {
+        val xs = box.corners.map { it.x * size.width }
+        val ys = box.corners.map { it.y * size.height }
+        var left = xs.min()
+        var right = xs.max()
+        var top = ys.min()
+        var bottom = ys.max()
+        val w = right - left
+        val h = bottom - top
+        // A 1D code gives a line: give it some height. A QR's finder centres sit inside its edge.
+        val padX = max(w * 0.18f, 12.dp.toPx())
+        val padY = if (h < w * 0.2f) max(w * 0.25f, 16.dp.toPx()) else max(h * 0.18f, 12.dp.toPx())
+        left -= padX; right += padX; top -= padY; bottom += padY
+        val arm = min(right - left, bottom - top) * 0.25f
+        val stroke = 3.dp.toPx()
+        val c = FocusYellow
+        fun corner(x: Float, y: Float, dx: Float, dy: Float) {
+            drawLine(c, Offset(x, y), Offset(x + dx * arm, y), stroke, cap = StrokeCap.Round)
+            drawLine(c, Offset(x, y), Offset(x, y + dy * arm), stroke, cap = StrokeCap.Round)
+        }
+        corner(left, top, 1f, 1f)
+        corner(right, top, -1f, 1f)
+        corner(left, bottom, 1f, -1f)
+        corner(right, bottom, -1f, -1f)
+    }
+}
 
 @Composable
 private fun FocusRing(mark: FocusMark, onFaded: () -> Unit) {

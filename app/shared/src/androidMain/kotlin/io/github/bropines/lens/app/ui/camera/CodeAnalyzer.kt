@@ -2,6 +2,7 @@ package io.github.bropines.lens.app.ui.camera
 
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
+import androidx.compose.ui.geometry.Offset
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType
@@ -12,14 +13,20 @@ import com.google.zxing.ReaderException
 import com.google.zxing.common.HybridBinarizer
 
 /**
- * Reads QR codes and barcodes from camera frames with ZXing.
+ * Reads QR codes and barcodes from camera frames with ZXing, and says where
+ * in the frame each one is.
  *
  * Works on the luminance (Y) plane only. QR is rotation-invariant, but 1D
  * barcodes are read along rows, and the sensor is landscape while the phone is
  * held upright, so every other frame is also tried rotated by 90 degrees.
+ * Light-on-dark codes (common on screens in dark mode) are tried too.
  * Frames are throttled: decoding every one would heat the phone for nothing.
+ *
+ * [onCode] gets the code and its corner points as fractions of the frame as
+ * it is shown upright (0..1 across and down), so they can be drawn over a
+ * viewfinder showing the same frame.
  */
-class CodeAnalyzer(private val onCode: (ScannedCode) -> Unit) : ImageAnalysis.Analyzer {
+class CodeAnalyzer(private val onCode: (ScannedCode, List<Offset>) -> Unit) : ImageAnalysis.Analyzer {
     private val reader = MultiFormatReader().apply {
         setHints(
             mapOf(
@@ -28,6 +35,9 @@ class CodeAnalyzer(private val onCode: (ScannedCode) -> Unit) : ImageAnalysis.An
                     BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E,
                     BarcodeFormat.CODE_128, BarcodeFormat.CODE_39, BarcodeFormat.ITF,
                 ),
+                // Slower per frame, but frames are throttled and small or skewed codes are found.
+                DecodeHintType.TRY_HARDER to true,
+                DecodeHintType.ALSO_INVERTED to true,
             ),
         )
     }
@@ -65,10 +75,27 @@ class CodeAnalyzer(private val onCode: (ScannedCode) -> Unit) : ImageAnalysis.An
             } finally {
                 reader.reset()
             }
-            result?.let { r -> onCode(ScannedCode(r.text, r.barcodeFormat.name)) }
+            result ?: return
+            val degrees = it.imageInfo.rotationDegrees
+            val corners = result.resultPoints.orEmpty().filterNotNull().map { p ->
+                // Back to the sensor buffer's own coordinates first...
+                val (x, y) = if (rotate) p.y to (height - 1 - p.x) else p.x to p.y
+                // ...then turned the way the frame is shown.
+                upright(x / width, y / height, degrees)
+            }
+            onCode(ScannedCode(result.text, result.barcodeFormat.name), corners)
         }
     }
 
+    /** A point of the buffer, as fractions of it, where it appears once the frame is turned by [degrees]. */
+    private fun upright(nx: Float, ny: Float, degrees: Int): Offset = when ((degrees % 360 + 360) % 360) {
+        90 -> Offset(1f - ny, nx)
+        180 -> Offset(1f - nx, 1f - ny)
+        270 -> Offset(ny, 1f - nx)
+        else -> Offset(nx, ny)
+    }
+
+    /** The plane turned a quarter clockwise: output row r, column c is input (x = r, y = height - 1 - c). */
     private fun rotate90(src: ByteArray, width: Int, height: Int): ByteArray {
         val out = ByteArray(src.size)
         var i = 0
@@ -79,6 +106,8 @@ class CodeAnalyzer(private val onCode: (ScannedCode) -> Unit) : ImageAnalysis.An
     }
 
     private companion object {
-        const val INTERVAL_MS = 200L
+        // About 10 tries a second: a code is framed almost as soon as it enters the view,
+        // and the frame follows it, while a busy decode simply drops the frames between.
+        const val INTERVAL_MS = 100L
     }
 }
