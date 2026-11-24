@@ -2,6 +2,10 @@
 #
 #   git tag v0.2.0 && git push origin v0.2.0
 #
+# Before tagging, give the version its section in CHANGELOG.md (and CHANGELOG_RU.md);
+# docs/releases/v0.2.0.md, if present, goes above it as the highlights. Pictures for the
+# highlights live on the `media` branch, under releases/<version>/.
+#
 # Needs four repository secrets (Settings > Secrets and variables > Actions):
 #   LENS_RELEASE_KEYSTORE_BASE64   the .jks file, base64-encoded
 #   LENS_RELEASE_STORE_PASSWORD
@@ -65,8 +69,8 @@ jobs:
       - name: Collect and check the APKs
         run: |
           mkdir -p out
-          cp app/android/build/outputs/apk/google/release/android-google-release.apk "out/seenly-$VERSION-google.apk"
-          cp app/android/build/outputs/apk/foss/release/android-foss-release.apk "out/seenly-$VERSION-foss.apk"
+          cp app/android/build/outputs/apk/google/release/android-google-release.apk "out/Seenly-v$VERSION-google-release.apk"
+          cp app/android/build/outputs/apk/foss/release/android-foss-release.apk "out/Seenly-v$VERSION-foss-release.apk"
           signer=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
           for apk in out/*.apk; do
             certs=$("$signer" verify --print-certs "$apk")
@@ -76,9 +80,15 @@ jobs:
           (cd out && sha256sum *.apk > SHA256SUMS)
           rm -f "$RUNNER_TEMP/release.jks"
 
+      # The highlights in docs/releases/<tag>.md, then the tag's section of CHANGELOG.md.
+      - name: Release notes
+        run: |
+          python3 scripts/release/notes.py "$GITHUB_REF_NAME" release_notes.md
+          if ! grep -q . release_notes.md; then echo "::error::No notes for $GITHUB_REF_NAME in CHANGELOG.md"; exit 1; fi
+
       - uses: softprops/action-gh-release@v2
         with:
-          name: Seenly ${{ env.VERSION }}
+          name: Seenly ${{ github.ref_name }}
           files: out/*
-          generate_release_notes: true
+          body_path: release_notes.md
           prerelease: ${{ contains(github.ref_name, '-') }}
