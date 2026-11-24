@@ -19,7 +19,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.coroutines.flow.map
 import okio.Path.Companion.toPath
@@ -29,6 +31,7 @@ enum class ThemeMode { System, Light, Dark }
 /** Which engine translates typed or copied text (images always go through Lens). */
 enum class TextEngine { Google, Lens }
 
+@Serializable
 data class AppSettings(
     val targetLanguage: String = "ru",
     /** null = let Lens detect. */
@@ -62,6 +65,7 @@ data class TranslatorPrefs(
  * How the translation is drawn. Each `Auto` keeps what the chosen layout's
  * preset does (Chromium for signs, the manga preset for bubbles).
  */
+@Serializable
 data class OverlayPrefs(
     val erase: EraseChoice = EraseChoice.Auto,
     val outline: OutlineChoice = OutlineChoice.Auto,
@@ -125,6 +129,34 @@ class SettingsRepository(services: PlatformServices) {
         }
     }
 
+    /**
+     * Every setting as JSON, translator keys included (in plain text: the
+     * file is the user's to guard). The last folder is left out: it is a
+     * permission on this device and means nothing on another.
+     */
+    suspend fun exportJson(): String =
+        backupJson.encodeToString(Backup.serializer(), Backup(settings = settings.first().copy(lastFolder = null)))
+
+    /** Replaces the settings with a file [exportJson] wrote. Throws [IllegalArgumentException] on anything else. */
+    suspend fun importJson(text: String) {
+        val backup = try {
+            backupJson.decodeFromString(Backup.serializer(), text)
+        } catch (e: SerializationException) {
+            throw IllegalArgumentException("not a settings file", e)
+        }
+        require(backup.format == BACKUP_FORMAT) { "not a settings file" }
+        update { backup.settings.copy(lastFolder = it.lastFolder) }
+    }
+
+    @Serializable
+    private data class Backup(val format: String = BACKUP_FORMAT, val version: Int = 1, val settings: AppSettings)
+
+    private val backupJson = Json {
+        prettyPrint = true
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
+
     private fun Preferences.toSettings() = AppSettings(
         targetLanguage = this[TARGET] ?: "ru",
         sourceLanguage = this[SOURCE]?.ifEmpty { null },
@@ -150,6 +182,7 @@ class SettingsRepository(services: PlatformServices) {
         enumValues<E>().firstOrNull { it.name == this } ?: default
 
     private companion object {
+        const val BACKUP_FORMAT = "lens-kmp-settings"
         val TARGET = stringPreferencesKey("target_language")
         val SOURCE = stringPreferencesKey("source_language")
         val OCR = stringPreferencesKey("ocr_language")

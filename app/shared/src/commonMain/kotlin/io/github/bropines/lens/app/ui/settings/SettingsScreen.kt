@@ -33,6 +33,17 @@ import androidx.compose.material.icons.rounded.DocumentScanner
 import androidx.compose.material.icons.rounded.GTranslate
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Layers
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.Upload
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
+import io.github.vinceglb.filekit.readString
+import io.github.vinceglb.filekit.writeString
 import androidx.compose.runtime.collectAsState
 import io.github.bropines.lens.app.screen.ScreenTranslate
 import androidx.compose.material.icons.rounded.Language
@@ -88,8 +99,27 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     fun update(transform: (AppSettings) -> AppSettings) = scope.launch { repository.update(transform) }
     var picker by remember { mutableStateOf<String?>(null) }
+    val snackbar = remember { SnackbarHostState() }
+    val exporter = rememberFileSaverLauncher(dialogSettings = FileKitDialogSettings.createDefault()) { file: PlatformFile? ->
+        if (file == null) return@rememberFileSaverLauncher
+        scope.launch {
+            val message = runCatching { file.writeString(repository.exportJson()) }
+                .fold({ "Настройки сохранены" }, { "Не удалось сохранить: ${it.message}" })
+            snackbar.showSnackbar(message)
+        }
+    }
+    // Any file: some file managers do not tag .json as JSON.
+    val importer = rememberFilePickerLauncher(type = FileKitType.File()) { file ->
+        if (file == null) return@rememberFilePickerLauncher
+        scope.launch {
+            val message = runCatching { repository.importJson(file.readString()) }
+                .fold({ "Настройки загружены" }, { if (it is IllegalArgumentException) "Это не файл настроек Lens" else "Не удалось прочитать: ${it.message}" })
+            snackbar.showSnackbar(message)
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
         contentWindowInsets = if (onBack == null) WindowInsets(0) else ScaffoldDefaults.contentWindowInsets,
         topBar = {
             TopAppBar(
@@ -186,6 +216,11 @@ fun SettingsScreen(
             }
 
             Section("Приложение")
+            Setting(
+                Icons.Rounded.Upload, "Экспорт настроек",
+                "Все настройки и ключи переводчиков в файл .json. Ключи там открытым текстом — не делитесь файлом",
+            ) { exporter.launch(suggestedName = "lens-settings", extension = "json") }
+            Setting(Icons.Rounded.Download, "Импорт настроек", "Заменить текущие настройки файлом экспорта") { importer.launch() }
             Setting(Icons.Rounded.Info, "О приложении", "Версия, конфиденциальность, лицензии", onAbout)
         }
     }
