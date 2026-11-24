@@ -8,3 +8,6 @@ local.properties
 captures/
 .cxx/
 xcuserdata/
+
+# Python byte-code from the screenshot scripts
+__pycache__/
