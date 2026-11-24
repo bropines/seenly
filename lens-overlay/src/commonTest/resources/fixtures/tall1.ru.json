@@ -1,0 +1,1450 @@
+{
+    "paragraphs": [
+        {
+            "text": "20:19",
+            "lines": [
+                {
+                    "text": "20:19",
+                    "words": [
+                        {
+                            "text": "20:19",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.1265636,
+                                "centerY": 0.028316908,
+                                "width": 0.1078125,
+                                "height": 0.012626262,
+                                "rotation": -8.018054E-5
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.1265636,
+                        "centerY": 0.028316908,
+                        "width": 0.1078125,
+                        "height": 0.012626262,
+                        "rotation": -8.018054E-5
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                }
+            ],
+            "box": {
+                "centerX": 0.1265636,
+                "centerY": 0.028316908,
+                "width": 0.1078125,
+                "height": 0.012626262,
+                "rotation": -8.018054E-5
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": null
+        },
+        {
+            "text": "...",
+            "lines": [
+                {
+                    "text": "...",
+                    "words": [
+                        {
+                            "text": "...",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.2578126,
+                                "centerY": 0.029040178,
+                                "width": 0.0265625,
+                                "height": 0.0025252523,
+                                "rotation": -3.6751615E-5
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.2578126,
+                        "centerY": 0.029040178,
+                        "width": 0.0265625,
+                        "height": 0.0025252523,
+                        "rotation": -3.6751615E-5
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                }
+            ],
+            "box": {
+                "centerX": 0.2578126,
+                "centerY": 0.029040178,
+                "width": 0.0265625,
+                "height": 0.0025252523,
+                "rotation": -3.6751615E-5
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": null
+        },
+        {
+            "text": "19,2\nКБ/с",
+            "lines": [
+                {
+                    "text": "19,2",
+                    "words": [
+                        {
+                            "text": "19,2",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.5601367,
+                                "centerY": 0.023657417,
+                                "width": 0.0515625,
+                                "height": 0.007575758,
+                                "rotation": 0.0023755764
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.5601367,
+                        "centerY": 0.023657417,
+                        "width": 0.0515625,
+                        "height": 0.007575758,
+                        "rotation": 0.0023755764
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                },
+                {
+                    "text": "КБ/с",
+                    "words": [
+                        {
+                            "text": "КБ",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.55038255,
+                                "centerY": 0.03265338,
+                                "width": 0.02421875,
+                                "height": 0.007575758,
+                                "rotation": 9.793355E-4
+                            }
+                        },
+                        {
+                            "text": "/",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.5652263,
+                                "centerY": 0.032650556,
+                                "width": 0.01171875,
+                                "height": 0.007575758,
+                                "rotation": 9.793355E-4
+                            }
+                        },
+                        {
+                            "text": "с",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.5765544,
+                                "centerY": 0.03265073,
+                                "width": 0.0125,
+                                "height": 0.007575758,
+                                "rotation": 9.793355E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.5605388,
+                        "centerY": 0.032657977,
+                        "width": 0.04453125,
+                        "height": 0.007575758,
+                        "rotation": 9.793355E-4
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                }
+            ],
+            "box": {
+                "centerX": 0.5601252,
+                "centerY": 0.028159093,
+                "width": 0.0515625,
+                "height": 0.016594516,
+                "rotation": 0.0017285378
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": null
+        },
+        {
+            "text": "79",
+            "lines": [
+                {
+                    "text": "79",
+                    "words": [
+                        {
+                            "text": "79",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.8706988,
+                                "centerY": 0.029224822,
+                                "width": 0.03515625,
+                                "height": 0.007936508,
+                                "rotation": 4.982004E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.8706988,
+                        "centerY": 0.029224822,
+                        "width": 0.03515625,
+                        "height": 0.007936508,
+                        "rotation": 4.982004E-4
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                }
+            ],
+            "box": {
+                "centerX": 0.8706988,
+                "centerY": 0.029224822,
+                "width": 0.03515625,
+                "height": 0.007936508,
+                "rotation": 4.982004E-4
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": null
+        },
+        {
+            "text": "manga1.png",
+            "lines": [
+                {
+                    "text": "manga1.png",
+                    "words": [
+                        {
+                            "text": "manga1.png",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.23320735,
+                                "centerY": 0.08422271,
+                                "width": 0.21484375,
+                                "height": 0.015512265,
+                                "rotation": -2.518537E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.23320735,
+                        "centerY": 0.08422271,
+                        "width": 0.21484375,
+                        "height": 0.015512265,
+                        "rotation": -2.518537E-4
+                    },
+                    "translation": "манга1.png",
+                    "translationStyle": {
+                        "textColor": -263173,
+                        "backgroundColor": -16711423,
+                        "background": {
+                            "image": "UklGRn4BAABXRUJQVlA4WAoAAAAQAAAAtwAAJwAAQUxQSJ4AAAABDzD/ERECciRJrqpBH58DmELEeoY0AJc0HJ8JKAPYG2qZ+mLFUwZE9H8CpHm1U9SgIApaFWVjhiHbkWfMyNFhy8ByxINxzDDK/4kCHw/KNgEGMsU78VGYvxHyojKtx6OA5wItRJeQlmOKgUlhhGgGTdCkb9ypBEemmLFjQY6xC4y93THid3Tk/5SWyLkKrbgsSRCRVcRzIjFTOoG6A1ZQOCC6AAAAsAYAnQEquAAoAD4xGItEIiGhEHQAIAMEtLbir6KG6AUJDw5myZ3QsXwa9vauubpWTg59h4Kh48gHoxPASxAA/v5xRMfCJWVnQOvCrO7VZ/yldht/i76+7xkEIbgqMBV9aLrhrUKvZVl0pVZ9CaQDgX2ktZMMhUGCvGHiT8HAc/5StsBHFTq1A3qRqh4NOdSmltk7HE0dzeNKgF4oW9CjFHNUO83OnuShwolIegaIAs4wJBRWac4QkgAA",
+                            "format": "Webp",
+                            "width": 184,
+                            "height": 40,
+                            "verticalPadding": 0.4821278,
+                            "horizontalPadding": 0.40697673
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.23320735,
+                "centerY": 0.08422271,
+                "width": 0.21484375,
+                "height": 0.015512265,
+                "rotation": -2.518537E-4
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": {
+                "text": "манга1.png",
+                "sourceLanguage": "en",
+                "targetLanguage": "ru",
+                "writingDirection": "LeftToRight",
+                "alignment": "Start",
+                "justified": false
+            }
+        },
+        {
+            "text": "Авто",
+            "lines": [
+                {
+                    "text": "Авто",
+                    "words": [
+                        {
+                            "text": "Авто",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.16366719,
+                                "centerY": 0.13907644,
+                                "width": 0.08046875,
+                                "height": 0.011183262,
+                                "rotation": 3.862275E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.16366719,
+                        "centerY": 0.13907644,
+                        "width": 0.08046875,
+                        "height": 0.011183262,
+                        "rotation": 3.862275E-4
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                }
+            ],
+            "box": {
+                "centerX": 0.16366719,
+                "centerY": 0.13907644,
+                "width": 0.08046875,
+                "height": 0.011183262,
+                "rotation": 3.862275E-4
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": null
+        },
+        {
+            "text": "Русский",
+            "lines": [
+                {
+                    "text": "Русский",
+                    "words": [
+                        {
+                            "text": "Русский",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.49843812,
+                                "centerY": 0.13978958,
+                                "width": 0.128125,
+                                "height": 0.014069264,
+                                "rotation": -4.0056293E-5
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.49843812,
+                        "centerY": 0.13978958,
+                        "width": 0.128125,
+                        "height": 0.014069264,
+                        "rotation": -4.0056293E-5
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                }
+            ],
+            "box": {
+                "centerX": 0.49843812,
+                "centerY": 0.13978958,
+                "width": 0.128125,
+                "height": 0.014069264,
+                "rotation": -4.0056293E-5
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": null
+        },
+        {
+            "text": "よく行く\n店だから\n油断した･･･",
+            "lines": [
+                {
+                    "text": "よく行く",
+                    "words": [
+                        {
+                            "text": "よく",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.87145585,
+                                "centerY": 0.40422663,
+                                "width": 0.03515625,
+                                "height": 0.036435787,
+                                "rotation": 7.2384713E-4
+                            }
+                        },
+                        {
+                            "text": "行く",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.871455,
+                                "centerY": 0.44192505,
+                                "width": 0.03515625,
+                                "height": 0.03751804,
+                                "rotation": 7.2384713E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.8714258,
+                        "centerY": 0.4233464,
+                        "width": 0.03515625,
+                        "height": 0.07467532,
+                        "rotation": 7.2384713E-4
+                    },
+                    "translation": "Я расслабилась, потому ",
+                    "translationStyle": {
+                        "textColor": -13092808,
+                        "backgroundColor": -4210753,
+                        "background": {
+                            "image": "UklGRiIBAABXRUJQVlA4WAoAAAAQAAAAHwAAagAAQUxQSH0AAAABDzD/ERHCTW1brXQnUmJogrSHNKQggfLnUxAlRPR/AtQfvBS9lK1nwemYknCKjWzSZQrwKCK4CH4sgFNxmJQLRo45NmtByo2EFLlVAjdd3AL8I1gC8rSlcQwtLL7IlcsFKHyXa6n2UOZWOcZMtf+QSUtBcRvIjcRNQtJHJQBWUDggfgAAABAEAJ0BKiAAawA+MRiLRCIhoREkACADBLS2IgAED6Zvwv522sV9rJSAAP74y02cxpqrXNJpv9+gqMf5zhpSgeIXSIgFUQx2weAPZkYRMaaJJUp7ipnCxkYNFjZ3v9GqzgVtAnBtB07DqpTikzcxVa/LChDs70mYwrUV+1gAAA==",
+                            "format": "Webp",
+                            "width": 32,
+                            "height": 107,
+                            "verticalPadding": 0.0927514,
+                            "horizontalPadding": 0.10869565
+                        }
+                    }
+                },
+                {
+                    "text": "店だから",
+                    "words": [
+                        {
+                            "text": "店",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.82304794,
+                                "centerY": 0.39520162,
+                                "width": 0.03828125,
+                                "height": 0.021284271,
+                                "rotation": -4.3675842E-5
+                            }
+                        },
+                        {
+                            "text": "だ",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.82304764,
+                                "centerY": 0.41450176,
+                                "width": 0.03828125,
+                                "height": 0.015873017,
+                                "rotation": -4.3675842E-5
+                            }
+                        },
+                        {
+                            "text": "から",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8230486,
+                                "centerY": 0.44372255,
+                                "width": 0.03828125,
+                                "height": 0.036075037,
+                                "rotation": -4.367584E-5
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.8230505,
+                        "centerY": 0.42315978,
+                        "width": 0.03828125,
+                        "height": 0.07720058,
+                        "rotation": -4.3675842E-5
+                    },
+                    "translation": "что это магазин, ",
+                    "translationStyle": {
+                        "textColor": -13027015,
+                        "backgroundColor": -4342339,
+                        "background": {
+                            "image": "UklGRmoBAABXRUJQVlA4WAoAAAAQAAAAIgAAbgAAQUxQSJAAAAABDzD/ERHCUW1brXPSh99Ak/KkgTSk4CDM0nMH1ERBRP8ngLHegOAqXjKiJNK42GaDUs/7H+5Z1FV4XbWLTdLu3cFdcqQsSpZthMzrc8FLu2wjSPYLX3Bfw1vcKN8n4F2a8ZIjDlBTGhcrLrs07EpBBtwmIG2Z1e4OeGcao8Iumxq2330b7pog6ZIdsh0ERz9WUDggtAAAAJAGAJ0BKiMAbwA+MRiLRCIhoRDEACADBLS13AACzIUWlRV59rvcDhGZhZvOqCUxv+3h257ZlekO4nkkWUAA/vitVqO7n9CZoTkqTq1qaxKJG9TyAqYnk46np8TaSRiQQpcw5lB8iwr9bBqbYLM18s1JOBXNsHVJ3YqnnOOm0yKhnxRJ8F/xohTeAMm9Cw8Neug9WEWbkP8Uz2crVbQ/e23XLJur3pa7y6KjrhaSIAtqYg6AAA==",
+                            "format": "Webp",
+                            "width": 35,
+                            "height": 111,
+                            "verticalPadding": 0.09204615,
+                            "horizontalPadding": 0.11565421
+                        }
+                    }
+                },
+                {
+                    "text": "油断した･･･",
+                    "words": [
+                        {
+                            "text": "油断",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.77079886,
+                                "centerY": 0.40474296,
+                                "width": 0.03671875,
+                                "height": 0.03968254,
+                                "rotation": -0.0022295981
+                            }
+                        },
+                        {
+                            "text": "し",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.77074313,
+                                "centerY": 0.43252075,
+                                "width": 0.03671875,
+                                "height": 0.016594516,
+                                "rotation": -0.0022295984
+                            }
+                        },
+                        {
+                            "text": "た",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.7707388,
+                                "centerY": 0.45218164,
+                                "width": 0.03671875,
+                                "height": 0.014790765,
+                                "rotation": -0.0022295984
+                            }
+                        },
+                        {
+                            "text": "･･･",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.7707414,
+                                "centerY": 0.47220328,
+                                "width": 0.03671875,
+                                "height": 0.015873017,
+                                "rotation": -0.0022295981
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.77093303,
+                        "centerY": 0.43252066,
+                        "width": 0.03671875,
+                        "height": 0.0952381,
+                        "rotation": -0.0022295981
+                    },
+                    "translation": "в который я часто хожу...",
+                    "translationStyle": {
+                        "textColor": -12500671,
+                        "backgroundColor": -4473925,
+                        "background": {
+                            "image": "UklGRm4BAABXRUJQVlA4WAoAAAAQAAAAIAAAhQAAQUxQSIAAAAABDzD/ERECUmzbbaTbeSkIgvKhqaElIoKgZaeZt/iKRhDR/wlg6i38QzYn7UYOzihS4tXQSKqVjjxS1mk3LdEypy0kZyte6yLoQN//dp4G/1+nBdEFd4GfDg74v8BNB8hSz86FjrgC/QWuUuDWZ4uiC1CMNalDIzbjNaXMy7HVCVZQOCDIAAAA0AUAnQEqIQCGAD4xGItEIiGhEJQAIAMEtLaLAAIsmBCj4kynnr840ZfQ4vRoyB2/iSzHSTtrAAD++I+uuu3RyT/JkwPG0HpSekQvH6yz4Ybx83QC5jYt3w3bG3Lp8evreIJJCMmzMJ2HGipf8s5fGYGdPDeRkAv+FiIIEBH27yoE5nmr6yn5fJpaW12xY9PoiOmYBEvIIts6OdRRy4lPvlR2hbYAvjZFdqpY7/9qrgXJg+plXg4vl0sMpcRRM6zAfoXZ0lAAAAA=",
+                            "format": "Webp",
+                            "width": 33,
+                            "height": 134,
+                            "verticalPadding": 0.074570976,
+                            "horizontalPadding": 0.08712121
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.8207618,
+                "centerY": 0.43234143,
+                "width": 0.13671875,
+                "height": 0.09559885,
+                "rotation": -5.6700606E-4
+            },
+            "language": null,
+            "writingDirection": "TopToBottom",
+            "translation": {
+                "text": "Я расслабилась, потому что это магазин, в который я часто хожу...",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "TopToBottom",
+                "alignment": "Center",
+                "justified": false
+            }
+        },
+        {
+            "text": "思えばあの店\n紹介してきたのも\nアイツだった",
+            "lines": [
+                {
+                    "text": "思えばあの店",
+                    "words": [
+                        {
+                            "text": "思え",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.36056298,
+                                "centerY": 0.40331534,
+                                "width": 0.03828125,
+                                "height": 0.036796536,
+                                "rotation": -4.048005E-4
+                            }
+                        },
+                        {
+                            "text": "ば",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.36055383,
+                                "centerY": 0.43289685,
+                                "width": 0.03828125,
+                                "height": 0.015873017,
+                                "rotation": -4.048005E-4
+                            }
+                        },
+                        {
+                            "text": "あの",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.3605622,
+                                "centerY": 0.46626627,
+                                "width": 0.03828125,
+                                "height": 0.034992784,
+                                "rotation": -4.048005E-4
+                            }
+                        },
+                        {
+                            "text": "店",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.36055446,
+                                "centerY": 0.4945852,
+                                "width": 0.03828125,
+                                "height": 0.017316017,
+                                "rotation": -4.048005E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.36059874,
+                        "centerY": 0.4440801,
+                        "width": 0.03828125,
+                        "height": 0.11832612,
+                        "rotation": -4.048005E-4
+                    },
+                    "translation": "Теперь, когда я об ",
+                    "translationStyle": {
+                        "textColor": -12829636,
+                        "backgroundColor": -4276546,
+                        "background": {
+                            "image": "UklGRtQBAABXRUJQVlA4WAoAAAAQAAAAIgAApQAAQUxQSLgAAAABDzD/ERECUmxbkZhHZeglEpDypYE04gQJLDP2XXymtIKI/k+Azt5BKpAW7Fw6Z6O60CA7Rh0I7uVMA1ODF6lnSZ0T9yhIjF7W7lGQfpEEUQXsGbohVHPZAS87YSNrZmqQXHTXQnL5UF0zFZAKWad7dGkGwV0qp6JLzhay6k47ZQtJFaK7VJwaL9Inl3QTJbBRcRXyqO30f2prpjpJElxSIUgVqQKD0B6gCnnUjvSFz8d0MOn3wzQEVlA4IPYAAACQBwCdASojAKYAPjEYi0QiIaEQhAAgAwS0tr+AAd+FaNcRh8yodyUHvJq0Dod6Y1/YeGtGXTcQdgx+QJQe0Ms/h9RIIkAA/vkBDZifASnoCPTSRE9YPT5Gm8pT+d2nQmli17eAVAD/6AozkPD64BYW0tDtxNz1BCtXSyIaT6VEiYC2yR4degwpE8Hcw2o9pcH0k6JigtBmCDsOKf3OfE+AnXBpqSZ/BbXMJkQa7QDfM+ASimxbH8UmbGC+IZggISLpKsPRe7c/gdqcxJMkL5IIXraSTziyOYFrbyNlVzV6Zzc+fAsJL9eL7E/vlcvNYWN1p3oAAAA=",
+                            "format": "Webp",
+                            "width": 35,
+                            "height": 166,
+                            "verticalPadding": 0.063025124,
+                            "horizontalPadding": 0.07545732
+                        }
+                    }
+                },
+                {
+                    "text": "紹介してきたのも",
+                    "words": [
+                        {
+                            "text": "紹介",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.30772477,
+                                "centerY": 0.40387818,
+                                "width": 0.0375,
+                                "height": 0.03860029,
+                                "rotation": 0.002098038
+                            }
+                        },
+                        {
+                            "text": "し",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.30777556,
+                                "centerY": 0.43237746,
+                                "width": 0.0375,
+                                "height": 0.016233766,
+                                "rotation": 0.0020980383
+                            }
+                        },
+                        {
+                            "text": "て",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.3077821,
+                                "centerY": 0.45257947,
+                                "width": 0.0375,
+                                "height": 0.013347764,
+                                "rotation": 0.0020980383
+                            }
+                        },
+                        {
+                            "text": "き",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.30777556,
+                                "centerY": 0.470617,
+                                "width": 0.0375,
+                                "height": 0.016233766,
+                                "rotation": 0.0020980383
+                            }
+                        },
+                        {
+                            "text": "た",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.30777887,
+                                "centerY": 0.49009752,
+                                "width": 0.0375,
+                                "height": 0.014790765,
+                                "rotation": 0.0020980383
+                            }
+                        },
+                        {
+                            "text": "の",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.30777967,
+                                "centerY": 0.5093976,
+                                "width": 0.0375,
+                                "height": 0.014430014,
+                                "rotation": 0.0020980383
+                            }
+                        },
+                        {
+                            "text": "も",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.30777395,
+                                "centerY": 0.5279763,
+                                "width": 0.0375,
+                                "height": 0.016955268,
+                                "rotation": 0.0020980383
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.30785805,
+                        "centerY": 0.46051618,
+                        "width": 0.03828125,
+                        "height": 0.1518759,
+                        "rotation": 0.002098038
+                    },
+                    "translation": "этом думаю, именно он мне ",
+                    "translationStyle": {
+                        "textColor": -11908534,
+                        "backgroundColor": -4342339,
+                        "background": {
+                            "image": "UklGRkYCAABXRUJQVlA4WAoAAAAQAAAAIgAA0AAAQUxQSAQBAAABDzD/ERFCbrXtddu8PL6wxAgYBZsZGA1dyowQdCnDUhccfMVHgVAmiOj/BLC2m6SzImlrE8cK/otm1Zodb2pWjJOuDDft0BVgKFIl0SRth6SPdVuTRJUydAUYChS9qlPPKwoUaYf+7wN6ZNUtAP3Srw/L0H+btCS/uClZtABNH1AVLFkGKVMm6pUiJQsgAcNu2ZJl0w5NYUG1Ys0O7XD7s0EXttkHjLMwEaFPpXVh3cfczQ67aYORgREtAcpQpTSRrxXjZPw1JYuWQMqmdRmGEvwcEW76sABdCYZJmSLprK7YlvAGZrp2aDMZ6BPjDdrsw3aLll70qQg3O640hRdVO/DDNFZQOCAcAQAAkAoAnQEqIwDRAD4xGIpEIiGIMj4QAYJaW2iAAMW7XGAge1sfK5PY29/xzwEfZMz9gBDDjgnLjdjnXB/ayu2Eo4OJhJS3ZdCC/+k0rXaNz3HtDPdzqf+y/Oc3ad+AAP74eDolcU+WUf1iTT3DLWTVmevVXWU3TUICjG5CKUwlTYA7q2ZAAFKFr00iWfRdro3MAHA2jMpNNK27yuOXCubdt6En+lFLp31iQ39VGdxuToUU3p2/wwe/p+oWCeZg8dijXOrsDY/N40SA2g2p/E7jW/mOyDEiCAb7VUa/C0fxOB4aH7xz+QEjYvjH8D4F3ky28CuYCT9E31c+SFZAibpcieftsY33lurFvz9/zpGhBiSB118ksaLA9UjQAAA=",
+                            "format": "Webp",
+                            "width": 35,
+                            "height": 209,
+                            "verticalPadding": 0.04786606,
+                            "horizontalPadding": 0.058788598
+                        }
+                    }
+                },
+                {
+                    "text": "アイツだった",
+                    "words": [
+                        {
+                            "text": "アイツ",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.2583637,
+                                "centerY": 0.4139916,
+                                "width": 0.0328125,
+                                "height": 0.0523088,
+                                "rotation": 0.0040591895
+                            }
+                        },
+                        {
+                            "text": "だっ",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.25845408,
+                                "centerY": 0.4599873,
+                                "width": 0.0328125,
+                                "height": 0.031746034,
+                                "rotation": 0.0040591895
+                            }
+                        },
+                        {
+                            "text": "た",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.25774258,
+                                "centerY": 0.48992968,
+                                "width": 0.0328125,
+                                "height": 0.015873017,
+                                "rotation": 0.00405919
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.25850064,
+                        "centerY": 0.4428521,
+                        "width": 0.03359375,
+                        "height": 0.11002886,
+                        "rotation": 0.0040591895
+                    },
+                    "translation": "порекомендовал этот магазин.",
+                    "translationStyle": {
+                        "textColor": -13290187,
+                        "backgroundColor": -4473925,
+                        "background": {
+                            "image": "UklGRsABAABXRUJQVlA4WAoAAAAQAAAAHQAAlwAAQUxQSNQAAAABDzD/ERECVm3bcZujlbT6fBDEpIZmMSkVQRGD6jOjTwerDoSI/k8A08swPfT00HjNZdI18xC2AlvAlsFMnTRPNNN/VmgWmiv1S3i8ZJu40lzoFi6Tx04cuBhwOTQmm4nNU9d82YtjQ/Ofrqe2l6rC9mcFF7CAAWYwgcAHVHtUx1J9LlWXocvlSJnERU9DT31npWseGpNyKManuQfUE0ebJ4a5ajQtx+qEP93CZSe4mBkmuom2MK9C20k0M83C0HTRfNF4zdBompue+l78GS/pGi1MAFZQOCDGAAAAsAQAnQEqHgCYAD4xGItEIiGhENQAIAMEtLSG0GAARbhZ1LFqbHryYYPJoEXUAAD++JL2b2OdDhItEqyXDGEN9nnJaLZ/MfidEwMBW7mA971pXdz3HaEWYCyT90tcjOl9L/8x0tFvoy+eEd43n6l2k9yqcGMQakkGBSr1F3xvA4OlErKvb/OzSOxFWv/h63sA17MWrkaanRlAGR9VKFGm9e7HuskNc25qMTDZ2YmA+BA9yQWkZn21+cfQq94hYPQe+D6XAAAA",
+                            "format": "Webp",
+                            "width": 30,
+                            "height": 152,
+                            "verticalPadding": 0.057141315,
+                            "horizontalPadding": 0.068032786
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.3106669,
+                "centerY": 0.46055055,
+                "width": 0.1390625,
+                "height": 0.1518759,
+                "rotation": 0.0016448384
+            },
+            "language": null,
+            "writingDirection": "TopToBottom",
+            "translation": {
+                "text": "Теперь, когда я об этом думаю, именно он мне порекомендовал этот магазин.",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "TopToBottom",
+                "alignment": "Start",
+                "justified": false
+            }
+        },
+        {
+            "text": "って事は\n最初から\n時間の問題",
+            "lines": [
+                {
+                    "text": "って事は",
+                    "words": [
+                        {
+                            "text": "って",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.23982827,
+                                "centerY": 0.5638566,
+                                "width": 0.0359375,
+                                "height": 0.031024534,
+                                "rotation": 4.601942E-4
+                            }
+                        },
+                        {
+                            "text": "事",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.23983404,
+                                "centerY": 0.58983064,
+                                "width": 0.0359375,
+                                "height": 0.019480519,
+                                "rotation": 4.6019425E-4
+                            }
+                        },
+                        {
+                            "text": "は",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.23983566,
+                                "centerY": 0.6091308,
+                                "width": 0.0359375,
+                                "height": 0.016233766,
+                                "rotation": 4.6019425E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.23980942,
+                        "centerY": 0.582796,
+                        "width": 0.0359375,
+                        "height": 0.06890332,
+                        "rotation": 4.601942E-4
+                    },
+                    "translation": "Это значит, что с ",
+                    "translationStyle": {
+                        "textColor": -12434878,
+                        "backgroundColor": -4408132,
+                        "background": {
+                            "image": "UklGRjgBAABXRUJQVlA4WAoAAAAQAAAAHwAAYQAAQUxQSIsAAAABDzD/ERHCVW1bjXNT+URB1pOCNJCGlCeBz6k5KUyRENH/CdCJ75sKUWCCtJFPaiT5DutUTIWXNGjnMAQNS9Qbc85JKhsatvi7aOCmgdBpG05Q4+aQGuTTUoNYITrYGwzI+5aNAbKD/VWwAlFvYgFVuDjcGoQGsYH91V3eixvBwTaSQz5We6mAlaQuAFZQOCCGAAAAEAUAnQEqIABiAD4xGItEIiGhESQAIAMEtLYQgAQNeh1K42n3eBy7TAM28OEZ9s06gAD++MiTGx+P3g8wco0dq0sxtRGoS9asQDeMyZeMyc76OEsR/sKRtwSZ/oQZfUFyq3zdbA3dLqopic65VnNaOUJYFMC2O6dfeC7JfDPQBKV/9iIAAAA=",
+                            "format": "Webp",
+                            "width": 32,
+                            "height": 98,
+                            "verticalPadding": 0.09923126,
+                            "horizontalPadding": 0.11910995
+                        }
+                    }
+                },
+                {
+                    "text": "最初から",
+                    "words": [
+                        {
+                            "text": "最初",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.18787065,
+                                "centerY": 0.5618728,
+                                "width": 0.03515625,
+                                "height": 0.036435787,
+                                "rotation": 5.060006E-4
+                            }
+                        },
+                        {
+                            "text": "から",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.18787125,
+                                "centerY": 0.6010142,
+                                "width": 0.03515625,
+                                "height": 0.035353534,
+                                "rotation": 5.060006E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.1878495,
+                        "centerY": 0.58117294,
+                        "width": 0.03515625,
+                        "height": 0.07503608,
+                        "rotation": 5.060006E-4
+                    },
+                    "translation": "самого начала это был ",
+                    "translationStyle": {
+                        "textColor": -12763843,
+                        "backgroundColor": -4408132,
+                        "background": {
+                            "image": "UklGRiIBAABXRUJQVlA4WAoAAAAQAAAAHwAAagAAQUxQSIUAAAABDzD/ERECUmzbcaOXeSkIgiJiqfqCJihikL/L2H0XGiFE9H8CNP/qZbgViPtewD4Hc0jNa8ZewFpdscaXXmC/bQ5UoPSsQCpgTeZpmYeJcNd/UIFQIVawAXNlUGdscKiYekmVKHmQPEmvxno/k/5NYo6D4JZ7cU5TeSY0cm5yTnKTPGkMAFZQOCB2AAAAEAQAnQEqIABrAD4xGItEIiGhESQAIAMEtLYQgAQNesZ3R9YX6ldTyhAA/viR03VeYo/xRB4upePefIwunRKvA1vu0IBOHxyWAAfCLlmdq7+f4A5P4PASDLgpLCNBRwTVdgi75B6s659FoS38zYf+Zp64JJqAAA==",
+                            "format": "Webp",
+                            "width": 32,
+                            "height": 107,
+                            "verticalPadding": 0.087497786,
+                            "horizontalPadding": 0.10817308
+                        }
+                    }
+                },
+                {
+                    "text": "時間の問題",
+                    "words": [
+                        {
+                            "text": "時間の問題",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.13707091,
+                                "centerY": 0.59091234,
+                                "width": 0.03671875,
+                                "height": 0.09163059,
+                                "rotation": 3.8775624E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.13707091,
+                        "centerY": 0.59091234,
+                        "width": 0.03671875,
+                        "height": 0.09163059,
+                        "rotation": 3.8775624E-4
+                    },
+                    "translation": "лишь вопрос времени.",
+                    "translationStyle": {
+                        "textColor": -12698050,
+                        "backgroundColor": -4408132,
+                        "background": {
+                            "image": "UklGRnYBAABXRUJQVlA4WAoAAAAQAAAAIAAAgAAAQUxQSHcAAAABDzD/ERHCcSRJjtKHfJ4JmHKmDZ6BKWPCPNH1WL2BARH9nwBVP5LPXtfzZ6+Asx6wJZZQFcAyg2oepaUpMjdYnFIACrCELiavIxdDrNsbOTRZsiZbi01DiyUX3WFNznKwXBToZ3+MxcfIwaqin1dEgcwySAGmLABWUDgg2AAAAFAIAJ0BKiEAgQA+MRiLRCIhoRCUACADBLS2nfgAACLTUS/LLnrBZOBiOtnHgsqlRIK6ivW/Kmx9dm0Obnpkas+Ru19671e2TRB0gAD++MTjaYRDa+Mb4jojilgM51JTxdCalWYOsaeoE9TQEI2z2TLgXb6+Xop3A4CH7SJC0ov9bUzmHhACeOjLHEzOir6Tx2GtNLIjGUQ3a9VfVHGmKLKicY3/iR9gwejzCovdFTbwPpHaBa8C0lLV6J+jzGOiJRB//mCbo1RGd6ThJKwOhUUbM8LgAAAAAA==",
+                            "format": "Webp",
+                            "width": 33,
+                            "height": 129,
+                            "verticalPadding": 0.07751561,
+                            "horizontalPadding": 0.09055118
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.18823576,
+                "centerY": 0.5902021,
+                "width": 0.1390625,
+                "height": 0.09307359,
+                "rotation": 4.5127288E-4
+            },
+            "language": null,
+            "writingDirection": "TopToBottom",
+            "translation": {
+                "text": "Это значит, что с самого начала это был лишь вопрос времени.",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "TopToBottom",
+                "alignment": "Start",
+                "justified": true
+            }
+        },
+        {
+            "text": "Перевод",
+            "lines": [
+                {
+                    "text": "Перевод",
+                    "words": [
+                        {
+                            "text": "Перевод",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.14516322,
+                                "centerY": 0.8194086,
+                                "width": 0.125,
+                                "height": 0.011904762,
+                                "rotation": 0.011272571
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.14516322,
+                        "centerY": 0.8194086,
+                        "width": 0.125,
+                        "height": 0.011904762,
+                        "rotation": 0.011272571
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                }
+            ],
+            "box": {
+                "centerX": 0.14516322,
+                "centerY": 0.8194086,
+                "width": 0.125,
+                "height": 0.011904762,
+                "rotation": 0.011272571
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": null
+        },
+        {
+            "text": "Текст",
+            "lines": [
+                {
+                    "text": "Текст",
+                    "words": [
+                        {
+                            "text": "Текст",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.38122693,
+                                "centerY": 0.818047,
+                                "width": 0.090625,
+                                "height": 0.0097402595,
+                                "rotation": 0.0021783921
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.38122693,
+                        "centerY": 0.818047,
+                        "width": 0.090625,
+                        "height": 0.0097402595,
+                        "rotation": 0.0021783921
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                }
+            ],
+            "box": {
+                "centerX": 0.38122693,
+                "centerY": 0.818047,
+                "width": 0.090625,
+                "height": 0.0097402595,
+                "rotation": 0.0021783921
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": null
+        },
+        {
+            "text": "Оригинал",
+            "lines": [
+                {
+                    "text": "Оригинал",
+                    "words": [
+                        {
+                            "text": "Оригинал",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.61795896,
+                                "centerY": 0.8189278,
+                                "width": 0.1359375,
+                                "height": 0.0115440115,
+                                "rotation": 7.794351E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.61795896,
+                        "centerY": 0.8189278,
+                        "width": 0.1359375,
+                        "height": 0.0115440115,
+                        "rotation": 7.794351E-4
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                }
+            ],
+            "box": {
+                "centerX": 0.61795896,
+                "centerY": 0.8189278,
+                "width": 0.1359375,
+                "height": 0.0115440115,
+                "rotation": 7.794351E-4
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": null
+        },
+        {
+            "text": "Поиск",
+            "lines": [
+                {
+                    "text": "Поиск",
+                    "words": [
+                        {
+                            "text": "Поиск",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.85385925,
+                                "centerY": 0.8184545,
+                                "width": 0.090625,
+                                "height": 0.0097402595,
+                                "rotation": 0.0044136336
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.85385925,
+                        "centerY": 0.8184545,
+                        "width": 0.090625,
+                        "height": 0.0097402595,
+                        "rotation": 0.0044136336
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                }
+            ],
+            "box": {
+                "centerX": 0.85385925,
+                "centerY": 0.8184545,
+                "width": 0.090625,
+                "height": 0.0097402595,
+                "rotation": 0.0044136336
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": null
+        },
+        {
+            "text": "Обведите что-нибудь пальцем или нажмите на точку\nоткроется поиск Google",
+            "lines": [
+                {
+                    "text": "Обведите что-нибудь пальцем или нажмите на точку",
+                    "words": [
+                        {
+                            "text": "Обведите",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.10898145,
+                                "centerY": 0.85732985,
+                                "width": 0.13359375,
+                                "height": 0.012626262,
+                                "rotation": 2.1363722E-4
+                            }
+                        },
+                        {
+                            "text": "что",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.22187206,
+                                "centerY": 0.8573256,
+                                "width": 0.0484375,
+                                "height": 0.012626262,
+                                "rotation": 2.136372E-4
+                            }
+                        },
+                        {
+                            "text": "-",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.25585645,
+                                "centerY": 0.85732365,
+                                "width": 0.00859375,
+                                "height": 0.012626262,
+                                "rotation": 2.1363723E-4
+                            }
+                        },
+                        {
+                            "text": "нибудь",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.31718457,
+                                "centerY": 0.8573282,
+                                "width": 0.1,
+                                "height": 0.012626262,
+                                "rotation": 2.136372E-4
+                            }
+                        },
+                        {
+                            "text": "пальцем",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.44648147,
+                                "centerY": 0.85732895,
+                                "width": 0.11640625,
+                                "height": 0.012626262,
+                                "rotation": 2.1363722E-4
+                            }
+                        },
+                        {
+                            "text": "или",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.551169,
+                                "centerY": 0.8573255,
+                                "width": 0.04609375,
+                                "height": 0.012626262,
+                                "rotation": 2.136372E-4
+                            }
+                        },
+                        {
+                            "text": "нажмите",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.65390337,
+                                "centerY": 0.8573291,
+                                "width": 0.1171875,
+                                "height": 0.012626262,
+                                "rotation": 2.1363722E-4
+                            }
+                        },
+                        {
+                            "text": "на",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.7499971,
+                                "centerY": 0.85732484,
+                                "width": 0.03125,
+                                "height": 0.012626262,
+                                "rotation": 2.1363722E-4
+                            }
+                        },
+                        {
+                            "text": "точку",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.8273408,
+                                "centerY": 0.85732734,
+                                "width": 0.084375,
+                                "height": 0.012626262,
+                                "rotation": 2.136372E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.45585647,
+                        "centerY": 0.857364,
+                        "width": 0.82734376,
+                        "height": 0.012626262,
+                        "rotation": 2.136372E-4
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                },
+                {
+                    "text": "откроется поиск Google",
+                    "words": [
+                        {
+                            "text": "откроется",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.11680387,
+                                "centerY": 0.8740798,
+                                "width": 0.15078124,
+                                "height": 0.012265513,
+                                "rotation": -5.275209E-4
+                            }
+                        },
+                        {
+                            "text": "поиск",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.25586617,
+                                "centerY": 0.8739075,
+                                "width": 0.08359375,
+                                "height": 0.011904762,
+                                "rotation": -5.275209E-4
+                            }
+                        },
+                        {
+                            "text": "Google",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.36836618,
+                                "centerY": 0.8739055,
+                                "width": 0.10078125,
+                                "height": 0.011904762,
+                                "rotation": -5.275209E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.2300851,
+                        "centerY": 0.87405217,
+                        "width": 0.37734374,
+                        "height": 0.012265513,
+                        "rotation": -5.275209E-4
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                }
+            ],
+            "box": {
+                "centerX": 0.4554692,
+                "centerY": 0.8656179,
+                "width": 0.828125,
+                "height": 0.029220778,
+                "rotation": -1.3918993E-5
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": null
+        },
+        {
+            "text": "Вся картинка",
+            "lines": [
+                {
+                    "text": "Вся картинка",
+                    "words": [
+                        {
+                            "text": "Вся",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.10030979,
+                                "centerY": 0.954801,
+                                "width": 0.04921875,
+                                "height": 0.011183261,
+                                "rotation": 0.0066309096
+                            }
+                        },
+                        {
+                            "text": "картинка",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.21436875,
+                                "centerY": 0.955113,
+                                "width": 0.13515624,
+                                "height": 0.0115440115,
+                                "rotation": 0.0066309087
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.1788211,
+                        "centerY": 0.9548611,
+                        "width": 0.20625,
+                        "height": 0.0115440115,
+                        "rotation": 0.006630909
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                }
+            ],
+            "box": {
+                "centerX": 0.1788211,
+                "centerY": 0.9548611,
+                "width": 0.20625,
+                "height": 0.0115440115,
+                "rotation": 0.006630909
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": null
+        },
+        {
+            "text": "Спросить Ии",
+            "lines": [
+                {
+                    "text": "Спросить Ии",
+                    "words": [
+                        {
+                            "text": "Спросить",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.47187933,
+                                "centerY": 0.9545353,
+                                "width": 0.134375,
+                                "height": 0.012265513,
+                                "rotation": -3.2672563E-4
+                            }
+                        },
+                        {
+                            "text": "Ии",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.5777386,
+                                "centerY": 0.95436263,
+                                "width": 0.03203125,
+                                "height": 0.011904762,
+                                "rotation": -3.267256E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.49922308,
+                        "centerY": 0.9545312,
+                        "width": 0.1890625,
+                        "height": 0.012265513,
+                        "rotation": -3.2672563E-4
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                }
+            ],
+            "box": {
+                "centerX": 0.49922308,
+                "centerY": 0.9545312,
+                "width": 0.1890625,
+                "height": 0.012265513,
+                "rotation": -3.2672563E-4
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": null
+        },
+        {
+            "text": "Весь текст",
+            "lines": [
+                {
+                    "text": "Весь текст",
+                    "words": [
+                        {
+                            "text": "Весь",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.76483595,
+                                "centerY": 0.953655,
+                                "width": 0.0671875,
+                                "height": 0.0097402595,
+                                "rotation": 7.4173947E-4
+                            }
+                        },
+                        {
+                            "text": "текст",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8624922,
+                                "centerY": 0.95365804,
+                                "width": 0.084375,
+                                "height": 0.0097402595,
+                                "rotation": 7.4173947E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.8179609,
+                        "centerY": 0.95367324,
+                        "width": 0.1734375,
+                        "height": 0.0097402595,
+                        "rotation": 7.417395E-4
+                    },
+                    "translation": null,
+                    "translationStyle": null
+                }
+            ],
+            "box": {
+                "centerX": 0.8179609,
+                "centerY": 0.95367324,
+                "width": 0.1734375,
+                "height": 0.0097402595,
+                "rotation": 7.417395E-4
+            },
+            "language": null,
+            "writingDirection": "LeftToRight",
+            "translation": null
+        }
+    ],
+    "language": "ru",
+    "imageWidth": 1280,
+    "imageHeight": 2772
+}

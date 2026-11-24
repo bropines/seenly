@@ -27,7 +27,9 @@ import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import kotlinx.serialization.json.Json
 import kotlin.math.PI
+import kotlin.math.roundToInt
 import kotlin.test.Test
 
 /** The image formats a platform has to be able to write for these tests. */
@@ -59,6 +61,9 @@ abstract class RenderContract {
 
     /** Keeps a rendered sheet for a human to look at. */
     protected abstract fun saveSheet(name: String, png: ByteArray)
+
+    /** A file from `src/commonTest/resources/fixtures`. */
+    protected abstract fun readFixture(name: String): ByteArray
 
     private fun solid(width: Int, height: Int, argb: Int): ImageBitmap =
         imageBitmapFromArgb(IntArray(width * height) { argb }, width, height)
@@ -293,7 +298,7 @@ abstract class RenderContract {
     @Test
     fun `reflow sets the paragraph as one block at one size, no larger than the source`() {
         if (!hasFonts) return
-        val block = scene(threeLines(), OverlayStyle(layout = TranslationLayout.Reflow)).texts.single()
+        val block = scene(threeLines(), reflow).texts.single()
         (block.fill.lineCount > 1) shouldBe true
         // 130px of paragraph height, 300px of width, and 30px source lines.
         (block.fill.size.height <= 130) shouldBe true
@@ -306,9 +311,51 @@ abstract class RenderContract {
     fun `the readable floor and the text scale override the fit`() {
         if (!hasFonts) return
         val fitted = scene(threeLines(), OverlayStyle()).texts.map { it.fontSize }
-        scene(threeLines(), OverlayStyle(), minFontPx = 40f).texts.map { it.fontSize } shouldBe listOf(40f, 40f, 40f)
+        val lineByLine = OverlayStyle(reflowWhenCrowded = false)
+        val floored = scene(threeLines(), lineByLine, minFontPx = 40f).texts
+        floored.drop(1).map { it.fontSize } shouldBe listOf(40f, 40f)
+        // The long first line would be wider than the 400px picture at 40px:
+        // the floor gives way to the picture, never below the fit.
+        floored[0].fill.size.width shouldBeLessThan 400
+        (floored[0].fontSize in fitted[0]..40f) shouldBe true
         scene(threeLines(), OverlayStyle(textScale = 0.5f)).texts.map { it.fontSize } shouldBe
             fitted.map { maxOf(MIN_FONT_PX, it * 0.5f) }
+    }
+
+    @Test
+    fun `a line raised past its box gets a background sized to the text, inside the image`() {
+        if (!hasFonts) return
+        // One 300x30 line at the left edge of a 400x200 image, floored at 40px.
+        val box = Box(0.375f, 0.5f, 0.75f, 0.15f, 0f)
+        val result = ScanResult(
+            listOf(paragraph(box, listOf(line(box, "Several words here", LineStyle(black, yellow, null))))),
+            "ja", 400, 200,
+        )
+        val scene = scene(result, OverlayStyle(), minFontPx = 40f)
+        val text = scene.texts.single()
+        text.fontSize shouldBe 40f
+        val grown = scene.erases.filterIsInstance<RectFillOp>().map { it.box }.maxBy { it.width }
+        // Measured, not scaled by 40 / fitted: the text plus a little air, and
+        // capped at the image.
+        (grown.width <= 400f) shouldBe true
+        (grown.width >= minOf(400f, text.fill.size.width.toFloat())) shouldBe true
+        // Nudged back in: nothing hangs off either side.
+        (grown.frame.left >= -0.5f && grown.frame.right <= 400.5f) shouldBe true
+    }
+
+    @Test
+    fun `a column of short lines that the floor would crowd is re-wrapped as one paragraph`() {
+        if (!hasFonts) return
+        // Raised to 40px, three lines 50px apart would be written through each other.
+        val texts = scene(threeLines(), OverlayStyle(), minFontPx = 40f).texts
+        texts.all { it.paragraph == 0 } shouldBe true
+        // Every drawn line is clear of the next.
+        val spans = texts.flatMap { op ->
+            (0 until op.fill.lineCount).map { op.topLeft.y + op.fill.getLineTop(it) to op.topLeft.y + op.fill.getLineBottom(it) }
+        }.sortedBy { it.first }
+        spans.zipWithNext().all { (a, b) -> b.first >= a.second - 1f } shouldBe true
+        // Without a floor it is Chromium's layout, untouched.
+        scene(threeLines(), OverlayStyle()).texts.size shouldBe 3
     }
 
     @Test
@@ -370,7 +417,8 @@ abstract class RenderContract {
         return (0 until fill.lineCount).map { text.substring(fill.getLineStart(it), fill.getLineEnd(it)).trim() }
     }
 
-    private val reflow = OverlayStyle(layout = TranslationLayout.Reflow)
+    // The rectangle: these test wrapping, not the bubble's shape.
+    private val reflow = OverlayStyle(layout = TranslationLayout.Reflow, bubbleShape = false)
 
     @Test
     fun `reflow wraps a long word whole, shrinking the text until it fits`() {
@@ -416,7 +464,7 @@ abstract class RenderContract {
     fun `text without spaces between words wraps anywhere, unhyphenated`() {
         if (!hasFonts) return
         val text = "ここまで来られるとは思わなかった"
-        val horizontal = OverlayStyle(layout = TranslationLayout.Reflow, verticalText = VerticalTextPolicy.Horizontal)
+        val horizontal = OverlayStyle(layout = TranslationLayout.Reflow, verticalText = VerticalTextPolicy.Horizontal, bubbleShape = false)
         val block = scene(narrow(text, width = 90f), horizontal).texts.single()
         (block.fill.lineCount >= 2) shouldBe true
         block.lines().joinToString("") shouldBe text
@@ -449,14 +497,16 @@ abstract class RenderContract {
         val neighbour = Box(0.525f, 0.35f, 0.09f, 0.15f, 0f).toPixels(400f, 400f).bounds()
         for (style in listOf(OverlayStyle.Manga, OverlayStyle(layout = TranslationLayout.Reflow), OverlayStyle())) {
             val scene = scene(bubbleWithUntranslatedNeighbour(), style)
-            val block = scene.texts.single()
-            block.paragraph shouldBe 0
-            val text = Rect(block.topLeft, Size(block.fill.size.width.toFloat(), block.fill.size.height.toFloat()))
-            text.overlaps(neighbour) shouldBe false
+            scene.texts.isEmpty() shouldBe false
+            for (block in scene.texts) {
+                block.paragraph shouldBe 0
+                val text = Rect(block.topLeft, Size(block.fill.size.width.toFloat(), block.fill.size.height.toFloat()))
+                text.overlaps(neighbour) shouldBe false
+            }
         }
         // It still grows where there is room: to the left, away from the neighbour.
-        val grown = scene(bubbleWithUntranslatedNeighbour(), OverlayStyle.Manga).texts.single()
-        (grown.topLeft.x < 120f) shouldBe true
+        val grown = scene(bubbleWithUntranslatedNeighbour(), OverlayStyle.Manga).texts
+        (grown.minOf { it.topLeft.x } < 120f) shouldBe true
     }
 
     @Test
@@ -590,5 +640,122 @@ abstract class RenderContract {
             drawTextMode(result, width.toFloat(), height.toFloat(), OverlayStyle().highlightColor, dp = 1f, selection = selected)
         }
         saveSheet("5-text-boxes", boxes.encode(TestFormat.Png))
+    }
+
+    // ---- real pages ------------------------------------------------------------
+
+    private val json = Json { ignoreUnknownKeys = true }
+
+    private fun fixture(name: String): ScanResult =
+        json.decodeFromString(ScanResult.serializer(), readFixture("$name.json").decodeToString())
+
+    /**
+     * The readable floor in image pixels for [image] shown fitted in a phone's
+     * 392 x 760 dp viewer, as [TranslatedImage] computes it (sp == dp here).
+     */
+    private fun phoneFloor(image: ImageBitmap, style: OverlayStyle): Float {
+        val scale = minOf(392f / image.width, 760f / image.height)
+        return style.minFontSp / scale
+    }
+
+    /** Roughly what this renderer did before the userscript's techniques: no floor, no rescue, no shape. */
+    private fun before(style: OverlayStyle) = style.copy(minFontSp = 0f, reflowWhenCrowded = false, bubbleShape = false)
+
+    private class Page(val name: String, val image: String, val answer: String, val style: OverlayStyle)
+
+    private val pages = listOf(
+        Page("manga-chromium", "manga1.png", "manga1.ru", OverlayStyle.Chromium),
+        Page("manga-manga", "manga1.png", "manga1.ru", OverlayStyle.Manga),
+        Page("phone-ru-chromium", "tall1.jpg", "tall1.ru", OverlayStyle.Chromium),
+        Page("phone-ru-manga", "tall1.jpg", "tall1.ru", OverlayStyle.Manga),
+        Page("phone-en-chromium", "tall1.jpg", "tall1.en", OverlayStyle.Chromium),
+        Page("ui-en-chromium", "s1.jpg", "s1.en", OverlayStyle.Chromium),
+    )
+
+    /**
+     * Pixels inked by two paragraphs at once: every paragraph's text is drawn
+     * alone, and a pixel any two of those drawings touch is counted. Ink is
+     * fill and outline both.
+     */
+    private fun overlap(scene: OverlayScene): Int {
+        val w = scene.imageWidth
+        val h = scene.imageHeight
+        val owners = IntArray(w * h) { -1 }
+        val pixels = IntArray(w * h)
+        var shared = 0
+        for ((paragraph, ops) in scene.texts.groupBy { it.paragraph }) {
+            val canvas = ImageBitmap(w, h)
+            val alone = OverlayScene(scene.source, w, h, emptyList(), ops)
+            CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(canvas), Size(w.toFloat(), h.toFloat())) {
+                drawOverlayScene(alone)
+            }
+            canvas.readPixels(pixels)
+            for (i in pixels.indices) {
+                if ((pixels[i] ushr 24) < 64) continue
+                val owner = owners[i]
+                if (owner == -1) owners[i] = paragraph else if (owner != paragraph) shared++
+            }
+        }
+        return shared
+    }
+
+    @Test
+    fun `real pages render, and their paragraphs are never written through each other`() {
+        if (!hasFonts) return
+        val report = StringBuilder()
+        for (page in pages) {
+            val image = decodeEncodedImage(readFixture(page.image))!!
+            val result = fixture(page.answer)
+            val state = blocking { decodeOverlay(result, fonts) }
+            for ((label, style) in listOf("before" to before(page.style), "after" to page.style)) {
+                val floor = phoneFloor(image, style)
+                val scene = buildOverlayScene(state, result, style, image, floor)
+                val shared = overlap(scene)
+                report.append("${page.name} $label: floor ${floor.roundToInt()}px, ${scene.texts.size} ops, overlap $shared\n")
+                val out = renderTranslatedBitmap(image, result, style, state, floor)
+                saveSheet("page-${page.name}-$label", out.encode(TestFormat.Png))
+                // The bubbles of a manga page stay apart, whichever preset draws them.
+                if (label == "after" && page.image == "manga1.png") shared shouldBe 0
+            }
+        }
+        println(report)
+    }
+
+    @Test
+    fun `text re-set in a drawn bubble follows its outline`() {
+        if (!hasFonts) return
+        // A white ellipse with a black outline on grey, x 100..300, y 60..340,
+        // and a column of three short lines in its middle.
+        val width = 400
+        val height = 400
+        val page = ImageBitmap(width, height)
+        CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(page), Size(width.toFloat(), height.toFloat())) {
+            drawRect(Color(0xFF808080))
+            drawOval(Color.White, Offset(100f, 60f), Size(200f, 280f))
+            drawOval(Color.Black, Offset(100f, 60f), Size(200f, 280f), style = Stroke(4f))
+        }
+        val boxes = listOf(170f, 200f, 230f).map { Box(0.5f, it / height, 60f / width, 24f / height, 0f) }
+        val lines = boxes.map { line(it, "x", LineStyle(black, white, null)) }
+        val text = "This is a rather long translation of a short line of speech"
+        val result = ScanResult(
+            listOf(paragraph(Box(0.5f, 0.5f, 60f / width, 84f / height, 0f), lines, text = text, alignment = TextAlignment.Center)),
+            "ja", width, height,
+        )
+        val state = blocking { decodeOverlay(result, fonts) }
+        val texts = buildOverlayScene(state, result, OverlayStyle(layout = TranslationLayout.Reflow), page, 0f).texts
+        // One op per line, every word kept, and each line inside the ellipse.
+        (texts.size >= 3) shouldBe true
+        texts.joinToString(" ") { it.fill.layoutInput.text.text } shouldBe text
+        for (op in texts) {
+            val top = op.topLeft.y
+            val bottom = top + op.fill.size.height
+            val mid = (top + bottom) / 2
+            val half = 100f * kotlin.math.sqrt(1f - ((mid - 200f) / 140f).let { it * it })
+            (op.topLeft.x >= 200f - half - 1f) shouldBe true
+            (op.topLeft.x + op.fill.multiParagraph.maxIntrinsicWidth <= 200f + half + 1f) shouldBe true
+        }
+        // Larger than the same text forced into the 60px paragraph box.
+        val boxed = scene(result, OverlayStyle(layout = TranslationLayout.Reflow, bubbleShape = false)).texts.single()
+        (texts.first().fontSize > boxed.fontSize) shouldBe true
     }
 }

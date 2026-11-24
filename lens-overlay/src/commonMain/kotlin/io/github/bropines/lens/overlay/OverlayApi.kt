@@ -88,10 +88,13 @@ public data class OverlayStyle(
     /**
      * Smallest text size, in sp as displayed with the image fitted to the
      * view. Lens fits text to the source line, so fine print on a large page
-     * can come back a few pixels tall. Raising it lets text leave its box, so
-     * lines may overlap: `0` (the default) turns the floor off.
+     * comes back a few pixels tall once the page is shown on a phone: this is
+     * the single biggest difference to legibility. A line raised past its box
+     * gets a background sized to the measured text; lines that would then be
+     * written through each other are re-wrapped instead ([reflowWhenCrowded]).
+     * `0` turns the floor off.
      */
-    val minFontSp: Float = 0f,
+    val minFontSp: Float = 12f,
     /** Multiplier on every fitted text size; below `1` leaves more air around the text. */
     val textScale: Float = 1f,
     val verticalText: VerticalTextPolicy = VerticalTextPolicy.Auto,
@@ -108,6 +111,21 @@ public data class OverlayStyle(
     val reflowGrowth: Float = 1f,
     /** [EraseMode.Fill] only: how far the fill reaches past the text, in line thicknesses. */
     val fillPadding: Float = 0.3f,
+    /**
+     * [TranslationLayout.Chromium] only: re-wrap a paragraph into one block
+     * when setting it line by line would go wrong at the readable-size floor:
+     * a bubble's column of short centred lines that only reaches the floor by
+     * leaving its boxes, or any paragraph whose raised lines would overlap.
+     * Without a floor nothing is raised and this changes nothing.
+     */
+    val reflowWhenCrowded: Boolean = true,
+    /**
+     * Re-wrapped text follows the bubble it stands in, read from the picture's
+     * own pixels: each line as wide as the bubble is there. When no outline is
+     * found, a paragraph known to be a bubble gets an ellipse and anything
+     * else its rectangle.
+     */
+    val bubbleShape: Boolean = true,
     /**
      * The colour of text mode ([OverlayMode.TextBoxes]): a faint tint on every
      * line, a stronger one on the selection, and the selection handles at full
@@ -127,7 +145,8 @@ public data class OverlayStyle(
             layout = TranslationLayout.Reflow,
             erase = EraseMode.Fill,
             outline = 2f,
-            minFontSp = 9f,
+            // Manga is read at a glance; a floor fine for a shop sign is not.
+            minFontSp = 14f,
             verticalText = VerticalTextPolicy.Horizontal,
             alignment = TextAlignment.Center,
             reflowGrowth = 1.45f,

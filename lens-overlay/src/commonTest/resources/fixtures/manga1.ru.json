@@ -1,0 +1,617 @@
+{
+    "paragraphs": [
+        {
+            "text": "よく行く\n店だから\n油断した･･･",
+            "lines": [
+                {
+                    "text": "よく行く",
+                    "words": [
+                        {
+                            "text": "よく",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8673211,
+                                "centerY": 0.21038574,
+                                "width": 0.035643563,
+                                "height": 0.12021858,
+                                "rotation": 1.3102751E-4
+                            }
+                        },
+                        {
+                            "text": "行く",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8673212,
+                                "centerY": 0.32650596,
+                                "width": 0.035643563,
+                                "height": 0.117486335,
+                                "rotation": 1.3102751E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.86731553,
+                        "centerY": 0.26776278,
+                        "width": 0.035643563,
+                        "height": 0.23497267,
+                        "rotation": 1.3102751E-4
+                    },
+                    "translation": "Я расслабилась, потому ",
+                    "translationStyle": {
+                        "textColor": -12698050,
+                        "backgroundColor": -65794,
+                        "background": {
+                            "image": "UklGRhQBAABXRUJQVlA4WAoAAAAQAAAAGgAAXQAAQUxQSHgAAAABDzD/ERHCUWzbbXM1bhSyC5EGLYYmKIKQHrm+hWoYRPR/Ash3Dbhj7B7IZDW4LJvl1bDLoEgzFpE4SY0PFuFfwi/i4HNYy24xr4Y1g4gXrMJKQ+qeWKXBF7kK2+CkP1ipIdgFvsp6xSqQyeMuIi5isDKMCYLdAABWUDggdgAAANAEAJ0BKhsAXgA+MRiLRCIhoRFUACADBLS1/wAErZqSf1TlnouKvYdk7Zv3CZAAAP7+S47ADE6OlXkD7gBBhyfrxbw8BckMZCMVGi1jVfoWB62ly8qJ6tY+CZzMX4qhGhCLrisf/cJ0HO06453G8Uv6WQgAAAA=",
+                            "format": "Webp",
+                            "width": 27,
+                            "height": 94,
+                            "verticalPadding": 0.093023255,
+                            "horizontalPadding": 0.10465116
+                        }
+                    }
+                },
+                {
+                    "text": "店だから",
+                    "words": [
+                        {
+                            "text": "店",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8188065,
+                                "centerY": 0.18306613,
+                                "width": 0.04158416,
+                                "height": 0.07103825,
+                                "rotation": 2.098571E-4
+                            }
+                        },
+                        {
+                            "text": "だ",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8188077,
+                                "centerY": 0.24044318,
+                                "width": 0.04158416,
+                                "height": 0.05464481,
+                                "rotation": 2.098571E-4
+                            }
+                        },
+                        {
+                            "text": "から",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.81880295,
+                                "centerY": 0.329241,
+                                "width": 0.04158416,
+                                "height": 0.117486335,
+                                "rotation": 2.098571E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.8187936,
+                        "centerY": 0.26776558,
+                        "width": 0.04158416,
+                        "height": 0.24043716,
+                        "rotation": 2.098571E-4
+                    },
+                    "translation": "что это магазин, ",
+                    "translationStyle": {
+                        "textColor": -12763843,
+                        "backgroundColor": -1,
+                        "background": {
+                            "image": "UklGRgABAABXRUJQVlA4WAoAAAAQAAAAHwAAYAAAQUxQSIIAAAABDzD/ERHCUW1brfPSh0h4NpghjcioQjJExh+iIL2HxUn5XUFE/ydA2k2HgSRGJRkn4P82FYuKoswVoFWPPvgHuG1bvpazoDZjbEalu7QfyIFBOKOBEh/AxTr+L9SK4A9l7gD6F0HlLzFokBuopIrcKNV6YEoOGAnMJDCQOQORndQHVlA4IFgAAADwAwCdASogAGEAPjEYi0QiIaERJAAgAwS0gAAIuSMtQd34IEGezvOgAP7+SxpIf6B3B5ki02z2FC0ofRkxL2ug8aSMvWUvlrXMrbWuSsgmEnlXi9UsAAAA",
+                            "format": "Webp",
+                            "width": 32,
+                            "height": 97,
+                            "verticalPadding": 0.10227273,
+                            "horizontalPadding": 0.125
+                        }
+                    }
+                },
+                {
+                    "text": "油断した･･･",
+                    "words": [
+                        {
+                            "text": "油断",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.7663117,
+                                "centerY": 0.21312885,
+                                "width": 0.035643563,
+                                "height": 0.12021858,
+                                "rotation": 5.731123E-4
+                            }
+                        },
+                        {
+                            "text": "し",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.7663264,
+                                "centerY": 0.29509607,
+                                "width": 0.035643563,
+                                "height": 0.04918033,
+                                "rotation": 5.731123E-4
+                            }
+                        },
+                        {
+                            "text": "た",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.7663264,
+                                "centerY": 0.35520536,
+                                "width": 0.035643563,
+                                "height": 0.04918033,
+                                "rotation": 5.731123E-4
+                            }
+                        },
+                        {
+                            "text": "･･･",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.7663253,
+                                "centerY": 0.41531464,
+                                "width": 0.035643563,
+                                "height": 0.05464481,
+                                "rotation": 5.731123E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.7662765,
+                        "centerY": 0.2978283,
+                        "width": 0.035643563,
+                        "height": 0.28961748,
+                        "rotation": 5.731123E-4
+                    },
+                    "translation": "в который я часто хожу...",
+                    "translationStyle": {
+                        "textColor": -12763843,
+                        "backgroundColor": -131587,
+                        "background": {
+                            "image": "UklGRjIBAABXRUJQVlA4WAoAAAAQAAAAGgAAcQAAQUxQSHoAAAABDzD/ERHCcdtIjlTAmQ5jQ5nQbkPbUPp3336uaZzOjcFGENH/CVD7fNHMQwvIW+wcAbZ2eSUqOWQFi0o2eWUFy64Ac7DoeF4ck3P5o1cfdoLkokSiaGGS/8HGLBUHyyFrxcFmMMFFa5GishYpm9YixbAcEkXySVpMv1ZQOCCSAAAAkAQAnQEqGwByAD4xGItEIiGhEQQAIAMEtLZ5gANsvSQ4WaZxIL+4mxD7mKgAAP7+Pc1jNLU9n1ROC2ly4ksMVvv17XbkLINbuVCliCkU6Gxc9worRJcKq3nvScEKEqV/SYUCP6yyZ4GnX53j7l+yNrOAMcIWkMASnckRDwpllVK/QItJDEpzJj1P/+ApNQwAAAA=",
+                            "format": "Webp",
+                            "width": 27,
+                            "height": 114,
+                            "verticalPadding": 0.075471625,
+                            "horizontalPadding": 0.08490566
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.816799,
+                "centerY": 0.29511076,
+                "width": 0.13663366,
+                "height": 0.29508197,
+                "rotation": 3.0569767E-4
+            },
+            "language": null,
+            "writingDirection": "TopToBottom",
+            "translation": {
+                "text": "Я расслабилась, потому что это магазин, в который я часто хожу...",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "TopToBottom",
+                "alignment": "Center",
+                "justified": false
+            }
+        },
+        {
+            "text": "思えばあの店\n紹介してきたのも\nアイツだった",
+            "lines": [
+                {
+                    "text": "思えばあの店",
+                    "words": [
+                        {
+                            "text": "思え",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.35642177,
+                                "centerY": 0.20765938,
+                                "width": 0.03960396,
+                                "height": 0.114754096,
+                                "rotation": 3.3342777E-4
+                            }
+                        },
+                        {
+                            "text": "ば",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.35642937,
+                                "centerY": 0.2964572,
+                                "width": 0.03960396,
+                                "height": 0.05191257,
+                                "rotation": 3.3342777E-4
+                            }
+                        },
+                        {
+                            "text": "あの",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.3564221,
+                                "centerY": 0.39755008,
+                                "width": 0.03960396,
+                                "height": 0.112021856,
+                                "rotation": 3.3342777E-4
+                            }
+                        },
+                        {
+                            "text": "店",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.35642838,
+                                "centerY": 0.48088342,
+                                "width": 0.03960396,
+                                "height": 0.06010929,
+                                "rotation": 3.3342777E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.3563921,
+                        "centerY": 0.33061022,
+                        "width": 0.03960396,
+                        "height": 0.36065573,
+                        "rotation": 3.3342777E-4
+                    },
+                    "translation": "Теперь, когда я об ",
+                    "translationStyle": {
+                        "textColor": -12632257,
+                        "backgroundColor": -65794,
+                        "background": {
+                            "image": "UklGRrwBAABXRUJQVlA4WAoAAAAQAAAAHQAAiwAAQUxQSKgAAAABDzD/ERECViTZrpuVk7IOAVcdKI+SIVwAAvUACIITgPipeObjvneuH4OI/k+A8n+ygcAEtk9dm/5SPdgB/HWouzZ9ZfwAtofZ5sh8d2SuI/NNMH8O7lOzahNoF8wFVn02CbqqTOU92L95roBVAinmSn6a9OfS0SWYVSVzL5gXsB58MhuZlxHFwL2C+QvYETzXQ9fkTTZyP9JN5m2f4NdUgF9TX2CboTlWUDgg7gAAABAHAJ0BKh4AjAA+MRiJRCIhiHI8EAGCWlqkmsgAFor+CG5WhsDZq+WA2F64PKjSFL1+o/0d0wyE7S19ot8dEQAAAP7+QbiHuKu1ncFDKXPq5dJkJI1Ps0bqzsLzrBPqs8FABP270oA2pqPO1MiDNj62mu4SqUR1rQkLJmhxwICmhSOLYiHsCA4W4+dnwABXhopH6cfVUNQiSIy+JwpxetNtTCHD8NNO0Dhe/2QLtv0IpKv1qFzI4Tr4+sYElLbEpsKNLgjWqO5fWVv8fKDyKr01IMZOBfJWVR39z3BOYdLZVURvcYFjX5fPqyUAAAA=",
+                            "format": "Webp",
+                            "width": 30,
+                            "height": 140,
+                            "verticalPadding": 0.060606062,
+                            "horizontalPadding": 0.07575758
+                        }
+                    }
+                },
+                {
+                    "text": "紹介してきたのも",
+                    "words": [
+                        {
+                            "text": "紹介",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.3059283,
+                                "centerY": 0.21175611,
+                                "width": 0.037623763,
+                                "height": 0.117486335,
+                                "rotation": 2.8868663E-4
+                            }
+                        },
+                        {
+                            "text": "し",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.30593547,
+                                "centerY": 0.29508945,
+                                "width": 0.037623763,
+                                "height": 0.04918033,
+                                "rotation": 2.8868666E-4
+                            }
+                        },
+                        {
+                            "text": "て",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.3059363,
+                                "centerY": 0.35656488,
+                                "width": 0.037623763,
+                                "height": 0.040983606,
+                                "rotation": 2.8868666E-4
+                            }
+                        },
+                        {
+                            "text": "き",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.30593547,
+                                "centerY": 0.40984356,
+                                "width": 0.037623763,
+                                "height": 0.04918033,
+                                "rotation": 2.8868666E-4
+                            }
+                        },
+                        {
+                            "text": "た",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.30593574,
+                                "centerY": 0.46858674,
+                                "width": 0.037623763,
+                                "height": 0.04644809,
+                                "rotation": 2.8868666E-4
+                            }
+                        },
+                        {
+                            "text": "の",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.30593604,
+                                "centerY": 0.52459764,
+                                "width": 0.037623763,
+                                "height": 0.043715846,
+                                "rotation": 2.8868666E-4
+                            }
+                        },
+                        {
+                            "text": "も",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.30593488,
+                                "centerY": 0.58197474,
+                                "width": 0.037623763,
+                                "height": 0.05464481,
+                                "rotation": 2.8868666E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.30589285,
+                        "centerY": 0.381155,
+                        "width": 0.037623763,
+                        "height": 0.45628417,
+                        "rotation": 2.8868663E-4
+                    },
+                    "translation": "этом думаю, именно он мне ",
+                    "translationStyle": {
+                        "textColor": -12500671,
+                        "backgroundColor": -131587,
+                        "background": {
+                            "image": "UklGRigCAABXRUJQVlA4WAoAAAAQAAAAHAAArgAAQUxQSOAAAAABDzD/ERECcmzbbZuHoaQvRzTgUApLg8LeFSWUwhK4VIBxFwiUOojo/wSoGY+m09HrBL5INWudwOaav5n1nW42Ff/YBL41gy071fwJbIZhAhUncK0EQ+sEQ4RB+VPKJqXPJRlTxi9IFSt2MOzAf3elmvXNlVHFjk/t8FIOUqZwSjjNjVSRUpBykGDoe6654q3rOeO+wO0aqkkEKQcpBSkHiVE7RkVwEYYIdpchgkXwrV2PxZqL4CPYzfx0l9jYgVdxwinhlHEiaK6MlR2jRFCEIYL1CQZlXCUtkE5BOo0qAVZQOCAiAQAA0AYAnQEqHQCvAD4xGItEIiGhEMQAIAMEtLUhBq0gAAGJFVGE5wmuzgfD7MWjeTYT6ANxnLbJm85Pi2SirhMAAP7+OPq/xokylTXgHXBNpVBbPB0hJw8LcLuE9jeexRQuOjCj2YO2Jsi7Wg2diJvz+WcQz/f1FsnX6vcCbfQHvk0hbJR3iUIjd29/H1c7MlMZKdqmfXHsp+iSLDEdrGiKMlpQXVcfxvZb/L8v11Wb27RMSCNNQEBv2JW64QHOcJbiSz6PZGEwrFf9BjYD/EBtGo7ABJPmWCHBzhEQQZ62RKb1mDDMm2Od3rZ4i2W3oia8KG51iWeug2ywBWLIR0fPagc+/bFqdXLaKV2q+5G5rhf07rHZw6wXbJ2eWda8dAIAAAA=",
+                            "format": "Webp",
+                            "width": 29,
+                            "height": 175,
+                            "verticalPadding": 0.047904193,
+                            "horizontalPadding": 0.059880238
+                        }
+                    }
+                },
+                {
+                    "text": "アイツだった",
+                    "words": [
+                        {
+                            "text": "アイツ",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.25541598,
+                                "centerY": 0.24044982,
+                                "width": 0.035643563,
+                                "height": 0.15846995,
+                                "rotation": 5.1505544E-4
+                            }
+                        },
+                        {
+                            "text": "だっ",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.25542665,
+                                "centerY": 0.37842798,
+                                "width": 0.035643563,
+                                "height": 0.1010929,
+                                "rotation": 5.150554E-4
+                            }
+                        },
+                        {
+                            "text": "た",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.25543585,
+                                "centerY": 0.4685919,
+                                "width": 0.035643563,
+                                "height": 0.05191257,
+                                "rotation": 5.150554E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.25538334,
+                        "centerY": 0.32788152,
+                        "width": 0.035643563,
+                        "height": 0.33333334,
+                        "rotation": 5.1505544E-4
+                    },
+                    "translation": "порекомендовал этот магазин.",
+                    "translationStyle": {
+                        "textColor": -11842741,
+                        "backgroundColor": -131587,
+                        "background": {
+                            "image": "UklGRpgBAABXRUJQVlA4WAoAAAAQAAAAGgAAgQAAQUxQSKkAAAABDzD/ERECUm3tcZtPJ8O/DARDESUzkJiEinaFUUH4d/X8OshDGUT0P1Ru0pJMG1Zp/VIFc7ABbgNoWKJ6ovKBqTbdLh0UkrT8cQTKpKaQVInyg+6g0knDzncDQQu3CnbNwQa4DRD+epC2dBh3nbS9TRsm2gxW/+WXKlgBG85ChqCFkD8I/sXNwfpduaQF03Ba/6IyR94kDXDbmR8Opw5WwfzKLX8SVF4CAFZQOCDIAAAAkAYAnQEqGwCCAD4xGItEIiGhEOQAIAMEtLZWgAMSqnBUyPvnUrQIeW2ymRhOZiE+4VVuKKfcYvf5itpwAAD+/jkeGEuSR1jCEQrTDO7LpNNqmydrHf7iwDJPkyDNGNMaqVFgod05JSs4e8i4NQnBXVm5cBXYAL+YcqteC6mxG07qLSGnwK99e72mr+O77IvvGZRDjeY2lClrxV7R8vLU+T8KTC8wsA5Dro1fdCt7xGrMaHBUjQ4EhokrwJRvQl1rEr094ayAAAA=",
+                            "format": "Webp",
+                            "width": 27,
+                            "height": 130,
+                            "verticalPadding": 0.06557377,
+                            "horizontalPadding": 0.07377049
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.30687156,
+                "centerY": 0.3798154,
+                "width": 0.13861386,
+                "height": 0.45901638,
+                "rotation": 3.5538618E-4
+            },
+            "language": null,
+            "writingDirection": "TopToBottom",
+            "translation": {
+                "text": "Теперь, когда я об этом думаю, именно он мне порекомендовал этот магазин.",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "TopToBottom",
+                "alignment": "Start",
+                "justified": false
+            }
+        },
+        {
+            "text": "って事は\n最初から\n時間の問題",
+            "lines": [
+                {
+                    "text": "って事は",
+                    "words": [
+                        {
+                            "text": "って",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.23662192,
+                                "centerY": 0.6912654,
+                                "width": 0.037623763,
+                                "height": 0.09836066,
+                                "rotation": 3.296993E-4
+                            }
+                        },
+                        {
+                            "text": "事",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.23662649,
+                                "centerY": 0.76776814,
+                                "width": 0.037623763,
+                                "height": 0.06010929,
+                                "rotation": 3.2969934E-4
+                            }
+                        },
+                        {
+                            "text": "は",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.23662746,
+                                "centerY": 0.8237791,
+                                "width": 0.037623763,
+                                "height": 0.05191257,
+                                "rotation": 3.2969934E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.23660886,
+                        "centerY": 0.7459102,
+                        "width": 0.037623763,
+                        "height": 0.20765027,
+                        "rotation": 3.2969934E-4
+                    },
+                    "translation": "Это значит, что с ",
+                    "translationStyle": {
+                        "textColor": -11711155,
+                        "backgroundColor": -197380,
+                        "background": {
+                            "image": "UklGRnABAABXRUJQVlA4WAoAAAAQAAAAHAAAUwAAQUxQSI8AAAABDzD/ERECciRJiqRcpgENNkVZtfa3LciJQi3KwPfoSW0Tj0ERIvo/AerHjVSVUmWpelgRK+Giw1mH3ydlHVYvYVWUY1lkkwWU6apMUqaf1T1wuIN/RtKUTQJVIP30btIPvdWEb1aqWFUtZQVeJoKfwM/gtMj3SAWO4AAWHASbAKsAh3lxiTKCe9ViceggSQBWUDggugAAADAFAJ0BKh0AVAA+MRiKRCIhoRFUACADBLSAAAnYRq59tyjSweaF09nT7JDZjnbMPuAAAP7+OTHrL2BdQJYeUsinSSWSARETcgJ8mpYAgGOXJPJqOVY+tf5BUMeZZFNZVorIcOTDxouls1aEdoZSKQMgsx8IMV9OlcQohjK4CLVq6ZEV6R32aCadytnEkEVmxHPa4LzzFlsPli4EXxQzNJjKEgbCeCTBFQOn2qA3OlNhfZGMEQZzoAAAAA==",
+                            "format": "Webp",
+                            "width": 29,
+                            "height": 84,
+                            "verticalPadding": 0.10526316,
+                            "horizontalPadding": 0.13157895
+                        }
+                    }
+                },
+                {
+                    "text": "最初から",
+                    "words": [
+                        {
+                            "text": "最初",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.18514067,
+                                "centerY": 0.683065,
+                                "width": 0.037623763,
+                                "height": 0.114754096,
+                                "rotation": 1.8855178E-4
+                            }
+                        },
+                        {
+                            "text": "から",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.18514085,
+                                "centerY": 0.7991853,
+                                "width": 0.037623763,
+                                "height": 0.112021856,
+                                "rotation": 1.8855178E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.18513283,
+                        "centerY": 0.7404421,
+                        "width": 0.037623763,
+                        "height": 0.22950819,
+                        "rotation": 1.8855178E-4
+                    },
+                    "translation": "самого начала это ",
+                    "translationStyle": {
+                        "textColor": -11842741,
+                        "backgroundColor": -131587,
+                        "background": {
+                            "image": "UklGRjwBAABXRUJQVlA4WAoAAAAQAAAAHAAAWwAAQUxQSHAAAAABDzD/ERHCWW29baN0D50jCIISaBWAQAuULgA+fn88GUT0fwJkfOYocK1pZQdL4AmsyyuWwNsyWKq8wbfK3mOp5PMErEsEjgEW4E02xCvXAAlWCbwguaR5FaWNUmbRzHGDa1tUtOeosOj/JfpfRUUKVlA4IKYAAADwBACdASodAFwAPjEYikQiIaERVAAgAwS0gAAJ2E2QALGNQ9TYbk1gnaV61vjCdwAA/v5DJ4yQtNu98Y6fuJ8tiwj77WEW7sc5SPzlqTP0ltVUBG9NERy83dEEz/YzVex6jb+VEUgtrVkgML3KWNPuGf+5+hjVEXVgNdtnKnQe9pbu97138pZu1xQF1ua1vhuv2tOvnYoUGnxZEnTvGI4gVwtPAAAA",
+                            "format": "Webp",
+                            "width": 29,
+                            "height": 92,
+                            "verticalPadding": 0.09523801,
+                            "horizontalPadding": 0.11904762
+                        }
+                    }
+                },
+                {
+                    "text": "時間の問題",
+                    "words": [
+                        {
+                            "text": "時間の問題",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.13362265,
+                                "centerY": 0.7705022,
+                                "width": 0.037623763,
+                                "height": 0.27868852,
+                                "rotation": 4.0320255E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.13362265,
+                        "centerY": 0.7705022,
+                        "width": 0.037623763,
+                        "height": 0.27868852,
+                        "rotation": 4.0320255E-4
+                    },
+                    "translation": "был лишь вопрос времени.",
+                    "translationStyle": {
+                        "textColor": -12434878,
+                        "backgroundColor": -197380,
+                        "background": {
+                            "image": "UklGRl4BAABXRUJQVlA4WAoAAAAQAAAAHAAAbQAAQUxQSHQAAAABDzD/ERHCcSRJinPiZ5sw/vsg2J/cOD4XBBtXgiWBARH9n4Aq01dVNa/OzKsJdhNYF9KUxEemCCAP5kEOVIesBr11KdaB6qQOrAPF6pClXUK7NweKWOxSzIf0tge5kNUpKmI1KMuyFLGI3lzEg/2HGsyBAFZQOCDEAAAAkAUAnQEqHQBuAD4xGItEIiGhESQAIAMEtLVQAAQ7sWMAqjtuzEbO38zWPUvRFPErtoyqEAAA/v4mmAvamKzgZPFcXrpDCn8Qkx59mlaIO2xJrKoIHV6mUx5mHKYj/Csj0om2EunVoT+0h0vN7hnSXJMMBuSkNMMutE3Ej8zsMbbbfndaEOj4B4dywodVHqp8UOCgqEWU3OBGmZBoljC1ZizPvtD6LCpLlsT4c0qSVUIgBBZ7yMgKCK+JGr4DAUWYxmAAAA==",
+                            "format": "Webp",
+                            "width": 29,
+                            "height": 110,
+                            "verticalPadding": 0.0784313,
+                            "horizontalPadding": 0.09803922
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.18511705,
+                "centerY": 0.7677892,
+                "width": 0.14059407,
+                "height": 0.284153,
+                "rotation": 3.0562485E-4
+            },
+            "language": null,
+            "writingDirection": "TopToBottom",
+            "translation": {
+                "text": "Это значит, что с самого начала это был лишь вопрос времени.",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "TopToBottom",
+                "alignment": "Start",
+                "justified": true
+            }
+        }
+    ],
+    "language": "ja",
+    "imageWidth": 505,
+    "imageHeight": 366
+}

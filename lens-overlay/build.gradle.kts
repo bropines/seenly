@@ -27,6 +27,8 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotest.assertions)
+            // Real Lens answers, saved by the CLI, replayed as fixtures.
+            implementation(libs.kotlinx.serialization.json)
         }
         jvmTest.dependencies {
             // Skia's native library for this machine: the JVM tests decode

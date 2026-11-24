@@ -53,6 +53,16 @@ private fun baseLanguage(tag: String?): String = tag.orEmpty().substringBefore('
 /** Whether [languageTag] is written in a script that reads well in vertical columns. */
 internal fun isCjkLanguage(languageTag: String?): Boolean = baseLanguage(languageTag) in CJK_LANGUAGES
 
+private val UNSPACED_LANGUAGES = setOf("th", "lo", "my", "km")
+
+/**
+ * Whether re-wrapped text in [languageTag] may break between any two
+ * characters: CJK and the scripts written without spaces. A property of the
+ * language, never of the string: a short Russian word has no space either.
+ */
+internal fun wrapsPerCharacter(languageTag: String?): Boolean =
+    isCjkLanguage(languageTag) || baseLanguage(languageTag) in UNSPACED_LANGUAGES
+
 /** Whether [languageTag] is written right to left. */
 internal fun isRtlLanguage(languageTag: String?): Boolean = baseLanguage(languageTag) in RTL_LANGUAGES
 

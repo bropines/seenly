@@ -49,6 +49,8 @@ class SkiaRenderTest : RenderContract() {
 
     override fun <T> blocking(block: suspend () -> T): T = runBlocking { block() }
 
+    override fun readFixture(name: String): ByteArray = File("src/commonTest/resources/fixtures/$name").readBytes()
+
     override fun saveSheet(name: String, png: ByteArray) {
         File("build/overlay-gallery/skia").apply { mkdirs() }.resolve("$name.png").writeBytes(png)
     }
