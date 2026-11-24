@@ -106,7 +106,7 @@ class ScreenTranslateService : Service() {
             // Its windows (and screenshots) die with the service: nothing would be left on screen to stop with.
             scope.launch {
                 ScreenOverlayHost.service.first { it !== trusted }
-                Toast.makeText(this@ScreenTranslateService, "Спецвозможность Lens выключена — перевод экрана остановлен", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@ScreenTranslateService, "Спецвозможность Seenly выключена — перевод экрана остановлен", Toast.LENGTH_LONG).show()
                 stopSelf()
             }
         }

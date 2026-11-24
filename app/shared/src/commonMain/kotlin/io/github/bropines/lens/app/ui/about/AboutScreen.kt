@@ -58,7 +58,7 @@ fun AboutScreen(services: PlatformServices, onBack: () -> Unit) {
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Block(Icons.Rounded.Info, "Lens · версия $APP_VERSION") {
+            Block(Icons.Rounded.Info, "Seenly · версия $APP_VERSION") {
                 Text(
                     "Перевод и распознавание текста на картинках, скриншотах и фото с камеры. " +
                         "Открытый проект на Kotlin Multiplatform.",
@@ -81,7 +81,7 @@ fun AboutScreen(services: PlatformServices, onBack: () -> Unit) {
                 Text("• Результаты поиска открываются в вашем браузере, со своими cookies и настройками.")
                 Text("• История хранится только на этом устройстве; у приложения нет своих серверов и аналитики.")
                 Text(
-                    "• Служба спецвозможностей Lens (если вы её включили) не читает окна и не следит за действиями: " +
+                    "• Служба спецвозможностей Seenly (если вы её включили) не читает окна и не следит за действиями: " +
                         "она только рисует перевод экрана поверх других приложений.",
                 )
                 Text("• Не открывайте здесь то, чем не готовы поделиться с этими сервисами.")

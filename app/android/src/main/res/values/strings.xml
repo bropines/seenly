@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Lens</string>
-    <string name="share_label">Перевести в Lens</string>
+    <string name="app_name">Seenly</string>
+    <string name="share_label">Перевести в Seenly</string>
     <string name="accessibility_label">Перевод экрана без просвечивания</string>
     <string name="accessibility_summary">Непрозрачный перевод поверх других приложений</string>
     <string name="accessibility_description">Позволяет переводу экрана полностью закрывать исходный текст, а касаниям при этом проходить к приложению под ним. Служба не читает содержимое окон и не следит за действиями: она только рисует перевод, который вы сами запустили пузырём.</string>

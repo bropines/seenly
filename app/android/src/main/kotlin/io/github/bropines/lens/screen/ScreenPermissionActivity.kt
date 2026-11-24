@@ -97,7 +97,7 @@ class ScreenPermissionActivity : ComponentActivity() {
                 }
                 overlayAsked = true
                 awaitingOverlay = true
-                toast("Разрешите Lens показывать окна поверх других приложений")
+                toast("Разрешите Seenly показывать окна поверх других приложений")
                 val page = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
                 runCatching { overlaySettings.launch(page) }.onFailure {
                     // Some vendor builds only have the list of all apps.

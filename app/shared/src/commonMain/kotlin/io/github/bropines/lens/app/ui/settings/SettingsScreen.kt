@@ -113,7 +113,7 @@ fun SettingsScreen(
         if (file == null) return@rememberFilePickerLauncher
         scope.launch {
             val message = runCatching { repository.importJson(file.readString()) }
-                .fold({ "Настройки загружены" }, { if (it is IllegalArgumentException) "Это не файл настроек Lens" else "Не удалось прочитать: ${it.message}" })
+                .fold({ "Настройки загружены" }, { if (it is IllegalArgumentException) "Это не файл настроек Seenly" else "Не удалось прочитать: ${it.message}" })
             snackbar.showSnackbar(message)
         }
     }
@@ -191,7 +191,7 @@ fun SettingsScreen(
                         "Включено: перевод полностью закрывает оригинал"
                     } else {
                         "Выключено: в режимах «Авто» и «Область» оригинал просвечивает. " +
-                            "Включите «Lens» в спецвозможностях; если пункт серый — " +
+                            "Включите «Seenly» в спецвозможностях; если пункт серый — " +
                             "в сведениях о приложении разрешите ограниченные настройки"
                     },
                 ) { screen.openOpaqueSettings() }

@@ -11,7 +11,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "io.github.bropines.lens"
+        applicationId = "io.github.bropines.seenly"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1

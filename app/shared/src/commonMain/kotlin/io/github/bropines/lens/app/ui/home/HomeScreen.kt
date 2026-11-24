@@ -94,7 +94,7 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                title = { Text("Lens") },
+                title = { Text("Seenly") },
                 subtitle = { Text("Перевод с картинок") },
             )
         },

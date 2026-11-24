@@ -22,7 +22,7 @@ compose.desktop {
         mainClass = "io.github.bropines.lens.desktop.MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Dmg)
-            packageName = "Lens"
+            packageName = "Seenly"
             packageVersion = "0.1.0"
         }
     }

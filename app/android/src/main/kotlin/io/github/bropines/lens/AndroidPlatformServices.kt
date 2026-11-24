@@ -28,7 +28,7 @@ class AndroidPlatformServices(private val context: Context) : PlatformServices {
     override val dataDir: String = context.filesDir.absolutePath
 
     override fun copyText(text: String) {
-        context.getSystemService<ClipboardManager>()?.setPrimaryClip(ClipData.newPlainText("Lens", text))
+        context.getSystemService<ClipboardManager>()?.setPrimaryClip(ClipData.newPlainText("Seenly", text))
         // Android 13+ shows its own clipboard confirmation.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             Toast.makeText(context, "Скопировано", Toast.LENGTH_SHORT).show()

@@ -14,7 +14,7 @@ fun main() {
     application {
         Window(
             onCloseRequest = ::exitApplication,
-            title = "Lens",
+            title = "Seenly",
             state = rememberWindowState(width = 1100.dp, height = 800.dp),
         ) {
             LensApp(graph)
