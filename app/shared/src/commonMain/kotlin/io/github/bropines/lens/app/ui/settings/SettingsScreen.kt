@@ -200,21 +200,6 @@ fun SettingsScreen(
                     onOnDevice,
                 )
             }
-            if (accountState != null) {
-                Setting(
-                    Icons.Rounded.AccountCircle,
-                    stringResource(Res.string.account_title),
-                    stringResource(
-                        when {
-                            !accountState.connected -> Res.string.account_summary_none
-                            accountState.rejected -> Res.string.account_summary_rejected
-                            !settings.account.useForLens -> Res.string.account_summary_unused
-                            else -> Res.string.account_summary_connected
-                        },
-                    ),
-                    onAccount,
-                )
-            }
 
             Section(stringResource(Res.string.settings_section_overlay))
             Choice(Icons.Rounded.AutoAwesome, stringResource(Res.string.layout_auto), stringResource(Res.string.layout_auto_desc), settings.readingLayout == ReadingLayout.Auto) {
@@ -340,6 +325,26 @@ fun SettingsScreen(
             ) { on -> update { it.copy(amoled = on) } }
 
             if (updates != null) UpdateSettings(updates, settings) { transform -> update { it.copy(updates = transform(it.updates)) } }
+
+            // The Google account works as far as Seenly goes, but the Lens endpoint
+            // answers cookie-signed requests with 401: it wants Chrome's own OAuth
+            // token. Kept out of the way, and says so, until that changes.
+            if (accountState != null) {
+                Section(stringResource(Res.string.settings_section_experimental))
+                Setting(
+                    Icons.Rounded.AccountCircle,
+                    stringResource(Res.string.account_title),
+                    stringResource(
+                        when {
+                            !accountState.connected -> Res.string.account_summary_experimental
+                            accountState.rejected -> Res.string.account_summary_rejected
+                            !settings.account.useForLens -> Res.string.account_summary_unused
+                            else -> Res.string.account_summary_connected
+                        },
+                    ),
+                    onAccount,
+                )
+            }
 
             Section(stringResource(Res.string.settings_section_app))
             Setting(

@@ -110,6 +110,8 @@
     <string name="settings_ui_language">Язык приложения</string>
     <string name="ui_language_system">Системный</string>
     <string name="settings_section_app">Приложение</string>
+    <string name="settings_section_experimental">Экспериментальное</string>
+    <string name="account_summary_experimental">Lens пока его не принимает; запросы остаются анонимными</string>
     <string name="settings_export">Экспорт настроек</string>
     <string name="settings_export_desc">Все настройки и ключи переводчиков в файл .json. Ключи там открытым текстом — не делитесь файлом</string>
     <string name="settings_import">Импорт настроек</string>
@@ -380,7 +382,7 @@
     <string name="account_summary_connected">Аккаунт Google подключён</string>
     <string name="account_summary_rejected">Google отклонил сессию; запросы идут анонимно</string>
     <string name="account_summary_unused">Подключён, для Lens не используется</string>
-    <string name="account_intro">Необязательно. С подключённым аккаунтом запросы к Lens уходят от вашего имени: меньше ограничений, и Lens ведёт себя так же, как у вас в браузере. Cookies отправляются только в Google и только с этого устройства. Тот, у кого они есть, входит как вы, поэтому подключайте только аккаунт, которым пользовались бы здесь в браузере.</string>
+    <string name="account_intro">Экспериментально. Сейчас Lens отклоняет запросы с аккаунтом от всех приложений, кроме Chrome (ему нужен вход самого Chrome), поэтому с подключённым аккаунтом первый запрос отклоняется, а остальные уходят анонимно, как и без него. Оставлено на случай, если это изменится. Cookies отправляются только в Google и только с этого устройства. Тот, у кого они есть, входит как вы, поэтому подключайте только аккаунт, которым пользовались бы здесь в браузере.</string>
     <string name="account_storage_encrypted">Они хранятся зашифрованными ключом, который не покидает это устройство.</string>
     <string name="account_storage_plain">Они хранятся в файле в папке данных приложения, доступном вашей учётной записи.</string>
     <string name="account_never_used">Ещё не использовался</string>

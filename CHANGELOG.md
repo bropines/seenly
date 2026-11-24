@@ -12,6 +12,10 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 - AMOLED black: a pure black background in the dark theme.
 - Three line-by-line refinements in Settings → Style, each Auto, On or Off: one text size per paragraph, widening a line from its aligned edge instead of both sides, and setting body-text paragraphs as one block. Auto decides for each paragraph from its shape (line sizes, a common edge, line spacing).
 
+### Changed
+
+- The Google account moved to Settings → Experimental and says what is known: Lens refuses cookie-signed requests (HTTP 401, it wants Chrome's own sign-in), so requests stay anonymous either way.
+
 ### Fixed
 
 - Camera: the viewfinder showed a tighter frame than the photo it took; it now shows the whole 4:3 frame.

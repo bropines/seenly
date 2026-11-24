@@ -27,7 +27,7 @@ Seenly is an Android app (with a desktop build) written with Kotlin Multiplatfor
 - **Visual search**: circle something, or tap a dot Lens found, to search for it.
 - **Text translators** for typed and selected text: Google, Bing, Yandex, DeepL, LibreTranslate, OpenAI-compatible and more, in your order, with fail-over.
 - **Works offline** (the `google` build): recognition and translation on the device with Google ML Kit, as a fallback when Lens is unreachable or as the only mode.
-- **Optional Google account**: sign in, or import browser cookies, to send Lens requests signed in. The cookies stay encrypted on the device and go only to Google.
+- **Google account (experimental)**: sign in, or import browser cookies. Lens currently refuses cookie-signed requests from anything but Chrome, so requests stay anonymous; the option is kept for if that changes. The cookies stay encrypted on the device and go only to Google.
 - **Updates itself**: checks GitHub for a new release, verifies the download and shows what is new.
 - History, Material 3 Expressive design, light and dark themes, settings export and import.
 

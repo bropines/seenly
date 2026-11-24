@@ -111,6 +111,8 @@
     <string name="settings_ui_language">App language</string>
     <string name="ui_language_system">System</string>
     <string name="settings_section_app">App</string>
+    <string name="settings_section_experimental">Experimental</string>
+    <string name="account_summary_experimental">Lens doesn’t accept it yet; requests stay anonymous</string>
     <string name="settings_export">Export settings</string>
     <string name="settings_export_desc">All settings and translator keys to a .json file. The keys are in plain text — don’t share the file</string>
     <string name="settings_import">Import settings</string>
@@ -375,7 +377,7 @@
     <string name="account_summary_connected">Google account connected</string>
     <string name="account_summary_rejected">Google refused the session; requests are anonymous</string>
     <string name="account_summary_unused">Connected, not used for Lens</string>
-    <string name="account_intro">Optional. With your account connected, Lens requests go out signed in: fewer limits, and Lens behaves as it does for you. The cookies are sent only to Google, only from this device. Anyone holding them is signed in as you, so connect only an account you’d use in a browser here.</string>
+    <string name="account_intro">Experimental. Lens currently refuses signed-in requests from apps other than Chrome (it wants Chrome’s own sign-in), so with an account connected the first request is refused and the rest go out anonymously, as they do without one. Kept for if that changes. The cookies are sent only to Google, only from this device. Anyone holding them is signed in as you, so connect only an account you’d use in a browser here.</string>
     <string name="account_storage_encrypted">They are stored encrypted with a key that never leaves this device.</string>
     <string name="account_storage_plain">They are stored in a file in the app’s data folder, readable by your user account.</string>
     <string name="account_never_used">Not used yet</string>
