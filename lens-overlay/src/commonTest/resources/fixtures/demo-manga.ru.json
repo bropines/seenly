@@ -1,0 +1,818 @@
+{
+    "paragraphs": [
+        {
+            "text": "夏休み\n最初の日",
+            "lines": [
+                {
+                    "text": "夏休み",
+                    "words": [
+                        {
+                            "text": "夏休み",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.90908223,
+                                "centerY": 0.092106596,
+                                "width": 0.034,
+                                "height": 0.07876712,
+                                "rotation": -0.0014295847
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.90908223,
+                        "centerY": 0.092106596,
+                        "width": 0.034,
+                        "height": 0.07876712,
+                        "rotation": -0.0014295847
+                    },
+                    "translation": "первый день ",
+                    "translationStyle": {
+                        "textColor": -13684945,
+                        "backgroundColor": -1,
+                        "background": {
+                            "image": "UklGRtYAAABXRUJQVlA4WAoAAAAQAAAAGgAAQwAAQUxQSGoAAAABDzD/ERHCbW3bSnTfwsJf8m/tZ+NTgRagIX5wKCGi/xOg1TlYDtEqa8HOeN0WnfGq8crxqmFkNURzLUQ52OiK0xmnN4yshmgun7JF0R+i1xp7gV64ibDLFFjnF/xncrDt/qCAk+pIyk1jVlA4IEYAAAAwBACdASobAEQAPjEYi0QiIaERpAAgAwS0gAAMVR6pP+g3VVSCy/DIqAAA/v5TdeirFHtu2ei/s10VRfoSyRjCxbmAAAAA",
+                            "format": "Webp",
+                            "width": 27,
+                            "height": 68,
+                            "verticalPadding": 0.1282269,
+                            "horizontalPadding": 0.15091483
+                        }
+                    }
+                },
+                {
+                    "text": "最初の日",
+                    "words": [
+                        {
+                            "text": "最初",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.868024,
+                                "centerY": 0.0794452,
+                                "width": 0.03,
+                                "height": 0.04931507,
+                                "rotation": -6.6685554E-4
+                            }
+                        },
+                        {
+                            "text": "の",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8680073,
+                                "centerY": 0.12191095,
+                                "width": 0.03,
+                                "height": 0.015068493,
+                                "rotation": -6.6685554E-4
+                            }
+                        },
+                        {
+                            "text": "日",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8680093,
+                                "centerY": 0.14862329,
+                                "width": 0.03,
+                                "height": 0.019178081,
+                                "rotation": -6.6685554E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.86805034,
+                        "centerY": 0.106499985,
+                        "width": 0.03,
+                        "height": 0.10342466,
+                        "rotation": -6.6685554E-4
+                    },
+                    "translation": "летних каникул",
+                    "translationStyle": {
+                        "textColor": -13421773,
+                        "backgroundColor": -1,
+                        "background": {
+                            "image": "UklGRsgAAABXRUJQVlA4WAoAAAAQAAAAFwAAVQAAQUxQSFQAAAABDzD/ERGCUWS7bTQTAIYgKB+acgstMbEg+Jj+0yuBiP5PgBwGUe6MtJG4Y2e4ZE4JlUJrifGGPRfElaxeiYjUTEENohDtS4UIqjPJYVAP8IMMbxRWUDggTgAAAPADAJ0BKhgAVgA+MRiLRCIhoRFUACADBLSAAAn3U+PLOz7HeY9q9QAA/v5WODuohMMB8ScYrB1wofE+ndVqVfdwBQnv9dQWQ9uX8AAAAA==",
+                            "format": "Webp",
+                            "width": 24,
+                            "height": 86,
+                            "verticalPadding": 0.085859895,
+                            "horizontalPadding": 0.10363626
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.8895786,
+                "centerY": 0.10545392,
+                "width": 0.073,
+                "height": 0.10547945,
+                "rotation": -0.0010202052
+            },
+            "language": null,
+            "writingDirection": "TopToBottom",
+            "translation": {
+                "text": "первый день летних каникул",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "TopToBottom",
+                "alignment": "Start",
+                "justified": false
+            }
+        },
+        {
+            "text": "今日は本当に\nいい天気だね!",
+            "lines": [
+                {
+                    "text": "今日は本当に",
+                    "words": [
+                        {
+                            "text": "今日",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.72500974,
+                                "centerY": 0.10068213,
+                                "width": 0.036,
+                                "height": 0.05890411,
+                                "rotation": -2.269013E-4
+                            }
+                        },
+                        {
+                            "text": "は",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.72500384,
+                                "centerY": 0.14725748,
+                                "width": 0.036,
+                                "height": 0.02328767,
+                                "rotation": -2.2690132E-4
+                            }
+                        },
+                        {
+                            "text": "本当に",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.725014,
+                                "centerY": 0.20787391,
+                                "width": 0.036,
+                                "height": 0.084246576,
+                                "rotation": -2.269013E-4
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.7250296,
+                        "centerY": 0.16061364,
+                        "width": 0.036,
+                        "height": 0.17876713,
+                        "rotation": -2.269013E-4
+                    },
+                    "translation": "Сегодня ",
+                    "translationStyle": {
+                        "textColor": -15263977,
+                        "backgroundColor": -1,
+                        "background": {
+                            "image": "UklGRhIBAABXRUJQVlA4WAoAAAAQAAAAGwAAjgAAQUxQSJYAAAABDzD/ERECUiRJjqQsW30SQkMZaEttmGxB6OeItolHyxMAIvofkj6KxaR0K/mWCJqZ5JBtgVsaXuDmoFrLU1qmKlTfcvjP4ZC/JvnrWWEOJ4dbjq1TZREU4RTh1nc4OZgTNPMtpVvruGmBW+oulYMluP1M6aRiOclhzHIEW4Zicxl2MOnQbJJPSQ7Z2hHUO1Wc+l4HKQNWUDggVgAAABAEAJ0BKhwAjwA+MRiLRCIhoRDkACADBLSAAAbDXLWL9L9V0oZccmaQAP7+U3J7lLu/rkAyYX+KsNc4GUU9WikYt/Fn7MiTYG4i5X+ZLqWMlqTAAAAA",
+                            "format": "Webp",
+                            "width": 28,
+                            "height": 143,
+                            "verticalPadding": 0.0597761,
+                            "horizontalPadding": 0.069763504
+                        }
+                    }
+                },
+                {
+                    "text": "いい天気だね!",
+                    "words": [
+                        {
+                            "text": "いい",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.67200226,
+                                "centerY": 0.10102667,
+                                "width": 0.038,
+                                "height": 0.05410959,
+                                "rotation": -5.6459012E-5
+                            }
+                        },
+                        {
+                            "text": "天気",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.6720023,
+                                "centerY": 0.1636979,
+                                "width": 0.038,
+                                "height": 0.056164384,
+                                "rotation": -5.6459012E-5
+                            }
+                        },
+                        {
+                            "text": "だ",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.672001,
+                                "centerY": 0.20856091,
+                                "width": 0.038,
+                                "height": 0.023972603,
+                                "rotation": -5.6459015E-5
+                            }
+                        },
+                        {
+                            "text": "ね",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.67200106,
+                                "centerY": 0.23904036,
+                                "width": 0.038,
+                                "height": 0.024657534,
+                                "rotation": -5.6459015E-5
+                            }
+                        },
+                        {
+                            "text": "!",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.67200077,
+                                "centerY": 0.27123216,
+                                "width": 0.038,
+                                "height": 0.019178081,
+                                "rotation": -5.6459015E-5
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.6720086,
+                        "centerY": 0.17739654,
+                        "width": 0.038,
+                        "height": 0.20684932,
+                        "rotation": -5.6459012E-5
+                    },
+                    "translation": "прекрасная погода!",
+                    "translationStyle": {
+                        "textColor": -15132391,
+                        "backgroundColor": -1,
+                        "background": {
+                            "image": "UklGRlIBAABXRUJQVlA4WAoAAAAQAAAAHQAApgAAQUxQSMAAAAABDzD/ERECUm27jaTv00FLQRCUYtbVzNpQBEHLzm9CRQYR/Z8Ak/RvPkPK4R//Wt44zNjEgCdEX+KrDh3XFZNo0lcL06UcpJqg1Y2WNw4zlsNEJERf40tcHdOVg/Rt0luTCXaHWFdTXmDLclFB3Df4Rg13z7HsitTBOniCF/h9jd3hUIsSLCE6REHcV9VMgus7EXPFBl5g/xKsTx0SbJXPdbAOB9E0NUrQBIfaJWcKYruEEKN0kVQu3Ter3e67lAtWUDggbAAAABAFAJ0BKh4ApwA+MRiLRCIhoRDEACADBLSB2AAA2zorZYovhv5D57zcSUJ7Og0LwAAA/v5P1zekLD+NqH0Wh0X1eTFmMZLH13KmbfXojfR4Kb/WSurm5YkRUcNZ19jTcOqq9MA4IzgW3gAAAA==",
+                            "format": "Webp",
+                            "width": 30,
+                            "height": 167,
+                            "verticalPadding": 0.052811984,
+                            "horizontalPadding": 0.06311702
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.6980204,
+                "centerY": 0.1760233,
+                "width": 0.09,
+                "height": 0.20958903,
+                "rotation": -1.3318744E-4
+            },
+            "language": null,
+            "writingDirection": "TopToBottom",
+            "translation": {
+                "text": "Сегодня прекрасная погода!",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "TopToBottom",
+                "alignment": "Start",
+                "justified": false
+            }
+        },
+        {
+            "text": "お弁当なら、\nもう作ったよ!",
+            "lines": [
+                {
+                    "text": "お弁当なら、",
+                    "words": [
+                        {
+                            "text": "お",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.87202203,
+                                "centerY": 0.38526073,
+                                "width": 0.036,
+                                "height": 0.028082192,
+                                "rotation": -0.0010748518
+                            }
+                        },
+                        {
+                            "text": "弁当",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.87204623,
+                                "centerY": 0.4294388,
+                                "width": 0.036,
+                                "height": 0.05890411,
+                                "rotation": -0.0010748517
+                            }
+                        },
+                        {
+                            "text": "なら",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8720451,
+                                "centerY": 0.4924525,
+                                "width": 0.036,
+                                "height": 0.057534248,
+                                "rotation": -0.0010748517
+                            }
+                        },
+                        {
+                            "text": "、",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.8720064,
+                                "centerY": 0.537658,
+                                "width": 0.036,
+                                "height": 0.008219178,
+                                "rotation": -0.0010748518
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.8721338,
+                        "centerY": 0.45649356,
+                        "width": 0.036,
+                        "height": 0.17054795,
+                        "rotation": -0.0010748517
+                    },
+                    "translation": "Я уже сделала ",
+                    "translationStyle": {
+                        "textColor": -15395563,
+                        "backgroundColor": -1,
+                        "background": {
+                            "image": "UklGRkQBAABXRUJQVlA4WAoAAAAQAAAAGwAAhwAAQUxQSKQAAAABDzD/ERECVm3bcZuj5UF/NQRDCTQFWphUEN5n5tPBUlUGEf2fALhsR2yYPo4EnarmGFY1X3UaF5qqggXeCSygVE2hU2juu2p+9mxd+ao5LISnv3yeqP7yVxoTOg1Jv6qmOJrG4QucDsJC6BSax1TNoVNoakx9VSeOEs8NnBq549Ko7lRtpf87a+ItvAs8d3hODKwTXDNcd7ieGqUnCtTGeQd2AFZQOCB6AAAAkAUAnQEqHACIAD4xGItEIiGhEcQAIAMEtIAACnHy6ndaTKE8mHc//w+ae3Vj7tKoqg+pigAA/v+9wWVGOc+pmeFpTgS04tux4kkAVsDdLlGRhIAAJfPubKSm0n7EDkELXSfT2uL78LkkXOw56HfeFo+Y/B8VD/AAAAA=",
+                            "format": "Webp",
+                            "width": 28,
+                            "height": 136,
+                            "verticalPadding": 0.059315387,
+                            "horizontalPadding": 0.0731256
+                        }
+                    }
+                },
+                {
+                    "text": "もう作ったよ!",
+                    "words": [
+                        {
+                            "text": "もう",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8201401,
+                                "centerY": 0.39961895,
+                                "width": 0.034,
+                                "height": 0.05821918,
+                                "rotation": -0.003300189
+                            }
+                        },
+                        {
+                            "text": "作っ",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.82013357,
+                                "centerY": 0.45989293,
+                                "width": 0.034,
+                                "height": 0.055479452,
+                                "rotation": -0.003300189
+                            }
+                        },
+                        {
+                            "text": "た",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8200593,
+                                "centerY": 0.50749576,
+                                "width": 0.034,
+                                "height": 0.024657534,
+                                "rotation": -0.0033001893
+                            }
+                        },
+                        {
+                            "text": "よ",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8200544,
+                                "centerY": 0.5393451,
+                                "width": 0.034,
+                                "height": 0.022602739,
+                                "rotation": -0.0033001893
+                            }
+                        },
+                        {
+                            "text": "!",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.8200478,
+                                "centerY": 0.5694821,
+                                "width": 0.034,
+                                "height": 0.019863013,
+                                "rotation": -0.0033001893
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.82000315,
+                        "centerY": 0.47495988,
+                        "width": 0.035,
+                        "height": 0.2089041,
+                        "rotation": -0.003300189
+                    },
+                    "translation": "бенто-бокс!",
+                    "translationStyle": {
+                        "textColor": -14935012,
+                        "backgroundColor": -1,
+                        "background": {
+                            "image": "UklGRqABAABXRUJQVlA4WAoAAAAQAAAAGgAAogAAQUxQSMIAAAABDzD/ERECcmvbcZtLaPhLlqBS2JgBurSpgJQQdmAuMxB8C4lDCRH9nwABp1gdoS4cdeFbxpeMd+MhI8mTFElSy/U9JMcIVxFKAB2gMPBQIHXECQ9F+GnU0HU0jLs8D3nShZYkWW6UkWXsR1rShIO+x8czMXsogaRIklpu7CE56gVXEcoBxcMNqA50WviR75L7kZYulyWXGrnxM5RPHznOZWlYQ9Mid0WSIlk6uXlJ4rIsUIylGFYNP8WKwVidsbTKAlZQOCC4AAAAsAYAnQEqGwCjAD4xGIhEIiGIvgAQAYJaQATgDNwQWcmkI6zeDthc6g0b8zyJrRhzu0gqU6dymYKduUNzxQAA/q3/8PPbJv4cd66g4yD0V+fft2sP5mnNOTN/8ARP/g1oyp42UWXjfT33v9KBhH9U8P8IErpVwLJExACSaqIyebEOatyqjyl9e79KjsjnIjqUUXPM7TDuvi/hut+NZoCVz2kCzvdoKADMqL5d5ol+JaOyIIiHwAAAAA==",
+                            "format": "Webp",
+                            "width": 27,
+                            "height": 163,
+                            "verticalPadding": 0.047131147,
+                            "horizontalPadding": 0.058300793
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.8463483,
+                "centerY": 0.47493088,
+                "width": 0.088,
+                "height": 0.2089041,
+                "rotation": -0.0022844588
+            },
+            "language": null,
+            "writingDirection": "TopToBottom",
+            "translation": {
+                "text": "Я уже сделала бенто-бокс!",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "TopToBottom",
+                "alignment": "Center",
+                "justified": false
+            }
+        },
+        {
+            "text": "ねえ、一緒に\n海へ行こうか?",
+            "lines": [
+                {
+                    "text": "ねえ、一緒に",
+                    "words": [
+                        {
+                            "text": "ねえ",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.19129947,
+                                "centerY": 0.3980057,
+                                "width": 0.039,
+                                "height": 0.06027397,
+                                "rotation": 0.0045529404
+                            }
+                        },
+                        {
+                            "text": "、",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.19147477,
+                                "centerY": 0.44423887,
+                                "width": 0.039,
+                                "height": 0.0075342464,
+                                "rotation": 0.0045529404
+                            }
+                        },
+                        {
+                            "text": "一緒",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.19134273,
+                                "centerY": 0.49697837,
+                                "width": 0.039,
+                                "height": 0.047260273,
+                                "rotation": 0.0045529404
+                            }
+                        },
+                        {
+                            "text": "に",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.1904224,
+                                "centerY": 0.53841686,
+                                "width": 0.039,
+                                "height": 0.02328767,
+                                "rotation": 0.0045529404
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.19139425,
+                        "centerY": 0.4589655,
+                        "width": 0.04,
+                        "height": 0.18219177,
+                        "rotation": 0.0045529404
+                    },
+                    "translation": "Эй, может, сходим ",
+                    "translationStyle": {
+                        "textColor": -14342875,
+                        "backgroundColor": -1,
+                        "background": {
+                            "image": "UklGRjQBAABXRUJQVlA4WAoAAAAQAAAAHgAAkQAAQUxQSJUAAAABDzD/ERECbm3tbZuniPIfAWu4wyoewx0wmQ9GwQZus5+yGBaI6P8EAG8PvXL9vwF3dyrobjySZomheZquGQ3+A34L/Fb49danoLQZKmjqGldjklZM8JmYtmcYVxWGz/Q7TeCf9XaNoXlomSR3DaZPLzQrTXPXPLQ8lIeWyWIZXL1/BBWaG5qmpjFZaga3jJnqf6JyEwBWUDggeAAAANAEAJ0BKh8AkgA+MRiLRCIhoRGkACADBLSAAAtaloUHyCUF+/M48ncPkTf9JCvQAP7+UrsP2R9hrRe7KLO5bBCtS0QPh7dMjGLMMTH/G8jgj/U8evCS/SdZfAo3SbcO2RpOY8e9vfAut35Jt7rK9g7+tGARRQAAAA==",
+                            "format": "Webp",
+                            "width": 31,
+                            "height": 146,
+                            "verticalPadding": 0.06129582,
+                            "horizontalPadding": 0.07486619
+                        }
+                    }
+                },
+                {
+                    "text": "海へ行こうか?",
+                    "words": [
+                        {
+                            "text": "海",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.13844839,
+                                "centerY": 0.3835927,
+                                "width": 0.037,
+                                "height": 0.028767124,
+                                "rotation": 0.0024549018
+                            }
+                        },
+                        {
+                            "text": "へ",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.13847417,
+                                "centerY": 0.4140722,
+                                "width": 0.037,
+                                "height": 0.014383562,
+                                "rotation": 0.0024549018
+                            }
+                        },
+                        {
+                            "text": "行こ",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.13840297,
+                                "centerY": 0.45996252,
+                                "width": 0.037,
+                                "height": 0.05410959,
+                                "rotation": 0.0024549016
+                            }
+                        },
+                        {
+                            "text": "う",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.13845453,
+                                "centerY": 0.50722283,
+                                "width": 0.037,
+                                "height": 0.025342466,
+                                "rotation": 0.0024549018
+                            }
+                        },
+                        {
+                            "text": "か",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.1384582,
+                                "centerY": 0.53701735,
+                                "width": 0.037,
+                                "height": 0.02328767,
+                                "rotation": 0.0024549018
+                            }
+                        },
+                        {
+                            "text": "?",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.13845944,
+                                "centerY": 0.56886667,
+                                "width": 0.037,
+                                "height": 0.022602739,
+                                "rotation": 0.0024549018
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.13862188,
+                        "centerY": 0.4746892,
+                        "width": 0.038,
+                        "height": 0.2109589,
+                        "rotation": 0.0024549016
+                    },
+                    "translation": "вместе на пляж?",
+                    "translationStyle": {
+                        "textColor": -15000805,
+                        "backgroundColor": -1,
+                        "background": {
+                            "image": "UklGRn4BAABXRUJQVlA4WAoAAAAQAAAAHQAAqQAAQUxQSM8AAAABDzD/ERECbm3tbZuHo4CSI2AUbGZiNIyiaLcoHWi8gnGEiP5PwAjMMpBa5MvIU4ebpm1tz9A0z25HpKbDrtj0dEueoLNzitAHMFMdqcpNT01j0zS7rWVTzVOq6TvBbWVzN6Kprtz25LW2JzWn0+ymC+UwFD6AbsAdpw3dgFLMFCNFKP6fis7iNmbdE5Mn5t8Zvj1CKRrW2NcNVAPfG1gal1qCNsD3Nk9FY9XhtpT21T2xKkvjSqaYoCUWv0eYDHQDHtYNTAbaAksZWjrqtgQAVlA4IIgAAACwBQCdASoeAKoAPjEYi0QiIaEQxAAgAwS0gAAEy/5AR1gLQqDdNkJ0gsI1pweDQmJd3d9L3oAA/v1Q/qf/PafO9UFKCE7veCkdbFoIENGevADaAZ7/9vVCaaIz20yEd3WYOTWPMVoqr0GXIBMGq2tCxHEI8EqzNhJbuv2hlgS96HuDIhK+IAAA",
+                            "format": "Webp",
+                            "width": 30,
+                            "height": 170,
+                            "verticalPadding": 0.050819296,
+                            "horizontalPadding": 0.06188747
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.16546436,
+                "centerY": 0.4740808,
+                "width": 0.092,
+                "height": 0.21232876,
+                "rotation": 0.0034539676
+            },
+            "language": null,
+            "writingDirection": "TopToBottom",
+            "translation": {
+                "text": "Эй, может, сходим вместе на пляж?",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "TopToBottom",
+                "alignment": "Center",
+                "justified": false
+            }
+        },
+        {
+            "text": "ほら、急いで!\n電車が来るよ!",
+            "lines": [
+                {
+                    "text": "ほら、急いで!",
+                    "words": [
+                        {
+                            "text": "ほら",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8525669,
+                                "centerY": 0.7397074,
+                                "width": 0.035,
+                                "height": 0.05890411,
+                                "rotation": -0.0015558186
+                            }
+                        },
+                        {
+                            "text": "、",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.85250854,
+                                "centerY": 0.7845704,
+                                "width": 0.035,
+                                "height": 0.0075342464,
+                                "rotation": -0.0015558187
+                            }
+                        },
+                        {
+                            "text": "急い",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8525638,
+                                "centerY": 0.83011836,
+                                "width": 0.035,
+                                "height": 0.056164384,
+                                "rotation": -0.0015558186
+                            }
+                        },
+                        {
+                            "text": "で",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8525225,
+                                "centerY": 0.8797759,
+                                "width": 0.035,
+                                "height": 0.019863013,
+                                "rotation": -0.0015558187
+                            }
+                        },
+                        {
+                            "text": "!",
+                            "separator": " ",
+                            "box": {
+                                "centerX": 0.8525202,
+                                "centerY": 0.9102553,
+                                "width": 0.035,
+                                "height": 0.01780822,
+                                "rotation": -0.0015558187
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.85273725,
+                        "centerY": 0.8147072,
+                        "width": 0.035,
+                        "height": 0.2089041,
+                        "rotation": -0.0015558186
+                    },
+                    "translation": "Поторопитесь! Поезд ",
+                    "translationStyle": {
+                        "textColor": -15263977,
+                        "backgroundColor": -1,
+                        "background": {
+                            "image": "UklGRloBAABXRUJQVlA4WAoAAAAQAAAAGgAAogAAQUxQSLoAAAABDzD/ERECUm1bdaTDems1w5KAlEgj0uKgLCDhDfOhcwdAijiI6P8EwBqbLayxJGKR/lyKLoWBNfusMLA5LgVXwvUBGeuD2NkUKZ1EkUbhHSR6Ge4E1Zi8G9QINQ2WJ/ugNIkXM6yKbEoUJVyJqkyVJu0SLrFLYZesqdN2LVCM1iPsH9i/eaBR2L+yjnr+U9F/Q1GgCNbM0AEFpLA/sTl+y3gCd/6lZtgzeIayQDWoEe7X6jPr3XFWNQBWUDggegAAADAFAJ0BKhsAowA+MRiLRCIhoRF0ACADBLSAAAoz3yNL1PkbciOGR/T/CNN0KBWdp5wAAP7+VjYlB2/138dm1LayY+2q9z+b0pWyvQmFR0y6tOvRYwZ9fZHfnJlbYiw623isAhafTvkEgJl4skNdSnCWkBdNeZ62oAAA",
+                            "format": "Webp",
+                            "width": 27,
+                            "height": 163,
+                            "verticalPadding": 0.047131147,
+                            "horizontalPadding": 0.058300793
+                        }
+                    }
+                },
+                {
+                    "text": "電車が来るよ!",
+                    "words": [
+                        {
+                            "text": "電車",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.80111605,
+                                "centerY": 0.740374,
+                                "width": 0.038,
+                                "height": 0.056164384,
+                                "rotation": -0.0028325382
+                            }
+                        },
+                        {
+                            "text": "が",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8010495,
+                                "centerY": 0.7852371,
+                                "width": 0.038,
+                                "height": 0.023972603,
+                                "rotation": -0.0028325382
+                            }
+                        },
+                        {
+                            "text": "来る",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.8011104,
+                                "centerY": 0.8314699,
+                                "width": 0.038,
+                                "height": 0.053424656,
+                                "rotation": -0.0028325382
+                            }
+                        },
+                        {
+                            "text": "よ",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.80104524,
+                                "centerY": 0.87941515,
+                                "width": 0.038,
+                                "height": 0.021917809,
+                                "rotation": -0.0028325382
+                            }
+                        },
+                        {
+                            "text": "!",
+                            "separator": "",
+                            "box": {
+                                "centerX": 0.801041,
+                                "centerY": 0.9092097,
+                                "width": 0.038,
+                                "height": 0.019863013,
+                                "rotation": -0.0028325382
+                            }
+                        }
+                    ],
+                    "box": {
+                        "centerX": 0.80092764,
+                        "centerY": 0.8157152,
+                        "width": 0.039,
+                        "height": 0.20684932,
+                        "rotation": -0.0028325382
+                    },
+                    "translation": "приближается!",
+                    "translationStyle": {
+                        "textColor": -15790321,
+                        "backgroundColor": -1,
+                        "background": {
+                            "image": "UklGRoQBAABXRUJQVlA4WAoAAAAQAAAAHQAAogAAQUxQSKQAAAABDzD/ERECdiRJjpXeODGfY8KZ8kxDg1trypqAZpD1s+phQUT/A0lAApbG2w/wl+ZxWGApYBl8Xo9NkB7BHsHnCliG1C+wPILNK1wKTH8fpj+8/8jA+mW0FE7qHY1LPyaFKcNSwObjXO9aW+JhURwSJ11yMU1VIHWXfoblEpJqVX8XkiSFNS4FZ2ZQqVOBpZv6NyxySUf4pIdrCZf+bQmXhcsrE1ZQOCC6AAAAEAcAnQEqHgCjAD4xGIpDoiGhEuwEACADBLSACccgHwcMMD4TEikaljMYBiBnL9lPCdRNdCX5opFwgxb+qMgzE4AA/q3/qM2zfxMeAF8ssntHW87um1q853luUk1SpLM9/MB5WNlV/K41mIcLHL68yoki58YjygWvdmANPptur3WENkd6ZzshEkzgSBenycQmljGfZGvPzR+oK3dbajZClz7jL9+EVT42Ha0XQ1IH6uWPzbThNcwAAAAA",
+                            "format": "Webp",
+                            "width": 30,
+                            "height": 163,
+                            "verticalPadding": 0.052811984,
+                            "horizontalPadding": 0.06452938
+                        }
+                    }
+                }
+            ],
+            "box": {
+                "centerX": 0.8258393,
+                "centerY": 0.814658,
+                "width": 0.089,
+                "height": 0.2089041,
+                "rotation": -0.0022255376
+            },
+            "language": null,
+            "writingDirection": "TopToBottom",
+            "translation": {
+                "text": "Поторопитесь! Поезд приближается!",
+                "sourceLanguage": "ja",
+                "targetLanguage": "ru",
+                "writingDirection": "TopToBottom",
+                "alignment": "Start",
+                "justified": false
+            }
+        }
+    ],
+    "language": "ja",
+    "imageWidth": 1000,
+    "imageHeight": 1460
+}

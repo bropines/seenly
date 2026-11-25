@@ -133,30 +133,58 @@ public data class OverlayStyle(
      */
     val bubbleShape: Boolean = true,
     /**
-     * [TranslationLayout.Chromium] only: every line of a paragraph gets the
-     * same size, the largest at which all of them fit their boxes. Lens splits
-     * a paragraph's translation over its lines unevenly, so sizing each line
-     * alone makes the size jump from line to line. [LayoutChoice.Auto] does it
-     * where the source lines are one size and the fitted sizes still jump.
-     * Off is Chromium's behaviour.
+     * Text that was one size in the source is one size in the translation.
+     *
+     * Within a paragraph set line by line, every line gets the same size, the
+     * largest all of them have room for: Lens splits a paragraph's translation
+     * over its lines unevenly, so sizing each line alone makes the size jump
+     * from line to line. [LayoutChoice.Auto] does it where the source lines
+     * are one size, On for every paragraph.
+     *
+     * Across the page (Auto and On alike, in both layouts), paragraphs whose
+     * source type is one size and one colour are set at one size: bubbles
+     * with bubbles, text with text. One cramped paragraph keeps a smaller
+     * size of its own and does not set the page's. Nor does the readable
+     * floor raise small print past what was larger in the source.
+     *
+     * Off is Chromium's behaviour: every line and paragraph on its own.
      */
     val uniformParagraphSize: LayoutChoice = LayoutChoice.Off,
     /**
-     * [TranslationLayout.Chromium] only: where a line the readable-size floor
-     * makes wider than its box grows from. On: from where the line starts (the
-     * left for left-to-right text), keeping indents. Off: evenly to both sides,
-     * centred on the source line, as Chromium does. Auto: from the side the
-     * paragraph is aligned to, centred only for centred text.
+     * [TranslationLayout.Chromium] only: how a line that needs more room than
+     * its box is set.
+     *
+     * Off is Chromium's way: the line is shrunk to its box, and when the
+     * readable floor raises it again it grows evenly to both sides over
+     * whatever is there, on a background painted for it.
+     *
+     * On and Auto set each line at the size of the source's type and let it
+     * run on past its box only into room the picture shows to be empty: no
+     * other paragraph, nothing drawn, still inside the picture. It shrinks
+     * when there is no such room, and the readable floor raises it on the
+     * same terms, so lines are never written over each other or over an icon.
+     * On grows a line from where it starts (the left for left-to-right text),
+     * Auto from the side its paragraph is aligned to, and to both sides for
+     * centred text. Two lines that face each other across a gap share it.
      */
     val growFromLineStart: LayoutChoice = LayoutChoice.Off,
     /**
-     * [TranslationLayout.Chromium] only: a horizontal paragraph of
-     * [DENSE_PARAGRAPH_LINES] or more lines is set as one re-wrapped block in
-     * its box, as the reflow layout does, instead of line by line. Suits dense
-     * text (documents, screenshots, photos of screens), where Lens's split of
-     * the translation over the lines matters most. [LayoutChoice.Auto] does it
-     * for paragraphs that look like body text: lines of one size, a common
-     * starting edge, regular spacing.
+     * Running text is set as one re-wrapped block in its paragraph's box
+     * instead of line by line: at the size of the source's type, aligned as
+     * the source was, its first line (and its indent) where the source's was
+     * and the rest on the source's own lines. A translation that needs more
+     * lines runs on below where the page is empty, and is otherwise set a
+     * little smaller or leaded more tightly. Suits documents, screenshots and
+     * photos of screens, where Lens's split of the translation over the lines
+     * matters most.
+     *
+     * [LayoutChoice.Auto] does it for paragraphs that read as running text:
+     * lines of one size with a common starting edge and ordinary spacing,
+     * every line but the last full (the items of a list are not), and for
+     * pages of vertical prose. In [TranslationLayout.Reflow] such paragraphs
+     * are then not taken for bubbles. On does it, in
+     * [TranslationLayout.Chromium], for every horizontal paragraph of
+     * [DENSE_PARAGRAPH_LINES] or more lines.
      */
     val reflowDenseParagraphs: LayoutChoice = LayoutChoice.Off,
     /**
