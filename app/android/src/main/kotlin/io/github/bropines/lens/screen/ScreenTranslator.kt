@@ -1,11 +1,16 @@
 package io.github.bropines.lens.screen
 
+import android.app.ActivityManager
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.ComponentCallbacks2
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Point
 import android.graphics.Rect
+import android.os.Build
 import android.os.SystemClock
 import android.util.Log
 import android.view.WindowManager
@@ -17,6 +22,8 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import io.github.bropines.lens.app.data.AppSettings
+import io.github.bropines.lens.app.data.OnDevicePrefs
+import io.github.bropines.lens.app.data.OverlayPrefs
 import io.github.bropines.lens.app.data.ReadingLayout
 import io.github.bropines.lens.app.di.AppGraph
 import io.github.bropines.lens.app.ui.viewer.withPrefs
@@ -30,29 +37,33 @@ import io.github.bropines.lens.protocol.Raster
 import io.github.bropines.lens.protocol.ScanResult
 import io.github.bropines.lens.protocol.WritingDirection
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 /**
- * The screen translator's brain: owns the overlay windows, decides when a
- * frame is worth sending to Lens, and puts the answer on screen.
+ * The screen translator's hands: owns the overlay windows, takes frames,
+ * sends them to Lens and puts the answer on screen.
  *
+ * When a frame is worth sending, and when a translation has to come down, is
+ * decided by [LiveBrain] (live and area modes); this class carries it out.
  * Everything here runs on the main thread except the pixel work, which
  * [translate] moves off it. There is never more than one Lens request in
- * flight: the one-shot mode cancels its predecessor, and the live loop only
- * asks again once its request has finished or been cancelled and joined.
+ * flight: the one-shot mode cancels its predecessor, and the brain asks again
+ * only once its request has finished or been cancelled.
  */
 internal class ScreenTranslator(
     private val service: Context,
@@ -60,8 +71,10 @@ internal class ScreenTranslator(
     private val ui: Context,
     private val graph: AppGraph,
     private val capturer: FrameSource,
+    /** Whether the screen is on and unlocked: asked now and then while it was last known not to be. */
+    private val awake: () -> Boolean,
     private val stop: () -> Unit,
-) : BubbleView.Listener, AreaHandles.Listener, BubbleMenu.Listener {
+) : BubbleView.Listener, AreaHandles.Listener, BubbleMenu.Listener, LiveBrain.Shell {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val wm = ui.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val density = ui.resources.displayMetrics.density
@@ -74,43 +87,91 @@ internal class ScreenTranslator(
     private val menu = BubbleMenu(ui, wm, graph.settings, this)
 
     private var screen = Point(capturer.width, capturer.height)
+    private var bars = wm.barInsets(density)
     private var mode = prefs.mode
     private var settings = AppSettings()
     private var paused = false
     private var dragging = false
+    private var asleep = false
+    private var busy = false
     private var failed = false
     private var area = Rect()
+    /** Everywhere the bubble may be drawn while it rests: never read as part of the screen. */
+    private var lane = Rect()
     private var once: Job? = null
     /** Counts one-shot runs, so a cancelled one does not tidy up after its successor. */
     private var run = 0
     private var live: Job? = null
-    /**
-     * The last few views translated and what came of them, newest last: a view
-     * seen a moment ago is shown again from here, never sent to Lens twice.
-     * Bounded by count; each layer holds only the rectangle it changed.
-     */
-    private val recent = ArrayDeque<Cached>()
-    /** The current minimum time between two requests; grows while they come back to back. */
-    private var gap = MIN_GAP_MS
-
-    private fun remember(entry: Cached) {
-        recent.removeAll { it.settings == entry.settings && it.signature.diff(entry.signature) < CHANGED_CELLS }
-        recent.addLast(entry)
-        while (recent.size > RECENT) recent.removeFirst()
-    }
+    private var brain: LiveBrain? = null
+    /** Views translated lately, shared by all three modes: a screen translated by hand is known to "auto" too. */
+    private val memory = Memory(MEMORY_VIEWS, memoryBudget())
+    /** Rouses the live loop: a frame came, or something it watches changed. */
+    private val wake = Channel<Unit>(Channel.CONFLATED)
+    /** The live views being translated, by the brain's ticket: the work, the word to send it, what to show meanwhile. */
+    private val requests = HashMap<Int, Job>()
+    private val gates = HashMap<Int, CompletableDeferred<Unit>>()
+    private val previews = HashMap<Int, List<Piece>>()
+    /** What the last translation shown says, for the menu's "copy". */
+    private var texts: Texts? = null
     /** Until then our own windows may still be in the frames. */
     private var dirtyUntil = 0L
 
-    /** A translation ready to draw: [bitmap] (null when there was nothing to translate) goes over [rect]. */
-    private class Layer(val bitmap: Bitmap?, val rect: Rect)
+    private class Texts(val translation: String, val original: String)
 
-    private class Cached(val signature: Signature, val settings: AppSettings, val layer: Layer)
+    /** One band of a rendered translation, in the pixels of the frame it was made from. */
+    private class Tile(val bitmap: Bitmap, val left: Int, val top: Int)
+
+    /** A translation ready to draw, and what it takes to put it back after the page under it moves. */
+    private class Stored(
+        /** Where on screen the frame it was made from sits. */
+        val region: Rect,
+        val tiles: List<Tile>,
+        /** Of that frame, before anything was drawn on it. */
+        val print: RowPrint,
+        val texts: Texts,
+    ) {
+        val bytes: Long get() = tiles.sumOf { it.bitmap.allocationByteCount.toLong() }
+        val pieces: List<Piece> get() = tiles.map { Piece(it.bitmap, region.left + it.left, region.top + it.top) }
+        val islands: List<Island> get() = tiles.map { Island(it.top, it.top + it.bitmap.height) }
+    }
+
+    /** What a live request needs besides the frame. */
+    private class LiveJob(
+        val ticket: Int,
+        val brain: LiveBrain,
+        val grid: Signature,
+        /** The samples of [grid] that never hold still: text there is not worth drawing over. */
+        val restless: BooleanArray?,
+        /** Earlier translations of this part of the screen, newest first. */
+        val known: List<Stored>,
+    ) {
+        /** Completed when the frame may go to Lens: until then only the preview is made. */
+        val go = CompletableDeferred<Unit>()
+    }
+
+    /** What a translation depends on besides the picture. */
+    private data class LiveKey(
+        val target: String,
+        val source: String?,
+        val ocr: String,
+        val layout: ReadingLayout,
+        val overlay: OverlayPrefs,
+        val onDevice: OnDevicePrefs,
+    ) {
+        constructor(s: AppSettings) : this(s.targetLanguage, s.sourceLanguage, s.ocrLanguage, s.readingLayout, s.overlay, s.onDevice)
+    }
 
     init {
-        scope.launch { graph.settings.settings.collect { settings = it } }
+        scope.launch {
+            graph.settings.settings.collect {
+                settings = it
+                poke()
+            }
+        }
+        capturer.onFrame = { wake.trySend(Unit) }
         // Bottom to top: the translation, the area's grips, the bubble (the menu comes and goes above them).
         layer.attach(screen)
-        bubble.attach(screen, wm.barInsets(density))
+        bubble.attach(screen, bars)
         applyMode()
         if (!prefs.menuShown) {
             prefs.menuShown = true
@@ -119,6 +180,7 @@ internal class ScreenTranslator(
     }
 
     fun close() {
+        capturer.onFrame = null
         scope.cancel()
         menu.hide()
         handles.detach()
@@ -126,27 +188,64 @@ internal class ScreenTranslator(
         layer.detach()
     }
 
-    /** The display may have rotated or changed size. */
-    fun onDisplayChanged(dpi: Int) {
+    /** The display may have rotated or changed size, or its bars may have moved. Safe to call often. */
+    fun onDisplayChanged() {
         val size = wm.screenSize()
-        if (size == screen) return
+        if (size != screen) {
+            if (!capturer.eventDriven && capturer.continuous) {
+                // Screenshots come in the display's true size, whatever anyone says: the next one settles it.
+                capturer.hurry(SystemClock.uptimeMillis())
+            } else {
+                applyDisplay(size)
+            }
+            return
+        }
+        val insets = wm.barInsets(density)
+        if (insets != bars) {
+            bars = insets
+            bubble.attach(screen, insets)
+        }
+    }
+
+    private fun applyDisplay(size: Point) {
+        if (size == screen || size.x <= 0 || size.y <= 0) return
+        Log.d(TAG, "the display is now ${size.x}x${size.y}")
         screen = size
-        recent.clear()
+        bars = wm.barInsets(density)
+        memory.clear()
+        texts = null
         layer.clear()
-        capturer.resize(size.x, size.y, dpi)
+        capturer.resize(size.x, size.y, service.resources.configuration.densityDpi)
         layer.attach(size)
-        bubble.attach(size, wm.barInsets(density))
+        bubble.attach(size, bars)
         applyMode()
+    }
+
+    /** The screen went off or was locked ([on] false), or is back. */
+    fun onScreen(on: Boolean) {
+        asleep = !on
+        if (!on && mode == ScreenMode.Screen) once?.cancel()
+        poke()
+    }
+
+    /** The system is short of memory: keep only the translation on screen. */
+    fun onTrimMemory(level: Int) {
+        @Suppress("DEPRECATION")
+        if (level == ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN || level < ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) return
+        memory.trim(1)
+    }
+
+    private fun poke() {
+        wake.trySend(Unit)
     }
 
     // ---- modes ----
 
     private fun applyMode() {
         once?.cancel()
-        live?.cancel()
+        stopLive()
         layer.clear()
-        recent.clear()
-        gap = MIN_GAP_MS
+        busy = false
         failed = false
         if (mode == ScreenMode.Area) {
             // The grips report the fitted rectangle back through onAreaChanged.
@@ -157,14 +256,35 @@ internal class ScreenTranslator(
             layer.area = null
             capturer.roi = null
         }
-        capturer.touch()
-        // Screenshots cost something each: "this screen" takes one only when tapped.
-        capturer.continuous = mode != ScreenMode.Screen
-        if (mode != ScreenMode.Screen) live = scope.launch { liveLoop() }
-        updateBubble(busy = false)
+        if (mode == ScreenMode.Screen) {
+            // Screenshots cost something each: "this screen" takes one only when tapped.
+            capturer.continuous = false
+        } else {
+            val mine = LiveBrain(
+                shell = this,
+                memory = memory,
+                eventDriven = capturer.eventDriven,
+                hideOnTouch = mode == ScreenMode.Live,
+                key = LiveKey(settings),
+                log = { Log.d(TAG, it) },
+            )
+            brain = mine
+            live = scope.launch { liveLoop(mine) }
+        }
+        updateBubble()
     }
 
-    private fun updateBubble(busy: Boolean) {
+    private fun stopLive() {
+        live?.cancel()
+        live = null
+        brain = null
+        requests.values.forEach { it.cancel() }
+        requests.clear()
+        gates.clear()
+        previews.clear()
+    }
+
+    private fun updateBubble() {
         bubble.look = when {
             busy -> BubbleView.Look.Busy
             failed -> BubbleView.Look.Error
@@ -180,7 +300,8 @@ internal class ScreenTranslator(
             ScreenMode.Screen -> when {
                 once?.isActive == true -> {
                     once?.cancel()
-                    updateBubble(busy = false)
+                    busy = false
+                    updateBubble()
                 }
                 layer.hasContent -> dismiss()
                 else -> translateOnce()
@@ -188,7 +309,8 @@ internal class ScreenTranslator(
             else -> {
                 paused = !paused
                 failed = false
-                updateBubble(busy = false)
+                updateBubble()
+                poke()
             }
         }
     }
@@ -196,10 +318,14 @@ internal class ScreenTranslator(
     override fun onLongPress() = openMenu()
 
     private fun openMenu() {
-        once?.cancel()
-        if (mode == ScreenMode.Screen) layer.clear()
-        updateBubble(busy = false)
-        menu.show(mode, wm.barInsets(density).bottom)
+        // A one-shot translation stays up under the menu: "copy" is about what is on screen.
+        if (once?.isActive == true) {
+            once?.cancel()
+            busy = false
+        }
+        updateBubble()
+        menu.show(mode, bars.bottom, canCopy = texts != null)
+        poke()
     }
 
     override fun onMode(mode: ScreenMode) {
@@ -214,7 +340,12 @@ internal class ScreenTranslator(
 
     override fun onPrimary() {
         paused = false
-        if (mode == ScreenMode.Screen) translateOnce() else updateBubble(busy = false)
+        if (mode == ScreenMode.Screen) {
+            translateOnce()
+        } else {
+            updateBubble()
+            poke()
+        }
     }
 
     override fun onLanguage(source: Boolean, code: String?) {
@@ -225,20 +356,42 @@ internal class ScreenTranslator(
         }
     }
 
+    override fun onCopy(translation: Boolean) {
+        val text = texts?.let { if (translation) it.translation else it.original }?.trim().orEmpty()
+        if (text.isEmpty()) return
+        val clipboard = service.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        runCatching { clipboard.setPrimaryClip(ClipData.newPlainText("Seenly", text)) }
+            // Android 13+ shows its own clipboard confirmation.
+            .onSuccess { if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) toast(R.string.copied) }
+            .onFailure { Log.w(TAG, "could not copy", it) }
+    }
+
     override fun onStop() = stop()
 
     override fun onMenuClosed() {
-        dirtyUntil = SystemClock.uptimeMillis() + SETTLE_OWN_MS
-        capturer.touch()
+        dirtyUntil = SystemClock.uptimeMillis() + LiveBrain.SETTLE_OWN_MS
+        poke()
     }
 
     override fun onDragging(dragging: Boolean) {
         this.dragging = dragging
-        if (!dragging) capturer.touch()
+        if (!dragging) capturer.exclude = Rect(lane)
+        poke()
     }
 
-    override fun onMoved(bounds: Rect) {
-        capturer.exclude = bounds
+    override fun onMoved(footprint: Rect) {
+        lane = footprint
+        // While it is dragged about, nothing is translated: where it rests is what counts.
+        if (!dragging) capturer.exclude = Rect(footprint)
+    }
+
+    override fun onOutsideTouch() {
+        val mine = brain ?: return
+        val now = SystemClock.uptimeMillis()
+        mine.onTouch(now)
+        // A look at the screen as soon as it can show what the finger did.
+        capturer.hurry(now + LiveBrain.TOUCH_HOLD_MS)
+        poke()
     }
 
     override fun onAreaDragging(dragging: Boolean) {
@@ -246,8 +399,8 @@ internal class ScreenTranslator(
         if (!dragging) {
             prefs.saveArea(area, screen.x, screen.y)
             capturer.roi = LayerView.inner(area, density)
-            capturer.touch()
         }
+        poke()
     }
 
     override fun onAreaChanged(area: Rect) {
@@ -258,197 +411,237 @@ internal class ScreenTranslator(
     private fun dismiss() {
         once?.cancel()
         layer.clear()
-        updateBubble(busy = false)
+        busy = false
+        updateBubble()
     }
 
     // ---- "this screen": one shot ----
 
     private fun translateOnce() {
         once?.cancel()
+        onDisplayChanged()
         failed = false
         val ticket = ++run
         once = scope.launch {
             layer.clear()
-            updateBubble(busy = true)
+            busy = true
+            updateBubble()
+            var shown: Boolean? = null
             try {
                 // Whatever of ours was on screen has to be gone from the frames first.
-                val clean = max(dirtyUntil, layer.clearedAt + SETTLE_OWN_MS)
-                delay((clean - SystemClock.uptimeMillis()).coerceIn(0, SETTLE_OWN_MS))
+                val clean = max(dirtyUntil, layer.clearedAt + LiveBrain.SETTLE_OWN_MS)
                 val current = graph.settings.settings.first()
-                capturer.refresh()
-                val frame = grabClean(null)
-                if (frame == null) {
+                // The bubble steps out of the picture as well, so what is under it gets translated too.
+                bubble.conceal()
+                val grab = try {
+                    capturer.refresh(after = max(clean, SystemClock.uptimeMillis() + CONCEAL_MS))
+                    capturer.grab(watched = false)
+                } finally {
+                    bubble.reveal()
+                }
+                if (grab == null) {
                     toast(R.string.screen_capture_failed)
+                    shown = false
                     return@launch
                 }
-                val result = translate(frame, Rect(0, 0, screen.x, screen.y), current)
-                val bitmap = result.bitmap
-                if (bitmap == null) toast(R.string.screen_no_text) else layer.show(bitmap, result.rect, modal = true)
+                if (grab.bitmap.width != screen.x || grab.bitmap.height != screen.y) {
+                    // The display turned and nobody said: put everything where it belongs, the next tap translates.
+                    val size = Point(grab.bitmap.width, grab.bitmap.height)
+                    grab.bitmap.recycle()
+                    applyDisplay(size)
+                    return@launch
+                }
+                val key = LiveKey(current)
+                val known = memory.find(grab.frame.signature, key)?.takeIf { !it.failed }
+                val stored = if (known != null) {
+                    // The same screen as a moment ago: no need to ask twice.
+                    grab.bitmap.recycle()
+                    known.payload as? Stored
+                } else {
+                    translate(grab.bitmap, grab.region, current, null).also {
+                        memory.put(grab.frame.signature, key, it.takeIf { made -> made.tiles.isNotEmpty() }, it.bytes)
+                    }
+                }
+                if (stored == null || stored.tiles.isEmpty()) {
+                    toast(R.string.screen_no_text)
+                    shown = false
+                } else {
+                    layer.show(stored.pieces, modal = true)
+                    texts = stored.texts
+                    shown = true
+                }
+            } catch (e: TimeoutCancellationException) {
+                shown = false
+                report(e)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                shown = false
                 report(e)
             } finally {
-                if (ticket == run) updateBubble(busy = false)
+                if (ticket == run) {
+                    busy = false
+                    updateBubble()
+                    shown?.let { bubble.buzz(it) }
+                }
             }
         }
     }
 
     // ---- live and area: translate whenever the picture comes to rest ----
 
-    private enum class Phase { Waiting, Requesting, Shown }
-
-    private suspend fun liveLoop() {
-        var phase = Phase.Waiting
-        var request: Deferred<Result<Layer>>? = null
-        /** The clean frame the request was made from (and the shown translation belongs to). */
-        var sent: Signature? = null
-        var sentSettings = settings
-        /** The same view with our translation over it, once that has settled. */
-        var reference: Signature? = null
-        /** Which samples our translation paints over. */
-        var covered: BooleanArray? = null
-        var shownAt = 0L
-        var hiddenAt = SystemClock.uptimeMillis()
-        var requestedAt = 0L
-        try {
-            while (true) {
-                delay(POLL_MS)
+    private suspend fun liveLoop(mine: LiveBrain) {
+        // The settings as they are, not the defaults they are until they load: a request in the wrong language is wasted.
+        settings = graph.settings.settings.first()
+        var seen = -1L
+        var pace = -1L
+        var faults = 0
+        while (true) {
+            try {
+                if (asleep && awake()) asleep = false
                 val now = SystemClock.uptimeMillis()
-                if (paused || dragging || menu.isShown) {
-                    // Out of the way while the user is busy with us; start over afterwards.
-                    if (phase != Phase.Waiting) {
-                        request?.cancelAndJoin()
-                        request = null
-                        layer.clear()
-                        phase = Phase.Waiting
-                        updateBubble(busy = false)
+                // Out of the way while the user is busy with us, or is not looking; start over afterwards.
+                if (paused || dragging || asleep || menu.isShown) mine.block() else mine.unblock(now)
+                mine.settings(LiveKey(settings), now)
+                val frame = capturer.frame
+                if (frame != null && frame.number != seen) {
+                    seen = frame.number
+                    if (!capturer.eventDriven && (capturer.width != screen.x || capturer.height != screen.y)) {
+                        // A screenshot in another size: the display turned. This restarts the mode, and with it this loop.
+                        applyDisplay(Point(capturer.width, capturer.height))
+                        return
                     }
-                    hiddenAt = now
-                    continue
+                    mine.onFrame(frame, now)
+                } else {
+                    mine.onTick(now)
                 }
-                val signature = capturer.signature ?: continue
-                when (phase) {
-                    Phase.Shown -> {
-                        val base = sent
-                        var moved = base == null || settings != sentSettings ||
-                            signature.diff(base, covered, maskValue = false) >= CHANGED_CELLS
-                        if (!moved) {
-                            val settled = reference
-                            // Only a frame taken after the translation went up can show it: screenshots
-                            // arrive late, and an older one would look as if the view had changed.
-                            val sinceShown = capturer.frameAt - shownAt
-                            if (settled != null) {
-                                moved = signature.diff(settled, covered, maskValue = true) >= CHANGED_CELLS
-                            } else if (sinceShown >= SETTLE_OWN_MS && now - capturer.lastMotionAt >= 60) {
-                                reference = signature
-                            } else if (sinceShown >= 500) {
-                                // Still moving under the translation half a second on: it is stale.
-                                moved = true
-                            }
-                        }
-                        if (moved) {
-                            // The view is changing: the translation no longer belongs to it.
-                            layer.clear()
-                            failed = false
-                            updateBubble(busy = false)
-                            phase = Phase.Waiting
-                            hiddenAt = now
-                        }
-                    }
-                    Phase.Waiting -> {
-                        val still = now - capturer.lastMotionAt >= STILL_MS
-                        // The frame must be one taken after our translation left the screen.
-                        val clean = capturer.frameAt >= max(hiddenAt, dirtyUntil) + SETTLE_OWN_MS
-                        if (!still || !clean || now < dirtyUntil || now - requestedAt < gap) continue
-                        val known = recent.lastOrNull { it.settings == settings && signature.diff(it.signature) < CHANGED_CELLS }
-                        if (known != null) {
-                            // A view translated a moment ago (scrolled away and back, or just un-paused):
-                            // shown again from memory, never asked of Lens a second time.
-                            sent = known.signature
-                            sentSettings = known.settings
-                            covered = show(known.layer, known.signature)
-                            reference = null
-                            shownAt = now
-                            phase = Phase.Shown
-                            continue
-                        }
-                        val region = Rect(signature.roi)
-                        val frame = grabClean(region) ?: continue
-                        val asked = settings
-                        sent = signature
-                        sentSettings = asked
-                        // Requests back to back mean something keeps changing the view on its own
-                        // (an animation, or a loop through our own drawing): slow down, up to 8 s.
-                        gap = if (now - requestedAt < BURST_MS) min(gap * 2, MAX_GAP_MS) else MIN_GAP_MS
-                        requestedAt = now
-                        Log.d(TAG, "live request, next gap ${gap} ms")
-                        failed = false
-                        updateBubble(busy = true)
-                        request = scope.async { runCatching { translate(frame, region, asked) } }
-                        phase = Phase.Requesting
-                    }
-                    Phase.Requesting -> {
-                        val pending = request ?: continue
-                        val base = sent
-                        if (base == null || signature.diff(base) >= CHANGED_CELLS) {
-                            // The user moved on before the answer came: it would land on the wrong picture.
-                            pending.cancelAndJoin()
-                            request = null
-                            updateBubble(busy = false)
-                            phase = Phase.Waiting
-                        } else if (pending.isCompleted) {
-                            request = null
-                            val outcome = pending.await()
-                            val result = outcome.getOrNull()
-                            if (result != null) {
-                                remember(Cached(base, sentSettings, result))
-                                covered = show(result, base)
-                            } else {
-                                // Shown, with nothing on screen: it is tried again when the view changes.
-                                covered = null
-                                outcome.exceptionOrNull()?.let { if (it !is CancellationException) report(it) }
-                            }
-                            reference = null
-                            shownAt = now
-                            phase = Phase.Shown
-                            updateBubble(busy = false)
-                        }
-                    }
+                val wanted = mine.cadence(now)
+                if (wanted != pace) {
+                    pace = wanted
+                    if (wanted > 0) capturer.pace(wanted)
+                    capturer.continuous = wanted > 0
+                }
+                faults = 0
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // A window the system took from under us, say. One bad turn is not worth the whole service;
+                // a run of them is not worth going on with.
+                Log.e(TAG, "live loop", e)
+                if (++faults >= MAX_FAULTS) {
+                    stop()
+                    return
                 }
             }
-        } finally {
-            request?.cancel()
+            val at = mine.wakeAt
+            val wait = if (at == NEVER || faults > 0) IDLE_TICK_MS else (at - SystemClock.uptimeMillis()).coerceIn(MIN_TICK_MS, IDLE_TICK_MS)
+            withTimeoutOrNull(wait) { wake.receive() }
         }
     }
 
-    /** Puts [result] on the pass-through layer and says which of [signature]'s samples it paints over. */
-    private fun show(result: Layer, signature: Signature): BooleanArray? {
-        val bitmap = result.bitmap ?: return null
-        layer.show(bitmap, result.rect, modal = false)
-        val covered = BooleanArray(signature.cells.size)
-        val cols = signature.xs.size
-        for (r in signature.ys.indices) {
-            val y = signature.ys[r] - result.rect.top
-            if (y < 0 || y >= bitmap.height) continue
-            for (c in 0 until cols) {
-                val x = signature.xs[c] - result.rect.left
-                if (x < 0 || x >= bitmap.width) continue
-                covered[r * cols + c] = bitmap.getPixel(x, y) ushr 24 != 0
+    override fun snap(ticket: Int): Signature? {
+        val mine = brain ?: return null
+        val grab = capturer.grab(watched = true) ?: return null
+        paintOutBubble(grab.bitmap, grab.region)
+        val region = grab.region
+        val job = LiveJob(
+            ticket = ticket,
+            brain = mine,
+            grid = grab.frame.signature,
+            restless = mine.volatile,
+            known = mine.remembered().filterIsInstance<Stored>().filter { it.region == region },
+        )
+        val asked = settings
+        // Dispatched, never run in place: the brain must know of this request before it hears from it.
+        requests[ticket] = scope.launch(Dispatchers.Main) {
+            val outcome = try {
+                val stored = translate(grab.bitmap, region, asked, job)
+                if (stored.tiles.isEmpty()) LiveBrain.Outcome.Empty else LiveBrain.Outcome.Translated(stored, stored.bytes)
+            } catch (e: TimeoutCancellationException) {
+                LiveBrain.Outcome.Failed(e)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                LiveBrain.Outcome.Failed(e)
+            }
+            requests.remove(ticket)
+            gates.remove(ticket)
+            previews.remove(ticket)
+            if (brain === mine) {
+                mine.onResult(ticket, outcome, SystemClock.uptimeMillis())
+                poke()
             }
         }
-        return covered
+        gates[ticket] = job.go
+        return grab.frame.signature
+    }
+
+    override fun send(ticket: Int) {
+        gates[ticket]?.complete(Unit)
+    }
+
+    override fun cancel(ticket: Int) {
+        requests.remove(ticket)?.cancel()
+        gates.remove(ticket)
+        previews.remove(ticket)
+    }
+
+    override fun show(payload: Any, grid: Signature): BooleanArray? {
+        val stored = payload as? Stored ?: return null
+        val pieces = stored.pieces
+        layer.show(pieces, modal = false)
+        if (pieces.isEmpty()) return null
+        texts = stored.texts
+        return paintedBy(pieces, grid)
+    }
+
+    override fun preview(ticket: Int, grid: Signature): BooleanArray? {
+        val pieces = previews[ticket]?.takeIf { it.isNotEmpty() } ?: return null
+        layer.show(pieces, modal = false)
+        return paintedBy(pieces, grid)
+    }
+
+    override fun hide() = layer.clear()
+
+    override fun status(busy: Boolean, failed: Boolean) {
+        this.busy = busy
+        this.failed = failed
+        updateBubble()
+    }
+
+    override fun failed(error: Throwable?, first: Boolean) {
+        Log.w(TAG, "live translation failed", error)
+        // Once per run of failures: the bubble's red ring says the rest. A toast is on the
+        // screen being watched, and one for every scroll while offline would be a loop of its own.
+        if (first) toast(R.string.screen_translate_failed, describe(error))
+    }
+
+    /** Which samples of [grid] the pieces paint over. */
+    private fun paintedBy(pieces: List<Piece>, grid: Signature): BooleanArray {
+        val painted = BooleanArray(grid.cells.size)
+        val cols = grid.xs.size
+        for (piece in pieces) {
+            for (r in grid.ys.indices) {
+                val y = grid.ys[r]
+                if (y < piece.top || y >= piece.bottom) continue
+                for (c in 0 until cols) {
+                    val x = grid.xs[c]
+                    if (x >= piece.left && x < piece.right && piece.paints(x, y)) painted[r * cols + c] = true
+                }
+            }
+        }
+        return painted
     }
 
     // ---- one frame through Lens ----
 
-    /** The latest frame (or [region] of it) with the bubble painted out, so Lens never reads it. */
-    private fun grabClean(region: Rect?): Bitmap? {
-        val frame = capturer.grab(region) ?: return null
+    /** Paints the bubble out of [frame] (the [region] of the screen), so Lens never reads it. */
+    private fun paintOutBubble(frame: Bitmap, region: Rect) {
         val hole = Rect(bubble.bounds)
+        if (hole.isEmpty) return
         hole.inset(-4, -4)
-        hole.offset(-(region?.left ?: 0), -(region?.top ?: 0))
-        if (!hole.intersect(0, 0, frame.width, frame.height)) return frame
+        hole.offset(-region.left, -region.top)
+        if (!hole.intersect(0, 0, frame.width, frame.height)) return
         // Fill with the colour around it: a flat patch has nothing to recognise.
         var red = 0L
         var green = 0L
@@ -473,48 +666,88 @@ internal class ScreenTranslator(
             add(hole.right, y)
             y += 4
         }
+        if (count == 0) return
         val paint = Paint().apply {
             color = (0xFF shl 24) or ((red / count).toInt() shl 16) or ((green / count).toInt() shl 8) or (blue / count).toInt()
         }
         Canvas(frame).drawRect(hole, paint)
-        return frame
     }
 
     /**
-     * Sends [frame] to Lens and renders the translation as a transparent layer
-     * of the same size: only the pixels the translation changes are kept, so
+     * Sends [frame] to Lens and renders the translation as transparent pieces
+     * to lay over it: only the pixels the translation changes are kept, so
      * everything else on screen stays live underneath.
      */
-    private suspend fun translate(frame: Bitmap, rect: Rect, settings: AppSettings): Layer =
+    private suspend fun translate(frame: Bitmap, rect: Rect, settings: AppSettings, live: LiveJob?): Stored =
         // The frame is a whole screen of pixels: give it back as soon as it has served.
         try {
-            translateFrame(frame, rect, settings)
+            translateFrame(frame, rect, settings, live)
         } finally {
             frame.recycle()
         }
 
-    private suspend fun translateFrame(frame: Bitmap, rect: Rect, settings: AppSettings): Layer {
+    private suspend fun translateFrame(frame: Bitmap, rect: Rect, settings: AppSettings, live: LiveJob?): Stored {
+        val began = SystemClock.uptimeMillis()
         // In bands, so a tall screen reaches Lens at full resolution rather than shrunk to 1600 px.
         val raster = withContext(Dispatchers.Default) {
             val pixels = IntArray(frame.width * frame.height)
             frame.getPixels(pixels, 0, frame.width, 0, 0, frame.width, frame.height)
             Raster(frame.width, frame.height, pixels)
         }
+        // The columns the bubble can be in are not part of the page.
+        val skipFrom = (lane.left - 8 - rect.left).coerceIn(0, raster.width)
+        val skipTo = if (lane.isEmpty) skipFrom else (lane.right + 8 - rect.left).coerceIn(skipFrom, raster.width)
+        val clearance = (CLEARANCE_DP * density).roundToInt()
+        // The page as rows of pixels, kept with its translation: what a later view of it is recognised by.
+        val print = withContext(Dispatchers.Default) { RowPrint.of(raster.argb, raster.width, raster.height, skipFrom, skipTo) }
+        if (live != null) {
+            // What was translated a moment ago and is still on screen, only somewhere else, goes back up at once.
+            val pieces = withContext(Dispatchers.Default) {
+                Sticky.place(print, live.known.map { Sticky.Seen(it.print, it.islands) }, clearance).map { placed ->
+                    val tile = live.known[placed.seen].tiles[placed.island]
+                    Piece(tile.bitmap, rect.left + tile.left, rect.top + tile.top + placed.dy)
+                }
+            }
+            if (pieces.isNotEmpty() && brain === live.brain) {
+                Log.d(TAG, "live #${live.ticket}: ${pieces.size} pieces kept, ${SystemClock.uptimeMillis() - began} ms in")
+                previews[live.ticket] = pieces
+                live.brain.onPreviewReady(live.ticket, SystemClock.uptimeMillis())
+                poke()
+            }
+        }
+        // The pixels are in hand and what is known of them is on screen; Lens is asked when the brain says so.
+        live?.go?.await()
+        return withTimeout(REQUEST_TIMEOUT_MS) { scanAndDraw(frame, rect, settings, live, raster, print, began) }
+    }
+
+    private suspend fun scanAndDraw(
+        frame: Bitmap,
+        rect: Rect,
+        settings: AppSettings,
+        live: LiveJob?,
+        raster: Raster,
+        print: RowPrint,
+        began: Long,
+    ): Stored {
+        val read = SystemClock.uptimeMillis()
         val scanned = Tiling.scan(raster) { band ->
             val prepared = withContext(Dispatchers.Default) { ImagePreparer.prepare(band) }
             // Lens, or the device where the build and the settings have it stand in.
             graph.scans.scanFrame(prepared, settings)
         }
+        val answered = SystemClock.uptimeMillis()
         // The frame is the screen pixel for pixel, so the status bar is its top rows.
-        val statusBar = (wm.barInsets(density).top - rect.top).toFloat() / frame.height
+        val statusBar = (bars.top - rect.top).toFloat() / frame.height
         // Inside an area, text running into the frame is a piece of a line the frame cuts.
         val cut = rect.width() < screen.x || rect.height() < screen.y
         val result = scanned.copy(
             paragraphs = scanned.paragraphs.filter { p ->
-                worthTranslating(p, statusBar) && !(cut && touchesEdge(p, frame.width, frame.height))
+                worthTranslating(p, statusBar) && !(cut && touchesEdge(p, frame.width, frame.height)) &&
+                    !(live != null && neverStill(p, rect, frame.width, frame.height, live))
             },
         )
-        if (result.paragraphs.none { it.translation != null }) return Layer(null, rect)
+        val texts = Texts(result.translation.orEmpty(), result.text)
+        if (result.paragraphs.none { it.translation != null }) return Stored(Rect(rect), emptyList(), print, texts)
         val decoded = decodeOverlay(result, fonts)
         return withContext(Dispatchers.Default) {
             val style = styleFor(result, settings)
@@ -523,19 +756,20 @@ internal class ScreenTranslator(
                 // Sizes are real here: the frame is shown pixel for pixel.
                 minFontPx = style.minFontSp * ui.resources.displayMetrics.scaledDensity,
             ).asAndroidBitmap()
-            // Keep only the rectangle the translation changed: a screenful of mostly
+            // Keep only the pieces the translation changed: a screenful of mostly
             // transparent pixels would cost as much memory as the screen itself.
-            val changed = keepChanges(rendered, frame)
-            if (changed == null) {
+            val tiles = try {
+                cutTiles(rendered, frame)
+            } finally {
                 rendered.recycle()
-                return@withContext Layer(null, rect)
             }
-            val kept = if (changed.width() == rendered.width && changed.height() == rendered.height) {
-                rendered
-            } else {
-                Bitmap.createBitmap(rendered, changed.left, changed.top, changed.width(), changed.height()).also { rendered.recycle() }
-            }
-            Layer(kept, Rect(changed).apply { offset(rect.left, rect.top) })
+            val done = SystemClock.uptimeMillis()
+            Log.d(
+                TAG,
+                "translated ${frame.width}x${frame.height}: read ${read - began} ms, Lens ${answered - read} ms, drawn ${done - answered} ms; " +
+                    "${tiles.size} pieces, ${tiles.sumOf { it.bitmap.allocationByteCount } / 1024} KB",
+            )
+            Stored(Rect(rect), tiles, print, texts)
         }
     }
 
@@ -559,6 +793,35 @@ internal class ScreenTranslator(
             box.centerY - box.height / 2 < my || box.centerY + box.height / 2 > 1 - my
     }
 
+    /**
+     * Whether [p] sits on a part of the screen that never holds still (a
+     * video, an animated banner): a translation drawn there would be stale
+     * before it appeared, and would cover what moves under it.
+     */
+    private fun neverStill(p: Paragraph, rect: Rect, width: Int, height: Int, live: LiveJob): Boolean {
+        val restless = live.restless ?: return false
+        val box = p.box ?: return false
+        val left = rect.left + (box.centerX - box.width / 2) * width
+        val right = rect.left + (box.centerX + box.width / 2) * width
+        val top = rect.top + (box.centerY - box.height / 2) * height
+        val bottom = rect.top + (box.centerY + box.height / 2) * height
+        val grid = live.grid
+        val cols = grid.xs.size
+        var inside = 0
+        var moving = 0
+        for (r in grid.ys.indices) {
+            val y = grid.ys[r]
+            if (y < top || y >= bottom) continue
+            for (c in 0 until cols) {
+                val x = grid.xs[c]
+                if (x < left || x >= right) continue
+                inside++
+                if (restless[r * cols + c]) moving++
+            }
+        }
+        return moving > 0 && moving * 4 >= inside
+    }
+
     /** The same choice the viewer makes: bubbles reflow, everything else is set in place. */
     private fun styleFor(result: ScanResult, settings: AppSettings): OverlayStyle {
         val manga = when (settings.readingLayout) {
@@ -572,67 +835,85 @@ internal class ScreenTranslator(
 
     /**
      * Makes every pixel of [rendered] that equals [frame]'s transparent and
-     * returns the bounds of what is left, or null if nothing is.
+     * cuts what is left into bands, each a bitmap of its own.
      */
-    private fun keepChanges(rendered: Bitmap, frame: Bitmap): Rect? {
+    private fun cutTiles(rendered: Bitmap, frame: Bitmap): List<Tile> {
         val width = rendered.width
         val height = rendered.height
         val rows = 64
         val drawn = IntArray(width * rows)
         val original = IntArray(width * rows)
-        var left = width
-        var top = height
-        var right = -1
-        var bottom = -1
+        val minX = IntArray(height)
+        val maxX = IntArray(height)
         var y = 0
         while (y < height) {
             val n = min(rows, height - y)
             rendered.getPixels(drawn, 0, width, 0, y, width, n)
             frame.getPixels(original, 0, width, 0, y, width, n)
-            for (i in 0 until width * n) {
-                if (drawn[i] == original[i]) {
-                    drawn[i] = 0
-                } else {
-                    val x = i % width
-                    val row = y + i / width
-                    if (x < left) left = x
-                    if (x > right) right = x
-                    if (row < top) top = row
-                    if (row > bottom) bottom = row
+            for (row in 0 until n) {
+                val start = row * width
+                var first = Int.MAX_VALUE
+                var last = -1
+                for (x in 0 until width) {
+                    val i = start + x
+                    if (drawn[i] == original[i]) {
+                        drawn[i] = 0
+                    } else {
+                        if (first == Int.MAX_VALUE) first = x
+                        last = x
+                    }
                 }
+                minX[y + row] = first
+                maxX[y + row] = last
             }
             rendered.setPixels(drawn, 0, width, 0, y, width, n)
             y += n
         }
-        return if (right < 0) null else Rect(left, top, right + 1, bottom + 1)
+        return bands(minX, maxX, gap = (BAND_GAP_DP * density).roundToInt(), limit = MAX_TILES).map { band ->
+            Tile(Bitmap.createBitmap(rendered, band.left, band.top, band.right - band.left, band.bottom - band.top), band.left, band.top)
+        }
     }
 
     private fun report(error: Throwable) {
         Log.w(TAG, "translation failed", error)
         failed = true
-        toast(R.string.screen_translate_failed, error.message ?: error::class.simpleName.orEmpty())
+        toast(R.string.screen_translate_failed, describe(error))
+    }
+
+    private fun describe(error: Throwable?): String = when (error) {
+        null -> ""
+        is TimeoutCancellationException -> AppLocale.string(service, R.string.screen_timed_out)
+        else -> error.message ?: error::class.simpleName.orEmpty()
     }
 
     private fun toast(@StringRes text: Int, vararg args: Any) =
         Toast.makeText(service, AppLocale.string(service, text, *args), Toast.LENGTH_SHORT).show()
 
+    /** How much the remembered translations may hold: they are bitmaps, a few megabytes a screen. */
+    private fun memoryBudget(): Long {
+        val manager = service.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        return (if (manager.isLowRamDevice) 20L else 56L) * 1024 * 1024
+    }
+
     private companion object {
         const val TAG = "ScreenTranslator"
         /** How close to an area's edge counts as cut by it. */
         const val EDGE_PX = 6f
-        const val POLL_MS = 24L
-        /** How long the picture must hold still before it is translated. */
-        const val STILL_MS = 200L
-        /** How long our own windows take to leave the captured frames after we hide them. */
-        const val SETTLE_OWN_MS = 100L
-        /** No two requests closer than this, however restless the screen. */
-        const val MIN_GAP_MS = 400L
-        /** Requests closer together than this count as a burst, which doubles the gap. */
-        const val BURST_MS = 3_000L
-        const val MAX_GAP_MS = 8_000L
-        /** Views remembered with their translations. */
-        const val RECENT = 6
-        /** This many changed samples (of 2880) mean the view is a different one. */
-        const val CHANGED_CELLS = 12
+        /** The bubble takes this long to leave the picture once it is told to. */
+        const val CONCEAL_MS = 64L
+        /** A request with no answer after this long has failed. */
+        const val REQUEST_TIMEOUT_MS = 20_000L
+        /** The live loop looks around this often even when nothing calls it. */
+        const val IDLE_TICK_MS = 1_000L
+        const val MIN_TICK_MS = 8L
+        /** This many turns of the live loop failing in a row end the translator. */
+        const val MAX_FAULTS = 5
+        /** Views remembered with their translations (and by the bytes they hold, see [memoryBudget]). */
+        const val MEMORY_VIEWS = 16
+        /** Rows of a translation closer together than this stay one piece: the lines of a paragraph. */
+        const val BAND_GAP_DP = 12f
+        const val MAX_TILES = 48
+        /** A kept piece needs this much of the page above and below it to have moved along with it. */
+        const val CLEARANCE_DP = 24f
     }
 }

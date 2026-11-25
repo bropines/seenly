@@ -77,6 +77,15 @@ class ScreenPermissionActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null && ScreenOverlayHost.service.value != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Reached from the "stopped" notification with the accessibility service on: it draws and
+            // takes the screenshots, so there is nothing to ask for.
+            runCatching {
+                startService(Intent(this, ScreenTranslateService::class.java).setAction(ScreenTranslateService.ACTION_START_TRUSTED))
+            }
+            finish()
+            return
+        }
         overlayAsked = savedInstanceState?.getBoolean(KEY_OVERLAY) ?: false
         notificationsAsked = savedInstanceState?.getBoolean(KEY_NOTIFICATIONS) ?: false
         // After a recreation a launched request is still pending and reports to its callback.

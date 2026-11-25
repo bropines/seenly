@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="screen_stopped_title">Перевод экрана остановлен</string>
+    <string name="screen_stopped_capture">Запись экрана завершилась. Нажмите, чтобы включить снова.</string>
+    <string name="screen_stopped_accessibility">Спецвозможность Seenly выключена. Нажмите, чтобы включить перевод экрана снова.</string>
+    <string name="screen_timed_out">ответ не пришёл вовремя</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- After "Copy": which text of the translation on screen goes to the clipboard. -->
+    <string name="bubble_copy_translation">Перевод</string>
+    <string name="bubble_copy_original">Оригинал</string>
+</resources>

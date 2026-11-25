@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
 import android.graphics.RectF
+import android.os.SystemClock
 import android.provider.Settings
 import io.github.bropines.lens.app.screen.ScreenTranslate
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -89,23 +90,89 @@ internal class ScreenPrefs(context: Context) {
         get() = prefs.getBoolean("menu_shown", false)
         set(value) = prefs.edit().putBoolean("menu_shown", value).apply()
 
-    /** The area, as fractions of the screen so it survives a rotation. */
+    /**
+     * The area, as fractions of the screen so it survives a rotation. Upright
+     * and sideways each remember their own (a chat one way, a game the other);
+     * until the area has been placed sideways, the upright one is used there.
+     */
     fun area(width: Int, height: Int): Rect {
-        val f = RectF(
-            prefs.getFloat("area_l", 0.08f),
-            prefs.getFloat("area_t", 0.30f),
-            prefs.getFloat("area_r", 0.92f),
-            prefs.getFloat("area_b", 0.58f),
-        )
+        val wide = if (width > height) WIDE else ""
+        fun part(name: String, default: Float) = prefs.getFloat(name + wide, prefs.getFloat(name, default))
+        val f = RectF(part("area_l", 0.08f), part("area_t", 0.30f), part("area_r", 0.92f), part("area_b", 0.58f))
         return Rect((f.left * width).toInt(), (f.top * height).toInt(), (f.right * width).toInt(), (f.bottom * height).toInt())
     }
 
     fun saveArea(rect: Rect, width: Int, height: Int) {
+        val wide = if (width > height) WIDE else ""
         prefs.edit()
-            .putFloat("area_l", rect.left.toFloat() / width)
-            .putFloat("area_t", rect.top.toFloat() / height)
-            .putFloat("area_r", rect.right.toFloat() / width)
-            .putFloat("area_b", rect.bottom.toFloat() / height)
+            .putFloat("area_l$wide", rect.left.toFloat() / width)
+            .putFloat("area_t$wide", rect.top.toFloat() / height)
+            .putFloat("area_r$wide", rect.right.toFloat() / width)
+            .putFloat("area_b$wide", rect.bottom.toFloat() / height)
             .apply()
+    }
+
+    private companion object {
+        const val WIDE = "_wide"
+    }
+}
+
+/**
+ * Remembers that the screen translator was running on the accessibility
+ * service, so that it comes back when the process does. Some systems (MIUI and
+ * its kin) kill a process the moment its task is swiped away; Android then
+ * starts the accessibility service again, and without this the bubble would
+ * simply be gone. A stop the user asked for clears the mark.
+ */
+internal class ScreenSession(private val context: Context) {
+    private val prefs = context.getSharedPreferences("screen_translate", Context.MODE_PRIVATE)
+
+    /** Counts restarts of the device: time since boot means nothing across one. */
+    private val boot: Int
+        get() = runCatching { Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT) }.getOrDefault(0)
+
+    fun started() {
+        prefs.edit().putBoolean(ON, true).putInt(BOOT, boot).putLong(ALIVE_AT, SystemClock.elapsedRealtime()).apply()
+    }
+
+    /** Still running. Once it has run for a while, an earlier comeback no longer counts against the next. */
+    fun beat(runningForMs: Long) {
+        val edit = prefs.edit().putLong(ALIVE_AT, SystemClock.elapsedRealtime())
+        if (runningForMs >= STEADY_MS) edit.putInt(COMEBACKS, 0)
+        edit.apply()
+    }
+
+    fun stopped() {
+        prefs.edit().putBoolean(ON, false).apply()
+    }
+
+    /**
+     * Whether the translator should be started again now: it was running a
+     * short while ago, in this same boot, and was never told to stop. Not
+     * more than a few times in a row: something that keeps dying is not
+     * brought back for ever.
+     */
+    fun comeBack(): Boolean {
+        if (!prefs.getBoolean(ON, false)) return false
+        val away = SystemClock.elapsedRealtime() - prefs.getLong(ALIVE_AT, 0)
+        val comebacks = prefs.getInt(COMEBACKS, 0)
+        if (prefs.getInt(BOOT, -1) != boot || away < 0 || away > COME_BACK_WITHIN_MS || comebacks >= MAX_COMEBACKS) {
+            stopped()
+            return false
+        }
+        prefs.edit().putInt(COMEBACKS, comebacks + 1).apply()
+        return true
+    }
+
+    companion object {
+        /** How often a running translator says it is alive. */
+        const val BEAT_MS = 60_000L
+        private const val ON = "trusted_on"
+        private const val BOOT = "trusted_boot"
+        private const val ALIVE_AT = "trusted_alive_at"
+        private const val COMEBACKS = "trusted_comebacks"
+        private const val COME_BACK_WITHIN_MS = 15 * 60_000L
+        private const val STEADY_MS = 2 * 60_000L
+        private const val MAX_COMEBACKS = 3
     }
 }

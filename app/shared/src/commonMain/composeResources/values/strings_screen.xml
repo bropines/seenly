@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Screen translation: the strings its bubble menu added after strings.xml. English; Russian is in values-ru. -->
+<resources>
+    <!-- After "Copy": which text of the translation on screen goes to the clipboard. -->
+    <string name="bubble_copy_translation">Translation</string>
+    <string name="bubble_copy_original">Original</string>
+</resources>
