@@ -6,6 +6,8 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-25
+
 ### Added
 
 - A proxy for the app's own requests, in Settings → Network: none, the system's, HTTP or SOCKS5, with an optional user name and password and a "Test connection" button that makes one small request through what is on screen and reports the time or the error. It covers Lens scans and search, the text translators and the updater, and takes effect without a restart. Not covered, and the page says so: Google's sign-in page inside the app, on-device model downloads and links opened in the browser. A proxy that is set but cannot be reached fails requests instead of letting them out directly. The password is kept with the other secrets (encrypted on Android) and goes into a settings export only when asked.
