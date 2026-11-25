@@ -84,7 +84,7 @@ fun TextSheet(
                 services.copyText(
                     when (view) {
                         TextView.Original -> result.readableText()
-                        TextView.Translation -> result.translation.orEmpty()
+                        TextView.Translation -> result.translatedText().orEmpty()
                         TextView.Both -> shareableText(result)
                     },
                 )
@@ -98,7 +98,7 @@ fun TextSheet(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            itemsIndexed(result.paragraphs) { _, paragraph ->
+            itemsIndexed(result.inReadingOrder()) { _, paragraph ->
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                     shape = MaterialTheme.shapes.large,

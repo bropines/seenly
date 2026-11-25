@@ -49,14 +49,23 @@ class AndroidPlatformServices(private val context: Context) : PlatformServices {
         context.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
-    override fun shareImage(bytes: ByteArray, fileName: String) {
+    override fun shareImage(bytes: ByteArray, fileName: String) = sendImage(bytes, fileName, caption = null)
+
+    override fun shareImage(bytes: ByteArray, fileName: String, text: String) = sendImage(bytes, fileName, caption = text)
+
+    private fun sendImage(bytes: ByteArray, fileName: String, caption: String?) {
         val dir = File(context.cacheDir, "shared").apply { mkdirs() }
+        // Only the newest few stay: each share leaves a full-size picture behind.
+        dir.listFiles()?.sortedByDescending { it.lastModified() }?.drop(6)?.forEach { it.delete() }
         val file = File(dir, fileName).apply { writeBytes(bytes) }
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", file)
         val send = Intent(Intent.ACTION_SEND)
             .setType("image/png")
             .putExtra(Intent.EXTRA_STREAM, uri)
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        // The chooser shows a preview of the picture only when the grant travels as clip data.
+        send.clipData = ClipData.newRawUri(fileName, uri)
+        if (caption != null) send.putExtra(Intent.EXTRA_TEXT, caption)
         context.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 

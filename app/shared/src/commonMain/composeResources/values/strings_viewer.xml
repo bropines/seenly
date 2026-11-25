@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English strings of the image screens: the viewer, its gallery, history and home.
+     Russian is in values-ru/strings_viewer.xml; keep both in step. -->
+<resources>
+    <!-- Viewer -->
+    <string name="viewer_all_pages">All pages</string>
+    <string name="viewer_save">Save</string>
+    <string name="viewer_saved">Saved to the gallery</string>
+    <string name="viewer_save_failed">Couldn’t save: %1$s</string>
+    <string name="viewer_preparing_image">Preparing the image…</string>
+    <string name="viewer_hold_to_peek">Tap to hide the translation, hold to peek at the original</string>
+    <string name="viewer_page_number">Page %1$d of %2$d</string>
+    <string name="viewer_no_text">No text found on this image</string>
+    <string name="viewer_rescan">Translate again</string>
+    <string name="viewer_copied_translation">Translation copied</string>
+    <string name="viewer_copied_original">Original copied</string>
+
+    <!-- Quick actions (hold the image) and sharing -->
+    <string name="quick_copy_translation">Copy translation</string>
+    <string name="quick_copy_original">Copy original</string>
+    <string name="quick_share">Share…</string>
+    <string name="quick_save">Save translated image</string>
+    <string name="quick_show_original">Show original</string>
+    <string name="quick_show_translation">Show translation</string>
+    <string name="share_title">Share</string>
+    <string name="share_image">Translated image</string>
+    <string name="share_image_desc">The picture with the translation drawn on it</string>
+    <string name="share_text">Text</string>
+    <string name="share_text_desc">Original and translation, paragraph by paragraph</string>
+    <string name="share_both">Image and text</string>
+    <string name="share_both_desc">The translated picture with the text as its caption</string>
+
+    <!-- The gallery's grid -->
+    <plurals name="gallery_images">
+        <item quantity="one">%1$d image</item>
+        <item quantity="other">%1$d images</item>
+    </plurals>
+    <string name="gallery_translated">%1$d translated</string>
+
+    <!-- History -->
+    <string name="history_today">Today</string>
+    <string name="history_yesterday">Yesterday</string>
+    <string name="history_earlier">Earlier</string>
+    <plurals name="history_pages">
+        <item quantity="one">%1$d page</item>
+        <item quantity="other">%1$d pages</item>
+    </plurals>
+    <string name="history_deleted">Deleted from history</string>
+    <plurals name="history_deleted_many">
+        <item quantity="one">%1$d image deleted from history</item>
+        <item quantity="other">%1$d images deleted from history</item>
+    </plurals>
+    <string name="undo">Undo</string>
+    <string name="history_empty_title">Nothing here yet</string>
+    <string name="history_search_clear">Clear search</string>
+    <plurals name="history_found">
+        <item quantity="one">%1$d match</item>
+        <item quantity="other">%1$d matches</item>
+    </plurals>
+
+    <!-- Home -->
+    <string name="home_recent">Recent</string>
+    <string name="home_see_all">All</string>
+    <string name="home_continue_reading">Continue reading</string>
+    <string name="home_page_of">Page %1$d of %2$d</string>
+    <string name="home_start_title">Three ways to translate</string>
+    <string name="home_start_share">Share a picture into Seenly</string>
+    <string name="home_start_share_desc">From the gallery, a browser, a chat: “Share” → Seenly</string>
+    <string name="home_start_folder">Open a folder and swipe</string>
+    <string name="home_start_folder_desc">A manga chapter page after page; the next ones are translated ahead</string>
+    <string name="home_start_camera">Point the camera</string>
+    <string name="home_start_camera_desc">The round button below: a sign, a menu, a label</string>
+    <string name="home_folder_gone">The folder “%1$s” can’t be opened any more</string>
+    <string name="home_forget_folder">Remove from the list</string>
+    <string name="home_paste">Paste image</string>
+    <string name="home_paste_empty">There is no image in the clipboard</string>
+    <string name="home_drop">Drop images to translate them</string>
+</resources>

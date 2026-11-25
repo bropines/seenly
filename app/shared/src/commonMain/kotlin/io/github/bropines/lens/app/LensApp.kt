@@ -16,7 +16,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -28,13 +27,17 @@ import io.github.bropines.lens.app.data.AppSettings
 import io.github.bropines.lens.app.di.AppGraph
 import io.github.bropines.lens.app.ui.main.MainScreen
 import io.github.bropines.lens.app.ui.main.Tab
-import io.github.bropines.lens.app.ui.text.TextTranslateScreen
-import io.github.bropines.lens.app.ui.text.TextTranslateViewModel
 import io.github.bropines.lens.app.ui.theme.LensTheme
-import io.github.bropines.lens.app.ui.viewer.ViewerScreen
-import io.github.bropines.lens.app.ui.viewer.ViewerViewModel
-import androidx.compose.runtime.rememberCoroutineScope
+import io.github.bropines.lens.app.ui.viewer.ViewerHost
+import io.github.bropines.lens.app.ui.gallery.HeroRegistry
+import io.github.bropines.lens.app.ui.gallery.LocalHeroRegistry
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import io.github.bropines.lens.app.data.GalleryItem
+import io.github.bropines.lens.app.data.GalleryOrigin
 import io.github.bropines.lens.app.ui.camera.CameraScreen
 import io.github.bropines.lens.app.ui.about.AboutScreen
 import io.github.bropines.lens.app.ui.settings.SettingsPage
@@ -51,7 +54,6 @@ import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
-import kotlinx.coroutines.launch
 import io.github.bropines.lens.app.resources.Res
 import io.github.bropines.lens.app.resources.camera_snapshot
 import org.jetbrains.compose.resources.stringResource
@@ -61,7 +63,6 @@ import kotlinx.coroutines.flow.emptyFlow
 sealed interface Route {
     /** The tabs with the dock. */
     data object Main : Route
-    data object Viewer : Route
     data object Camera : Route
     data object About : Route
     data object Translators : Route
@@ -71,13 +72,15 @@ sealed interface Route {
 
     /** One of the pages behind the Settings tab's tiles. */
     data class Settings(val page: SettingsPage) : Route
-    data class TextTranslate(val initial: String) : Route
 }
 
 /**
  * The whole app. [incoming] carries images handed to the app from outside
  * (Android's share sheet, a file opened with it, the assistant's screenshot)
  * and opens them in the viewer.
+ *
+ * The viewer is not a screen in the back stack: it is a layer over whatever
+ * opened it, shown while a gallery is open (see ViewerHost).
  */
 @Composable
 fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
@@ -93,14 +96,13 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
     val settings by graph.settings.settings.collectAsState(AppSettings())
     val backStack = remember { mutableStateListOf<Route>(Route.Main) }
     var tab by rememberSaveable { mutableStateOf(Tab.Images) }
-    val scope = rememberCoroutineScope()
+    val gallery by graph.gallery.current.collectAsState()
+    // Where the thumbnails on screen are, for pictures to fly between them and the viewer.
+    val heroes = remember { HeroRegistry() }
     fun pop() { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) }
 
     LaunchedEffect(incoming) {
-        incoming.collect { files ->
-            graph.gallery.openFiles(files)
-            if (backStack.lastOrNull() != Route.Viewer) backStack.add(Route.Viewer)
-        }
+        incoming.collect { files -> graph.gallery.openFiles(files) }
     }
 
     // The update check and "What's new" belong to the app coming up, not to any one screen.
@@ -110,9 +112,13 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
         UpdateDialog(graph.updates)
         WhatsNewDialog(graph.updates, graph.services)
         AccountRefusedDialog(graph.account, onOpen = { if (backStack.lastOrNull() != Route.Account) backStack.add(Route.Account) })
+        CompositionLocalProvider(LocalHeroRegistry provides heroes) {
+        Box(Modifier.fillMaxSize()) {
         NavDisplay(
             backStack = backStack,
             onBack = ::pop,
+            // Beneath a viewer that hides it all, the screens need not be drawn.
+            modifier = Modifier.graphicsLayer { alpha = if (gallery != null && heroes.covered) 0f else 1f },
             entryDecorators = listOf(
                 rememberSaveableStateHolderNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator(),
@@ -133,20 +139,12 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
                         settings = settings,
                         tab = tab,
                         onTab = { tab = it },
-                        onOpenViewer = { backStack.add(Route.Viewer) },
+                        // Opening a gallery is what shows the viewer.
+                        onOpenViewer = {},
                         onOpenCamera = { backStack.add(Route.Camera) },
                         onOpen = { backStack.add(it) },
-                        onOpenHistory = { entry ->
-                            scope.launch {
-                                val item = GalleryItem(PlatformFile(entry.imagePath), entry.title)
-                                // Opening an old scan costs no request when the language still matches.
-                                if (entry.targetLanguage == settings.targetLanguage) {
-                                    graph.history.load(entry)?.let { graph.scans.prime(item, settings, it) }
-                                }
-                                graph.gallery.openItems(listOf(item), entry.title)
-                                backStack.add(Route.Viewer)
-                            }
-                        },
+                        // An old scan is its own stored result: opening it costs no request.
+                        onOpenHistory = { entry -> graph.gallery.openHistory(listOf(entry), 0) },
                     )
                 }
                 entry<Route.Settings> { route ->
@@ -177,39 +175,25 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
                     val pick = rememberFilePickerLauncher(type = FileKitType.Image, mode = FileKitMode.Multiple()) { files ->
                         if (!files.isNullOrEmpty()) {
                             graph.gallery.openFiles(files)
-                            backStack[backStack.lastIndex] = Route.Viewer
+                            pop()
                         }
                     }
                     val snapshot = stringResource(Res.string.camera_snapshot)
                     CameraScreen(
                         services = graph.services,
                         onCaptured = { file ->
-                            graph.gallery.openItems(listOf(GalleryItem(file, snapshot)), snapshot)
-                            // Replace the camera: back from the photo goes home, like Lens.
-                            backStack[backStack.lastIndex] = Route.Viewer
+                            graph.gallery.openItems(listOf(GalleryItem(file, snapshot)), snapshot, origin = GalleryOrigin.Camera)
+                            // The camera goes as the photo opens: back from the photo goes home, like Lens.
+                            pop()
                         },
                         onPickImages = { pick.launch() },
                         onBack = ::pop,
                     )
                 }
-                entry<Route.Viewer> {
-                    val gallery = graph.gallery.current.collectAsState().value
-                    if (gallery != null) {
-                        val vm = viewModel { ViewerViewModel(gallery, graph.scans, graph.settings) }
-                        ViewerScreen(
-                            vm = vm,
-                            services = graph.services,
-                            translator = graph.translator,
-                            onBack = ::pop,
-                            onTranslateText = { backStack.add(Route.TextTranslate(it)) },
-                        )
-                    }
-                }
-                entry<Route.TextTranslate> { route ->
-                    val vm = viewModel { TextTranslateViewModel(graph.translator, graph.settings, route.initial) }
-                    TextTranslateScreen(vm, graph.services, onBack = ::pop)
-                }
             },
         )
+        gallery?.let { open -> ViewerHost(graph, open, onClose = graph.gallery::close) }
+        }
+        }
     }
 }
