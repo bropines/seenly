@@ -1,5 +1,6 @@
 package io.github.bropines.lens.overlay
 
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.ImageBitmap
 import io.github.bropines.lens.protocol.ScanResult
 import io.github.bropines.lens.protocol.WritingDirection
@@ -85,6 +86,7 @@ abstract class QualityContract {
         val answer = backend.readFixture("${page.answer}.json") ?: return emptyList()
         val result = json.decodeFromString(ScanResult.serializer(), answer.decodeToString())
         val state = backend.blocking { decodeOverlay(result, backend.fonts) }
+        saveDetail(page.name, image)
         val comic = AppStyles.isComic(result)
         // The style the app would pick is starred; the other is what the user gets by overriding it.
         val styles = listOf(
@@ -93,7 +95,9 @@ abstract class QualityContract {
         )
         return styles.map { (label, style) ->
             val floor = AppStyles.phoneFloor(image, style)
-            var scene = buildOverlayScene(state, result, style, image, floor)
+            val trace = StringBuilder()
+            var scene = buildOverlayScene(state, result, style, image, floor) { trace.append(it).append('\n') }
+            backend.save(DIRECTORY, "${page.name}-${label.trimEnd('*')}-trace.log", trace.toString().encodeToByteArray())
             // The first layout pays for fonts and caches; the best of the next three is the cost.
             val ms = (0 until 3).minOf {
                 measureTime { scene = buildOverlayScene(state, result, style, image, floor) }.inWholeMicroseconds / 1000.0
@@ -105,6 +109,29 @@ abstract class QualityContract {
                 backend.save(DIRECTORY, "$file-diag.png", backend.encodePng(diagnostic))
             }
         }
+    }
+
+    /** The picture washed out, with everything the layout takes for "something is drawn here" in red. */
+    private fun saveDetail(name: String, image: ImageBitmap) {
+        val map = detailOf(image.forSoftwareCanvas()) ?: return
+        val w = image.width
+        val h = image.height
+        val pixels = IntArray(w * h).also { image.readPixels(it) }
+        for (y in 0 until h) {
+            for (x in 0 until w) {
+                val i = y * w + x
+                val p = pixels[i]
+                pixels[i] = if (!map.plain(Rect(x + 0.25f, y + 0.25f, x + 0.75f, y + 0.75f))) {
+                    0xFFE00000.toInt()
+                } else {
+                    val r = (((p shr 16) and 0xFF) + 255 * 2) / 3
+                    val g = (((p shr 8) and 0xFF) + 255 * 2) / 3
+                    val b = ((p and 0xFF) + 255 * 2) / 3
+                    ARGB_BLACK or (r shl 16) or (g shl 8) or b
+                }
+            }
+        }
+        backend.save(DIRECTORY, "$name-detail.png", backend.encodePng(imageBitmapFromArgb(pixels, w, h)))
     }
 
     @Test

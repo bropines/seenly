@@ -138,7 +138,23 @@ internal class BubbleMask(
     val bottom: Int,
     val left: IntArray,
     val right: IntArray,
-)
+    /** The bubble's own colour, opaque: what its lettering is erased with. */
+    val color: Int = ARGB_WHITE,
+) {
+    /**
+     * The columns every row of `from until to` has in common, or null when
+     * they share none. Rows the mask does not have are skipped.
+     */
+    fun commonSpan(from: Int, to: Int): Pair<Int, Int>? {
+        var lo = Int.MIN_VALUE
+        var hi = Int.MAX_VALUE
+        for (y in max(from, top) until min(to, bottom)) {
+            lo = max(lo, left[y])
+            hi = min(hi, right[y])
+        }
+        return if (lo != Int.MIN_VALUE && hi > lo) lo to hi else null
+    }
+}
 
 /**
  * How far a channel may sit from the bubble's colour and still be the bubble:
@@ -352,7 +368,8 @@ internal fun bubbleMask(
     var area = 0L
     for (y in first until last) area += right[y] - left[y]
     if (area > maxArea) return null
-    return BubbleMask(width, height, first, last, left, right)
+    val color = ARGB_BLACK or (r.toInt().coerceIn(0, 255) shl 16) or (g.toInt().coerceIn(0, 255) shl 8) or b.toInt().coerceIn(0, 255)
+    return BubbleMask(width, height, first, last, left, right, color)
 }
 
 // ---- shape -----------------------------------------------------------------------
@@ -439,6 +456,10 @@ private class Slot(val from: Int, val to: Int, val left: Float, val right: Float
  * Wraps token [widths] into [shape] at one size. The block is centred
  * vertically, so where a line's band is depends on how many lines there are:
  * counts are tried from one upwards and the first that takes everything wins.
+ *
+ * @param anchor the height the block is centred on, as far as the shape lets
+ *   it be, or NaN for the middle of the shape. A shape read off a picture can
+ *   run on into a tail or a joined bubble; the text belongs where it was.
  */
 private fun arrange(
     widths: FloatArray,
@@ -447,6 +468,7 @@ private fun arrange(
     size: Float,
     spacing: Float,
     cap: Float = Float.POSITIVE_INFINITY,
+    anchor: Float = Float.NaN,
 ): List<Slot>? {
     val pitch = size * spacing
     val margin = size * SHAPE_MARGIN
@@ -456,7 +478,11 @@ private fun arrange(
     while (count * pitch <= height && count <= widths.size) {
         val slots = ArrayList<Slot>(count)
         var next = 0
-        val blockTop = middle - count * pitch / 2
+        val blockTop = if (anchor.isNaN()) {
+            middle - count * pitch / 2
+        } else {
+            (anchor - count * pitch / 2).coerceIn(shape.top, shape.bottom - count * pitch)
+        }
         for (i in 0 until count) {
             if (next >= widths.size) break
             val y = blockTop + i * pitch + (pitch - size) / 2
@@ -494,6 +520,7 @@ private fun balance(
     size: Float,
     spacing: Float,
     greedy: List<Slot>,
+    anchor: Float = Float.NaN,
 ): List<Slot> {
     val count = greedy.size
     var best = greedy
@@ -503,7 +530,7 @@ private fun balance(
         repeat(14) {
             if (hi - lo < 0.5f) return@repeat
             val mid = (lo + hi) / 2
-            val tried = arrange(widths, gap, shape, size, spacing, cap = mid)
+            val tried = arrange(widths, gap, shape, size, spacing, cap = mid, anchor = anchor)
             if (tried != null && tried.size == count) {
                 best = tried
                 hi = mid
@@ -545,7 +572,8 @@ internal fun wrapTokens(text: String, perCharacter: Boolean): List<String> {
  * cheaply: token widths are taken once at the top and scaled, and only a size
  * that looks feasible is measured for real, which is the layout returned.
  *
- * [measure] gives a string's advance at a size.
+ * [measure] gives a string's advance at a size. [anchor] is the height the
+ * block is centred on where the shape allows, or NaN for the shape's middle.
  */
 internal fun fitShaped(
     measure: (String, Float) -> Float,
@@ -556,6 +584,7 @@ internal fun fitShaped(
     maxSize: Float,
     minSize: Float = MIN_FONT_PX,
     step: Float = FONT_STEP_PX,
+    anchor: Float = Float.NaN,
 ): ShapedFit? {
     val tokens = wrapTokens(text, perCharacter)
     if (tokens.isEmpty()) return null
@@ -567,11 +596,11 @@ internal fun fitShaped(
     while (size >= minSize) {
         val ratio = size / high
         val scaled = FloatArray(widths.size) { widths[it] * ratio }
-        if (arrange(scaled, gap * ratio, shape, size, spacing) != null) {
+        if (arrange(scaled, gap * ratio, shape, size, spacing, anchor = anchor) != null) {
             val real = FloatArray(tokens.size) { measure(tokens[it], size) }
             val realGap = if (joiner.isEmpty()) 0f else measure(joiner, size)
-            val greedy = arrange(real, realGap, shape, size, spacing)
-            val slots = greedy?.let { balance(real, realGap, shape, size, spacing, it) }
+            val greedy = arrange(real, realGap, shape, size, spacing, anchor = anchor)
+            val slots = greedy?.let { balance(real, realGap, shape, size, spacing, it, anchor) }
             if (slots != null) {
                 val lines = slots.map { ShapedLine(tokens.subList(it.from, it.to).joinToString(joiner), it.left, it.right, it.y) }
                 // A line is not exactly the sum of its words; the whole line is what gets painted.

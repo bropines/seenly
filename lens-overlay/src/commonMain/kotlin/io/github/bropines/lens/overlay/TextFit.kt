@@ -66,6 +66,59 @@ internal fun wrapsPerCharacter(languageTag: String?): Boolean =
 /** Whether [languageTag] is written right to left. */
 internal fun isRtlLanguage(languageTag: String?): Boolean = baseLanguage(languageTag) in RTL_LANGUAGES
 
+// How tall a line's ink is, in font sizes. Lens draws a line's box around its
+// ink, so "сеть" gets a box half as tall as "Привет, друг" set in the same
+// font: the height of a box says nothing about the size of its type until it
+// is known which letters stand in it.
+
+/** A lowercase letter without a stem, and the least any line of letters is. */
+private const val INK_X_HEIGHT = 0.56f
+
+/** From the baseline to the top of a capital, a digit or an ascender. */
+private const val INK_ASCENT = 0.76f
+
+/** From the baseline down to the foot of a descender. */
+private const val INK_DESCENT = 0.22f
+
+/** Ideographs, kana and hangul fill their square; so, near enough, do scripts without case. */
+internal const val INK_FULL: Float = 0.92f
+
+private const val ASCENDERS = "bdfhkltбёйδζθλξ"
+private const val DESCENDERS = "gjpqyруфцщдβγζημξρφχψ"
+
+/**
+ * How tall the ink of [text] is as a share of its font size: the x-height,
+ * more with a capital, a digit or an ascender in it, more again with a
+ * descender. A box of that height around [text] holds type of
+ * `height / inkRatio(text)`.
+ */
+internal fun inkRatio(text: String): Float {
+    var ascends = false
+    var descends = false
+    var cased = 0
+    var full = 0
+    for (char in text) {
+        when {
+            char.isWhitespace() -> Unit
+            isUpright(char.code) -> full++
+            char.isDigit() || char.isUpperCase() || char in ASCENDERS -> {
+                cased++
+                ascends = true
+                if (char in DESCENDERS) descends = true
+            }
+            char in DESCENDERS -> {
+                cased++
+                descends = true
+            }
+            char.isLowerCase() -> cased++
+            char.isLetter() -> full++
+        }
+    }
+    // Nothing but punctuation says nothing: a dash is as thin in any size.
+    if (full > cased || cased == 0) return INK_FULL
+    return (if (ascends) INK_ASCENT else INK_X_HEIGHT) + (if (descends) INK_DESCENT else 0f)
+}
+
 /**
  * Whether vertical source text stays vertical in the translation. Under
  * [VerticalTextPolicy.Auto] only a CJK target does: Russian or English set in a
