@@ -3,6 +3,8 @@
      Russian is in values-ru/strings_viewer.xml; keep both in step. -->
 <resources>
     <!-- Viewer -->
+    <string name="viewer_panel_collapse">Fold the panel away</string>
+    <string name="viewer_panel_expand">Show the panel</string>
     <string name="viewer_all_pages">All pages</string>
     <string name="viewer_save">Save</string>
     <string name="viewer_saved">Saved to the gallery</string>

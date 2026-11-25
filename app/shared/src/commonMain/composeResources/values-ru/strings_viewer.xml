@@ -2,6 +2,8 @@
 <!-- Русские строки экранов с картинками: просмотр, его галерея, история и главный экран.
      Английские — в values/strings_viewer.xml; правьте оба файла вместе. -->
 <resources>
+    <string name="viewer_panel_collapse">Свернуть панель</string>
+    <string name="viewer_panel_expand">Показать панель</string>
     <!-- Viewer -->
     <string name="viewer_all_pages">Все страницы</string>
     <string name="viewer_save">Сохранить</string>

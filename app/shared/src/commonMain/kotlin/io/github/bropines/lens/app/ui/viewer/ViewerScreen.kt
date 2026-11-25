@@ -36,6 +36,9 @@ import androidx.compose.material.icons.automirrored.rounded.Notes
 import androidx.compose.material.icons.automirrored.rounded.RotateRight
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.ui.unit.Dp
 import androidx.compose.material.icons.rounded.VisibilityOff
 import io.github.bropines.lens.app.ui.components.languageName
 import io.github.bropines.lens.app.ui.UiText
@@ -662,6 +665,8 @@ fun ViewerScreen(
                 BusyStatus(exporting, stringResource(Res.string.viewer_preparing_image))
                 SearchStatus(searching, searchError, onDismiss = vm::dismissSearchError)
             }
+            // Folded, the controls are one row over the picture: languages, rotate, the eye.
+            val compact = settings.viewerCompact
             AnimatedVisibility(
                 chrome && quiet,
                 enter = FastIn + slideInVertically(tween(160)) { it / 3 },
@@ -670,9 +675,11 @@ fun ViewerScreen(
                 Column {
                     // Darkened towards the panel: the controls over the picture read on a white page too.
                     Column(
-                        Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)))).padding(top = 20.dp),
+                        Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))))
+                            .padding(top = 20.dp)
+                            .then(if (compact) Modifier.navigationBarsPadding() else Modifier),
                     ) {
-                        if (items.size > 1) {
+                        AnimatedVisibility(!compact && items.size > 1) {
                             Filmstrip(
                                 items = items,
                                 current = front,
@@ -701,22 +708,32 @@ fun ViewerScreen(
                                     lastRegion = null
                                     vm.rotate(pager.currentPage)
                                 },
-                                modifier = Modifier.padding(start = 8.dp).size(56.dp),
+                                modifier = Modifier.padding(start = 6.dp).size(48.dp),
                             ) {
                                 Icon(
                                     Icons.AutoMirrored.Rounded.RotateRight,
                                     contentDescription = stringResource(Res.string.viewer_rotate),
-                                    modifier = Modifier.size(28.dp),
+                                    modifier = Modifier.size(24.dp),
                                 )
                             }
                             PeekButton(
                                 hidden = overlayHidden,
                                 onToggle = { overlayHidden = !overlayHidden; selection.clear() },
                                 onPeek = { peeking = it },
-                                modifier = Modifier.padding(start = 8.dp),
+                                size = 48.dp,
+                                modifier = Modifier.padding(start = 6.dp),
                             )
+                            // Fold the panel away, or bring it back; the choice is remembered.
+                            IconButton(onClick = { vm.setCompact(!compact) }, modifier = Modifier.padding(start = 2.dp).size(40.dp)) {
+                                Icon(
+                                    if (compact) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                                    contentDescription = stringResource(if (compact) Res.string.viewer_panel_expand else Res.string.viewer_panel_collapse),
+                                    tint = Color.White,
+                                )
+                            }
                         }
                     }
+                    AnimatedVisibility(!compact) {
                     ViewerBottomPanel(
                         mode = mode,
                         onMode = { mode = it; searchMode = false },
@@ -734,8 +751,27 @@ fun ViewerScreen(
                         onSaveImage = ::saveImage,
                         onSelectAll = { result?.let(selection::selectAll) },
                     )
+                    }
                 }
             }
+        }
+
+        // With every control away, the eye stays: small and see-through in the corner,
+        // one tap from translation on or off, and held to peek, as in the panel.
+        AnimatedVisibility(
+            !chrome && quiet,
+            enter = FastIn,
+            exit = FastOut,
+            modifier = Modifier.align(Alignment.BottomEnd),
+        ) {
+            PeekButton(
+                hidden = overlayHidden,
+                onToggle = { overlayHidden = !overlayHidden; selection.clear() },
+                onPeek = { peeking = it },
+                size = 44.dp,
+                translucent = true,
+                modifier = Modifier.navigationBarsPadding().padding(16.dp),
+            )
         }
     }
 
@@ -819,7 +855,15 @@ private fun ViewerTopBar(
  * a glance.
  */
 @Composable
-private fun PeekButton(hidden: Boolean, onToggle: () -> Unit, onPeek: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+private fun PeekButton(
+    hidden: Boolean,
+    onToggle: () -> Unit,
+    onPeek: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    size: Dp = 56.dp,
+    /** Over the bare picture: see-through until it is acting, so it hides little of the page. */
+    translucent: Boolean = false,
+) {
     val haptics = LocalHapticFeedback.current
     val toggle by rememberUpdatedState(onToggle)
     val peek by rememberUpdatedState(onPeek)
@@ -828,9 +872,16 @@ private fun PeekButton(hidden: Boolean, onToggle: () -> Unit, onPeek: (Boolean) 
     var held by remember { mutableStateOf(false) }
     Box(
         modifier
-            .size(56.dp)
+            .size(size)
             .clip(CircleShape)
-            .background(if (hidden || held) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer)
+            .background(
+                when {
+                    held -> MaterialTheme.colorScheme.primary
+                    hidden -> MaterialTheme.colorScheme.primary.copy(alpha = if (translucent) 0.75f else 1f)
+                    translucent -> Color.Black.copy(alpha = 0.35f)
+                    else -> MaterialTheme.colorScheme.secondaryContainer
+                },
+            )
             .semantics(mergeDescendants = true) {
                 role = Role.Switch
                 contentDescription = label
@@ -864,8 +915,12 @@ private fun PeekButton(hidden: Boolean, onToggle: () -> Unit, onPeek: (Boolean) 
         Icon(
             if (hidden != held) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
             contentDescription = null,
-            tint = if (hidden || held) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier.size(28.dp),
+            tint = when {
+                hidden || held -> MaterialTheme.colorScheme.onPrimary
+                translucent -> Color.White.copy(alpha = 0.85f)
+                else -> MaterialTheme.colorScheme.onSecondaryContainer
+            },
+            modifier = Modifier.size(size / 2),
         )
     }
 }

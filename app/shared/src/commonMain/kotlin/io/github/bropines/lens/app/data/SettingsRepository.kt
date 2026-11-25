@@ -48,6 +48,8 @@ data class AppSettings(
     val themeColor: ThemeColor = ThemeColor.Wallpaper,
     /** Pure black backgrounds in the dark theme, for OLED screens. */
     val amoled: Boolean = false,
+    /** The viewer's controls folded to one row (languages, rotate, the eye); remembered between pictures. */
+    val viewerCompact: Boolean = false,
     /** The UI language as a BCP 47 tag ("en", "ru"); null follows the system. */
     val uiLanguage: String? = null,
     /** The last folder opened, as FileKit's serialised PlatformFile, so it can be reopened. */
@@ -195,6 +197,7 @@ class SettingsRepository(services: PlatformServices) {
             p[THEME] = next.theme.name
             p[THEME_COLOR] = next.themeColor.name
             p[AMOLED] = next.amoled
+            p[VIEWER_COMPACT] = next.viewerCompact
             if (next.uiLanguage != null) p[UI_LANGUAGE] = next.uiLanguage else p.remove(UI_LANGUAGE)
             if (next.lastFolder != null) p[LAST_FOLDER] = next.lastFolder else p.remove(LAST_FOLDER)
             p[ERASE] = next.overlay.erase.name
@@ -278,6 +281,7 @@ class SettingsRepository(services: PlatformServices) {
         theme = this[THEME].toEnum(ThemeMode.System),
         themeColor = this[THEME_COLOR].toEnum(ThemeColor.Wallpaper),
         amoled = this[AMOLED] ?: false,
+        viewerCompact = this[VIEWER_COMPACT] ?: false,
         uiLanguage = this[UI_LANGUAGE]?.ifEmpty { null },
         lastFolder = this[LAST_FOLDER],
         overlay = OverlayPrefs(
@@ -322,6 +326,7 @@ class SettingsRepository(services: PlatformServices) {
         val THEME = stringPreferencesKey("theme")
         val THEME_COLOR = stringPreferencesKey("theme_color")
         val AMOLED = booleanPreferencesKey("theme_amoled")
+        val VIEWER_COMPACT = booleanPreferencesKey("viewer_compact")
         val UI_LANGUAGE = stringPreferencesKey("ui_language")
         val LAST_FOLDER = stringPreferencesKey("last_folder")
         val ERASE = stringPreferencesKey("overlay_erase")

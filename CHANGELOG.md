@@ -13,6 +13,7 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 - Viewer gallery: a grid of a folder's or a set's pictures with marks for translated and failed pages, and a strip of thumbnails under the picture to jump or scrub through pages.
 - Pull a picture down to put it away: it follows the finger and lands in its thumbnail. The system back gesture draws it back with its progress.
 - Hold a picture for quick actions (copy, share, save, translate again); hold the eye to peek at the original.
+- The viewer's panel folds down to one row (languages, rotate, the eye) with the arrow beside the eye, and stays folded until unfolded. With every control hidden by a tap, a small see-through eye stays in the corner to switch the translation on and off.
 - Share the translated picture, the text, or both; save the translated picture to the gallery.
 - Pages read before open without a request, also offline. The next pages of a folder are translated ahead, and a folder reopens at the page it was left at.
 - Screen translation: copy the translated text or the original from the bubble menu.

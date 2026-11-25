@@ -292,6 +292,8 @@ class ViewerViewModel(
 
     fun setSource(code: String?) = viewModelScope.launch { settingsRepository.update { it.copy(sourceLanguage = code) } }
 
+    fun setCompact(compact: Boolean) = viewModelScope.launch { settingsRepository.update { it.copy(viewerCompact = compact) } }
+
     private fun placeOf(index: Int): PagePlace? = gallery.folderKey?.let { PagePlace(it, gallery.title, index) }
 
     private fun ensure(index: Int, fresh: Boolean = false) {
