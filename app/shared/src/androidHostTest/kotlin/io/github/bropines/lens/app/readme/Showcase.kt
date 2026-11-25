@@ -89,11 +89,11 @@ class DemoGraph(override val services: DemoServices) : AppGraph {
     private val registry = TranslatorRegistry()
 
     override val settings = SettingsRepository(services)
-    override val gallery = GalleryRepository()
     override val lens = LensClient(offline)
 
     /** Scans come primed from the saved results, so history never records one and its database stays shut. */
     override val history: HistoryRepository = allocateUnconstructed(HistoryRepository::class.java)
+    override val gallery = GalleryRepository(services, history)
     override val scans = ScanRepository(lens, history, services)
     override val updates = io.github.bropines.lens.app.update.UpdateController(offline, settings, services)
     override val account = io.github.bropines.lens.app.data.GoogleAccount(services, settings)
@@ -135,6 +135,6 @@ fun Shot(content: @Composable () -> Unit) {
         ImageLoader.Builder(context).components { add(BitmapFactoryDecoder.Factory()); addPlatformFileSupport() }.build()
     }
     CompositionLocalProvider(LocalDynamicColor provides false) {
-        LensTheme(ThemeMode.Dark, content)
+        LensTheme(ThemeMode.Dark, content = content)
     }
 }
