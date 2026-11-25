@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Screen translation: what Android itself shows when it stops on its own. English; Russian is in values-ru. -->
+<resources>
+    <string name="screen_stopped_title">Screen translation stopped</string>
+    <string name="screen_stopped_capture">The screen capture ended. Tap to turn it on again.</string>
+    <string name="screen_stopped_accessibility">Seenly accessibility was turned off. Tap to turn screen translation on again.</string>
+    <string name="screen_timed_out">no answer in time</string>
+</resources>

@@ -41,7 +41,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -77,6 +79,8 @@ internal class BubbleMenu(
         /** The main button: translate now ("this screen") or just carry on. */
         fun onPrimary()
         fun onLanguage(source: Boolean, code: String?)
+        /** Copy what the last translation shown says: the [translation], or the text it was made from. */
+        fun onCopy(translation: Boolean)
         fun onStop()
         fun onMenuClosed()
     }
@@ -87,7 +91,8 @@ internal class BubbleMenu(
 
     val isShown: Boolean get() = root != null
 
-    fun show(current: ScreenMode, bottomInset: Int) {
+    /** [canCopy]: there is a translation whose text can be copied. */
+    fun show(current: ScreenMode, bottomInset: Int, canCopy: Boolean = false) {
         // A window the system took away without hide() must not block the menu for good.
         root?.let { if (!it.isAttachedToWindow) forget() else return }
         mode = current
@@ -117,6 +122,11 @@ internal class BubbleMenu(
                                 listener.onStop()
                             },
                             onDismiss = ::hide,
+                            canCopy = canCopy,
+                            onCopy = {
+                                listener.onCopy(it)
+                                hide()
+                            },
                         )
                     }
                 },
@@ -217,9 +227,13 @@ internal fun MenuSheet(
     onLanguage: (source: Boolean, code: String?) -> Unit,
     onStop: () -> Unit,
     onDismiss: () -> Unit,
+    /** There is a translation on screen (or there just was) whose text can be copied. */
+    canCopy: Boolean = false,
+    onCopy: (translation: Boolean) -> Unit = {},
 ) {
     val current by settings.settings.collectAsState(AppSettings())
     var picking by remember { mutableStateOf<Picking?>(null) }
+    val haptics = LocalHapticFeedback.current
     LensTheme(current.theme, current.themeColor, current.amoled) {
         Box(
             Modifier.fillMaxSize().clickable(remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
@@ -243,7 +257,10 @@ internal fun MenuSheet(
                             modes.forEachIndexed { index, item ->
                                 SegmentedButton(
                                     selected = item == mode,
-                                    onClick = { onMode(item) },
+                                    onClick = {
+                                        if (item != mode) haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                                        onMode(item)
+                                    },
                                     shape = SegmentedButtonDefaults.itemShape(index, modes.size),
                                     icon = {},
                                 ) {
@@ -273,6 +290,34 @@ internal fun MenuSheet(
                             Text("→", style = MaterialTheme.typography.titleMedium)
                             FilledTonalButton(onClick = { picking = Picking.Target }, modifier = Modifier.weight(1f)) {
                                 Text(languageName(current.targetLanguage), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                        if (canCopy) {
+                            // The text of what was just translated: for a reply, a search, a note.
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(
+                                    stringResource(Res.string.copy),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                OutlinedButton(
+                                    onClick = {
+                                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                                        onCopy(true)
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                ) {
+                                    Text(stringResource(Res.string.bubble_copy_translation), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                }
+                                OutlinedButton(
+                                    onClick = {
+                                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                                        onCopy(false)
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                ) {
+                                    Text(stringResource(Res.string.bubble_copy_original), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                }
                             }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

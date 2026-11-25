@@ -2,6 +2,8 @@ package io.github.bropines.lens.screen
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
+import android.os.Build
+import android.util.Log
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +23,13 @@ import kotlinx.coroutines.flow.asStateFlow
 class LensAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         ScreenOverlayHost.connected(this)
+        // The process was killed under a running screen translator (a task swiped away on MIUI),
+        // and the system has just brought this service back: the bubble comes back with it.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !ScreenTranslateState.running.value && ScreenSession(this).comeBack()) {
+            runCatching {
+                startService(Intent(this, ScreenTranslateService::class.java).setAction(ScreenTranslateService.ACTION_START_TRUSTED))
+            }.onFailure { Log.w("ScreenTranslate", "could not come back", it) }
+        }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) = Unit
