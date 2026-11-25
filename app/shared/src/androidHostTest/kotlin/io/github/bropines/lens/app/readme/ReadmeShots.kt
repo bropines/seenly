@@ -8,11 +8,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import io.github.bropines.lens.app.data.GalleryItem
 import io.github.bropines.lens.app.resources.Res
-import io.github.bropines.lens.app.resources.about_title
 import io.github.bropines.lens.app.resources.tab_text
 import io.github.bropines.lens.app.ui.main.MainScreen
 import io.github.bropines.lens.app.ui.main.Tab
@@ -79,8 +77,6 @@ abstract class ReadmeShots(private val lang: String) {
     @Test
     fun settings() {
         compose.setContent { Shot { Main(Tab.Settings) } }
-        // The lower half: the app language, the theme, the translators.
-        compose.onNodeWithText(text(Res.string.about_title)).performScrollTo()
         snap("Settings")
     }
 
@@ -143,8 +139,6 @@ abstract class ReadmeShots(private val lang: String) {
         onOpenViewer = {},
         onOpenCamera = {},
         onOpenHistory = {},
-        onOpenAbout = {},
-        onOpenTranslators = {},
     )
 
     private fun viewer(title: String, items: List<GalleryItem>, result: ScanResult) {

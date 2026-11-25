@@ -17,8 +17,8 @@ import io.github.bropines.lens.app.data.TextTranslator
 import io.github.bropines.lens.translate.TranslationPipeline
 import io.github.bropines.lens.translate.TranslatorRegistry
 import io.github.bropines.lens.protocol.LensClient
+import io.github.bropines.lens.app.net.AppNetwork
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.HttpTimeout
 
 /** The app's object graph, checked at compile time by Metro. */
 @DependencyGraph(AppScope::class)
@@ -33,17 +33,11 @@ interface AppGraph {
     val history: io.github.bropines.lens.app.data.history.HistoryRepository
     val updates: UpdateController
     val account: GoogleAccount
+    val network: AppNetwork
 
-    /** One HTTP client for the app; the engine (OkHttp) comes from the classpath. */
-    @SingleIn(AppScope::class)
+    /** One HTTP client for the app: [AppNetwork]'s, which goes through the proxy the user set. */
     @Provides
-    fun httpClient(): HttpClient = HttpClient {
-        install(HttpTimeout) {
-            connectTimeoutMillis = 15_000
-            // Engines set their own, shorter, timeouts; an LLM may take up to two minutes.
-            requestTimeoutMillis = 130_000
-        }
-    }
+    fun httpClient(network: AppNetwork): HttpClient = network.http
 
     /** Anonymous unless the user connected a Google account and left "use for Lens" on. */
     @SingleIn(AppScope::class)

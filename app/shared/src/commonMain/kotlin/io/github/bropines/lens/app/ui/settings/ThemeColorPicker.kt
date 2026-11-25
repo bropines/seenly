@@ -47,13 +47,14 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun ThemeColorPicker(selected: ThemeColor, onSelect: (ThemeColor) -> Unit) {
     val wallpaper = platformDynamicColorScheme(isSystemInDarkTheme())
-    val shown = selected.takeUnless { it == ThemeColor.Wallpaper && wallpaper == null } ?: ThemeColor.Violet
+    val shown = shownThemeColor(selected)
     val options = ThemeColor.entries.filter { it != ThemeColor.Wallpaper || wallpaper != null }
     Column {
         ListItem(
             headlineContent = { Text(stringResource(Res.string.theme_color)) },
             supportingContent = { Text(stringResource(shown.label())) },
             leadingContent = { SettingIcon(Icons.Rounded.Palette) },
+            colors = rowColors(),
         )
         Row(
             Modifier.horizontalScroll(rememberScrollState()).padding(start = 72.dp, end = 16.dp, bottom = 8.dp),
@@ -101,7 +102,12 @@ private fun Swatch(fill: Color, selected: Boolean, label: String, wallpaper: Boo
     }
 }
 
-private fun ThemeColor.label(): StringResource = when (this) {
+/** The palette in use: a saved "Wallpaper" is violet where the system has no wallpaper colours. */
+@Composable
+internal fun shownThemeColor(selected: ThemeColor): ThemeColor =
+    selected.takeUnless { it == ThemeColor.Wallpaper && platformDynamicColorScheme(isSystemInDarkTheme()) == null } ?: ThemeColor.Violet
+
+internal fun ThemeColor.label(): StringResource = when (this) {
     ThemeColor.Wallpaper -> Res.string.color_wallpaper
     ThemeColor.Violet -> Res.string.color_violet
     ThemeColor.Blue -> Res.string.color_blue

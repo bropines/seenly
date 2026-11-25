@@ -78,7 +78,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import io.github.bropines.lens.app.data.ReadingLayout
 import io.github.bropines.lens.app.platform.PlatformServices
 import io.github.bropines.lens.app.platform.encodePng
 import io.github.bropines.lens.app.ui.components.LanguageBar
@@ -88,7 +87,6 @@ import io.github.bropines.lens.overlay.OverlayStyle
 import io.github.bropines.lens.overlay.rememberTextSelectionState
 import io.github.bropines.lens.overlay.renderTranslatedBitmap
 import io.github.bropines.lens.protocol.ScanResult
-import io.github.bropines.lens.protocol.WritingDirection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -127,18 +125,7 @@ fun ViewerScreen(
     val renders = remember { mutableStateMapOf<Int, PageRender>() }
     val scope = rememberCoroutineScope()
     val highlight = MaterialTheme.colorScheme.primary
-    fun styleFor(scan: ScanResult?): OverlayStyle {
-        val manga = when (settings.readingLayout) {
-            ReadingLayout.InPlace -> false
-            ReadingLayout.Reflow -> true
-            // Vertical source text means a comic page: bubbles want reflow, not per-column fitting.
-            ReadingLayout.Auto -> scan?.paragraphs?.any { it.writingDirection == WritingDirection.TopToBottom } == true
-        }
-        // Lens misses tiny side columns (a lone "でも……"), so a reflow that grows far
-        // runs over text it was never told about; grow a little less than the preset.
-        val base = if (manga) OverlayStyle.Manga.copy(reflowGrowth = 1.25f) else OverlayStyle.Chromium
-        return base.withPrefs(settings.overlay).copy(highlightColor = highlight)
-    }
+    fun styleFor(scan: ScanResult?): OverlayStyle = settings.overlayStyle(scan).copy(highlightColor = highlight)
 
     val selection = rememberTextSelectionState()
 

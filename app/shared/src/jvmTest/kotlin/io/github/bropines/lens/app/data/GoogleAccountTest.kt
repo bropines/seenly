@@ -111,10 +111,26 @@ class GoogleAccountTest {
         assertTrue(cookies in withAccount)
 
         val other = SettingsRepository(Services())
-        assertNull(other.importJson(plain))
+        assertNull(other.importJson(plain).googleCookies)
         // The new preferences travel with the backup; the cookies come back for the caller to connect.
         assertEquals(UpdatePrefs(autoCheck = false, beta = true), other.settings.first().updates)
         assertTrue(other.settings.first().onDevice.always)
-        assertEquals(cookies, other.importJson(withAccount))
+        assertEquals(cookies, other.importJson(withAccount).googleCookies)
+    }
+
+    @Test
+    fun theProxyTravelsWithABackupAndItsPasswordOnlyWhenAsked() = runBlocking {
+        val settings = SettingsRepository(Services())
+        val proxy = ProxyPrefs(ProxyMode.Socks5, "proxy.example.com", 1080, "ann")
+        settings.update { it.copy(proxy = proxy) }
+
+        val plain = settings.exportJson()
+        assertFalse("hunter2" in plain)
+        val withPassword = settings.exportJson(proxyPassword = "hunter2")
+
+        val other = SettingsRepository(Services())
+        assertNull(other.importJson(plain).proxyPassword)
+        assertEquals(proxy, other.settings.first().proxy)
+        assertEquals("hunter2", other.importJson(withPassword).proxyPassword)
     }
 }

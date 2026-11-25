@@ -97,6 +97,9 @@ class DemoGraph(override val services: DemoServices) : AppGraph {
     override val scans = ScanRepository(lens, history, services)
     override val updates = io.github.bropines.lens.app.update.UpdateController(offline, settings, services)
     override val account = io.github.bropines.lens.app.data.GoogleAccount(services, settings)
+
+    /** Built like the app's, and never asked for a connection: everything above is handed [offline]. */
+    override val network = io.github.bropines.lens.app.net.AppNetwork(services, settings)
     override val translator = TextTranslator(
         pipeline = TranslationPipeline(registry, offline, settings = { settings.current.value.translators.toSettings() }),
         registry = registry,
@@ -135,6 +138,6 @@ fun Shot(content: @Composable () -> Unit) {
         ImageLoader.Builder(context).components { add(BitmapFactoryDecoder.Factory()); addPlatformFileSupport() }.build()
     }
     CompositionLocalProvider(LocalDynamicColor provides false) {
-        LensTheme(ThemeMode.Dark, content)
+        LensTheme(ThemeMode.Dark, content = content)
     }
 }

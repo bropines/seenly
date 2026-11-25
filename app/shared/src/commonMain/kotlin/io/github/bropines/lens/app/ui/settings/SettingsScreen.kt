@@ -1,539 +1,443 @@
 package io.github.bropines.lens.app.ui.settings
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.AutoFixHigh
-import androidx.compose.material.icons.rounded.BorderStyle
-import androidx.compose.material.icons.rounded.FontDownload
-import androidx.compose.material.icons.rounded.FormatSize
-import androidx.compose.material.icons.rounded.TextFields
-import androidx.compose.material.icons.rounded.TextRotateVertical
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Slider
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import io.github.bropines.lens.app.data.EraseChoice
-import io.github.bropines.lens.app.data.FontChoice
-import io.github.bropines.lens.app.data.OutlineChoice
-import io.github.bropines.lens.app.data.OverlayPrefs
-import io.github.bropines.lens.app.data.VerticalChoice
-import io.github.bropines.lens.app.data.RefineChoice
-import kotlin.math.roundToInt
-import androidx.compose.material.icons.rounded.BrightnessAuto
-import androidx.compose.material.icons.rounded.ChatBubbleOutline
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material.icons.rounded.Contrast
-import androidx.compose.material.icons.rounded.FormatLineSpacing
-import androidx.compose.material.icons.rounded.WrapText
-import androidx.compose.material.icons.automirrored.rounded.FormatAlignLeft
-import androidx.compose.material.icons.rounded.DocumentScanner
-import androidx.compose.material.icons.rounded.GTranslate
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Layers
-import androidx.compose.material.icons.rounded.Download
-import androidx.compose.material.icons.rounded.Upload
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import io.github.vinceglb.filekit.dialogs.FileKitType
-import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
-import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
-import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
-import io.github.vinceglb.filekit.readString
-import io.github.vinceglb.filekit.writeString
-import androidx.compose.runtime.collectAsState
-import io.github.bropines.lens.app.screen.ScreenTranslate
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.LightMode
-import androidx.compose.material.icons.rounded.Translate
-import androidx.compose.material.icons.rounded.ViewHeadline
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.BrightnessAuto
+import androidx.compose.material.icons.rounded.ChatBubbleOutline
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.CloudOff
+import androidx.compose.material.icons.rounded.Contrast
+import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.Layers
+import androidx.compose.material.icons.rounded.LightMode
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Public
+import androidx.compose.material.icons.rounded.Science
+import androidx.compose.material.icons.rounded.ScreenshotMonitor
+import androidx.compose.material.icons.rounded.SystemUpdate
+import androidx.compose.material.icons.rounded.Translate
+import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.rounded.ViewHeadline
+import androidx.compose.material.icons.rounded.VpnLock
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ScaffoldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.bropines.lens.app.Route
 import io.github.bropines.lens.app.data.AppSettings
-import io.github.bropines.lens.app.data.Languages
+import io.github.bropines.lens.app.data.ProxyMode
+import io.github.bropines.lens.app.data.ProxyPrefs
 import io.github.bropines.lens.app.data.ReadingLayout
-import io.github.bropines.lens.app.data.SettingsRepository
-import io.github.bropines.lens.app.data.TextEngine
+import io.github.bropines.lens.app.data.ThemeColor
 import io.github.bropines.lens.app.data.ThemeMode
+import io.github.bropines.lens.app.di.AppGraph
+import io.github.bropines.lens.app.resources.*
+import io.github.bropines.lens.app.ui.asString
+import io.github.bropines.lens.app.ui.components.AppTopBar
 import io.github.bropines.lens.app.ui.components.LanguagePickerSheet
 import io.github.bropines.lens.app.ui.components.languageName
-import io.github.bropines.lens.app.data.GoogleAccount
-import io.github.bropines.lens.app.ui.asString
-import io.github.bropines.lens.app.update.UpdateController
+import io.github.bropines.lens.app.ui.theme.seed
 import io.github.bropines.lens.app.update.UpdateStatus
-import androidx.compose.material.icons.rounded.AccountCircle
-import androidx.compose.material.icons.rounded.CloudOff
-import androidx.compose.material.icons.rounded.NewReleases
-import androidx.compose.material.icons.rounded.Science
-import androidx.compose.material.icons.rounded.SystemUpdate
-import androidx.compose.material.icons.rounded.Update
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Switch
-import androidx.compose.material3.TextButton
-import io.github.bropines.lens.app.resources.*
-import org.jetbrains.compose.resources.getString
-import org.jetbrains.compose.resources.stringResource
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import kotlin.math.roundToInt
 
+/** The pages the settings are sorted into; each opens from its tile on the Settings tab. */
+enum class SettingsPage { Translation, Overlay, Screen, Appearance, Network, Updates, App }
+
+/**
+ * The Settings tab: not a list. On top a card that says what the app is set to
+ * do right now and lets the things changed most often be changed in place;
+ * under it the rest, sorted into pages, as a grid of tiles that each say what
+ * is set inside.
+ */
 @Composable
-fun SettingsScreen(
-    repository: SettingsRepository,
-    settings: AppSettings,
-    onBack: (() -> Unit)?,
-    onAbout: () -> Unit = {},
-    onTranslators: () -> Unit = {},
-    translatorsSummary: String = "",
-    screen: ScreenTranslate? = null,
-    updates: UpdateController? = null,
-    account: GoogleAccount? = null,
-    onAccount: () -> Unit = {},
-    /** Opens the on-device scanning page; null where the build has none (foss, desktop). */
-    onOnDevice: (() -> Unit)? = null,
-) {
+fun SettingsScreen(graph: AppGraph, settings: AppSettings, onOpen: (Route) -> Unit) {
     val scope = rememberCoroutineScope()
-    fun update(transform: (AppSettings) -> AppSettings) = scope.launch { repository.update(transform) }
-    var picker by remember { mutableStateOf<String?>(null) }
-    val snackbar = remember { SnackbarHostState() }
-    val accountState = account?.state?.collectAsState()?.value
-    // Whether the export about to be saved carries the account's cookies: asked each time, never the default.
-    var exportCookies by remember { mutableStateOf(false) }
-    var askExport by remember { mutableStateOf(false) }
-    val exporter = rememberFileSaverLauncher(dialogSettings = FileKitDialogSettings.createDefault()) { file: PlatformFile? ->
-        if (file == null) return@rememberFileSaverLauncher
-        scope.launch {
-            val cookies = if (exportCookies) account?.exportCookies() else null
-            val message = runCatching { file.writeString(repository.exportJson(cookies)) }
-                .fold({ getString(Res.string.settings_saved) }, { getString(Res.string.settings_save_failed, it.message.orEmpty()) })
-            snackbar.showSnackbar(message)
-        }
-    }
-    // Any file: some file managers do not tag .json as JSON.
-    val importer = rememberFilePickerLauncher(type = FileKitType.File()) { file ->
-        if (file == null) return@rememberFilePickerLauncher
-        scope.launch {
-            val message = runCatching { repository.importJson(file.readString()) }
-                .fold(
-                    { cookies ->
-                        // A backup made with the account in it brings the account along.
-                        if (cookies != null && account?.connect(cookies) == true) {
-                            getString(Res.string.settings_loaded_with_account)
-                        } else {
-                            getString(Res.string.settings_loaded)
-                        }
-                    },
-                    {
-                        if (it is IllegalArgumentException) {
-                            getString(Res.string.settings_not_a_backup)
-                        } else {
-                            getString(Res.string.settings_read_failed, it.message.orEmpty())
-                        }
-                    },
-                )
-            snackbar.showSnackbar(message)
-        }
-    }
+    fun update(transform: (AppSettings) -> AppSettings) = scope.launch { graph.settings.update(transform) }
+    fun open(page: SettingsPage) = onOpen(Route.Settings(page))
+
+    val screen = graph.services.screenTranslate
+    val updateStatus by graph.updates.status.collectAsState()
+    val translators = settings.translators.enabled.joinToString(" → ") { graph.translator.nameOf(it) }
+        .ifEmpty { stringResource(Res.string.translators_none) }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbar) },
-        contentWindowInsets = if (onBack == null) WindowInsets(0) else ScaffoldDefaults.contentWindowInsets,
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(Res.string.tab_settings)) },
-                navigationIcon = { if (onBack != null) IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(Res.string.back)) } },
-            )
-        },
+        // A tab: the dock below is the main screen's, and it has already taken the insets.
+        contentWindowInsets = WindowInsets(0),
+        topBar = { AppTopBar(stringResource(Res.string.tab_settings), stringResource(Res.string.about_version, graph.services.appVersion)) },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
-            Section(stringResource(Res.string.settings_section_translation))
-            Setting(Icons.Rounded.Translate, stringResource(Res.string.settings_target), languageName(settings.targetLanguage)) { picker = "target" }
-            Setting(Icons.Rounded.Language, stringResource(Res.string.source_language), languageName(settings.sourceLanguage)) { picker = "source" }
-            Setting(
-                Icons.Rounded.DocumentScanner,
-                stringResource(Res.string.settings_ocr_hint),
-                if (settings.ocrLanguage.isEmpty()) stringResource(Res.string.settings_ocr_hint_none) else languageName(settings.ocrLanguage),
-            ) { picker = "ocr" }
-            if (onOnDevice != null) {
-                Setting(
-                    Icons.Rounded.CloudOff,
-                    stringResource(Res.string.on_device_title),
-                    stringResource(
-                        when {
-                            settings.onDevice.always -> Res.string.on_device_summary_always
-                            settings.onDevice.fallback -> Res.string.on_device_summary_fallback
-                            else -> Res.string.on_device_summary_off
-                        },
-                    ),
-                    onOnDevice,
-                )
-            }
-
-            Section(stringResource(Res.string.settings_section_overlay))
-            Choice(Icons.Rounded.AutoAwesome, stringResource(Res.string.layout_auto), stringResource(Res.string.layout_auto_desc), settings.readingLayout == ReadingLayout.Auto) {
-                update { it.copy(readingLayout = ReadingLayout.Auto) }
-            }
-            Choice(Icons.Rounded.ViewHeadline, stringResource(Res.string.layout_in_place), stringResource(Res.string.layout_in_place_desc), settings.readingLayout == ReadingLayout.InPlace) {
-                update { it.copy(readingLayout = ReadingLayout.InPlace) }
-            }
-            Choice(Icons.Rounded.ChatBubbleOutline, stringResource(Res.string.layout_reflow), stringResource(Res.string.layout_reflow_desc), settings.readingLayout == ReadingLayout.Reflow) {
-                update { it.copy(readingLayout = ReadingLayout.Reflow) }
-            }
-
-            Section(stringResource(Res.string.settings_section_style))
-            val o = settings.overlay
-            fun overlay(transform: (OverlayPrefs) -> OverlayPrefs) = update { it.copy(overlay = transform(it.overlay)) }
-            val auto = stringResource(Res.string.auto)
-            Segmented(
-                Icons.Rounded.AutoFixHigh, stringResource(Res.string.style_erase),
-                listOf(EraseChoice.Auto to auto, EraseChoice.Patch to stringResource(Res.string.erase_patch), EraseChoice.Fill to stringResource(Res.string.erase_fill)),
-                o.erase,
-            ) { v -> overlay { it.copy(erase = v) } }
-            Segmented(
-                Icons.Rounded.BorderStyle, stringResource(Res.string.style_outline),
-                listOf(
-                    OutlineChoice.Auto to auto,
-                    OutlineChoice.None to stringResource(Res.string.outline_none),
-                    OutlineChoice.Thin to stringResource(Res.string.outline_thin),
-                    OutlineChoice.Bold to stringResource(Res.string.outline_bold),
-                ),
-                o.outline,
-            ) { v -> overlay { it.copy(outline = v) } }
-            Segmented(
-                Icons.Rounded.FontDownload, stringResource(Res.string.style_font),
-                listOf(
-                    FontChoice.System to stringResource(Res.string.font_system),
-                    FontChoice.Sans to "Sans",
-                    FontChoice.Serif to "Serif",
-                    FontChoice.Mono to stringResource(Res.string.font_mono),
-                ),
-                o.font,
-            ) { v -> overlay { it.copy(font = v) } }
-            Segmented(
-                Icons.Rounded.TextRotateVertical, stringResource(Res.string.style_vertical),
-                listOf(
-                    VerticalChoice.Auto to auto,
-                    VerticalChoice.Keep to stringResource(Res.string.vertical_keep),
-                    VerticalChoice.Horizontal to stringResource(Res.string.vertical_horizontal),
-                ),
-                o.vertical,
-            ) { v -> overlay { it.copy(vertical = v) } }
-            SliderSetting(
-                Icons.Rounded.FormatSize, stringResource(Res.string.style_text_size), "${(o.textScale * 100).roundToInt()}%",
-                value = o.textScale, range = 0.7f..1.3f, steps = 11,
-            ) { v -> overlay { it.copy(textScale = (v * 20).roundToInt() / 20f) } }
-            SliderSetting(
-                Icons.Rounded.TextFields, stringResource(Res.string.style_min_size), if (o.minFontSp == 0) auto else "${o.minFontSp} sp",
-                value = o.minFontSp.toFloat(), range = 0f..16f, steps = 15,
-            ) { v -> overlay { it.copy(minFontSp = v.roundToInt()) } }
-            // Line-by-line refinements; each is optional because none is right for every page.
-            // "Auto" decides per paragraph from its shape; On and Off force it.
-            val refine = listOf(
-                RefineChoice.Auto to auto,
-                RefineChoice.On to stringResource(Res.string.choice_on),
-                RefineChoice.Off to stringResource(Res.string.choice_off),
-            )
-            Segmented(Icons.Rounded.FormatLineSpacing, stringResource(Res.string.style_uniform_size), refine, o.uniformLineSize) { v ->
-                overlay { it.copy(uniformLineSize = v) }
-            }
-            Segmented(Icons.AutoMirrored.Rounded.FormatAlignLeft, stringResource(Res.string.style_grow_start), refine, o.growFromLineStart) { v ->
-                overlay { it.copy(growFromLineStart = v) }
-            }
-            Segmented(Icons.Rounded.WrapText, stringResource(Res.string.style_reflow_dense), refine, o.reflowDense) { v ->
-                overlay { it.copy(reflowDense = v) }
-            }
-            Text(
-                stringResource(Res.string.style_refine_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            SetupCard(
+                settings = settings,
+                hasOnDevice = graph.services.onDevice != null,
+                update = ::update,
+                onAppearance = { open(SettingsPage.Appearance) },
+                onNetwork = { open(SettingsPage.Network) },
             )
 
-            if (screen != null) {
-                val opaque by screen.opaque.collectAsState()
-                Section(stringResource(Res.string.screen_translation))
-                Setting(
-                    Icons.Rounded.Layers,
-                    stringResource(Res.string.settings_opaque),
-                    stringResource(if (opaque) Res.string.settings_opaque_on else Res.string.settings_opaque_off),
-                ) { screen.openOpaqueSettings() }
-            }
-
-            Section(stringResource(Res.string.text_translation))
-            Setting(Icons.Rounded.GTranslate, stringResource(Res.string.translators), translatorsSummary, onTranslators)
-
-            Section(stringResource(Res.string.settings_section_appearance))
-            // The app's own language. English and Russian are named natively, so each reads right whatever is chosen.
-            Segmented(
-                Icons.Rounded.Language, stringResource(Res.string.settings_ui_language),
-                listOf(
-                    null to stringResource(Res.string.ui_language_system),
-                    "en" to Languages.nativeName("en"),
-                    "ru" to Languages.nativeName("ru"),
-                ),
-                settings.uiLanguage,
-            ) { v -> update { it.copy(uiLanguage = v) } }
-            ThemeMode.entries.forEach { mode ->
-                val label = when (mode) {
-                    ThemeMode.System -> stringResource(Res.string.theme_system)
-                    ThemeMode.Light -> stringResource(Res.string.theme_light)
-                    ThemeMode.Dark -> stringResource(Res.string.theme_dark)
+            val tiles = buildList {
+                add(Tile(Icons.Rounded.Translate, MaterialShapes.Cookie9Sided.toShape(), stringResource(Res.string.settings_section_translation), translators) { open(SettingsPage.Translation) })
+                add(
+                    Tile(
+                        Icons.Rounded.Layers, MaterialShapes.Clover4Leaf.toShape(), stringResource(Res.string.settings_section_overlay_style),
+                        layoutLabel(settings.readingLayout) + " · ${(settings.overlay.textScale * 100).roundToInt()}%",
+                    ) { open(SettingsPage.Overlay) },
+                )
+                if (screen != null) {
+                    val opaque by screen.opaque.collectAsState()
+                    add(
+                        Tile(
+                            Icons.Rounded.ScreenshotMonitor, MaterialShapes.Cookie4Sided.toShape(), stringResource(Res.string.screen_translation),
+                            stringResource(if (opaque) Res.string.screen_summary_opaque else Res.string.screen_summary_through),
+                        ) { open(SettingsPage.Screen) },
+                    )
                 }
-                val icon = when (mode) {
-                    ThemeMode.System -> Icons.Rounded.BrightnessAuto
-                    ThemeMode.Light -> Icons.Rounded.LightMode
-                    ThemeMode.Dark -> Icons.Rounded.DarkMode
-                }
-                Choice(icon, label, null, settings.theme == mode) { update { it.copy(theme = mode) } }
-            }
-            ThemeColorPicker(settings.themeColor) { c -> update { it.copy(themeColor = c) } }
-            Toggle(
-                Icons.Rounded.Contrast, stringResource(Res.string.theme_amoled),
-                stringResource(Res.string.theme_amoled_desc), settings.amoled,
-            ) { on -> update { it.copy(amoled = on) } }
-
-            if (updates != null) UpdateSettings(updates, settings) { transform -> update { it.copy(updates = transform(it.updates)) } }
-
-            // The Google account works as far as Seenly goes, but the Lens endpoint
-            // answers cookie-signed requests with 401: it wants Chrome's own OAuth
-            // token. Kept out of the way, and says so, until that changes.
-            if (accountState != null) {
-                Section(stringResource(Res.string.settings_section_experimental))
-                Setting(
-                    Icons.Rounded.AccountCircle,
-                    stringResource(Res.string.account_title),
-                    stringResource(
-                        when {
-                            !accountState.connected -> Res.string.account_summary_experimental
-                            accountState.rejected -> Res.string.account_summary_rejected
-                            !settings.account.useForLens -> Res.string.account_summary_unused
-                            else -> Res.string.account_summary_connected
+                add(
+                    Tile(
+                        Icons.Rounded.Palette, MaterialShapes.Flower.toShape(), stringResource(Res.string.settings_section_appearance),
+                        themeLabel(settings.theme) + " · " + stringResource(shownThemeColor(settings.themeColor).label()),
+                    ) { open(SettingsPage.Appearance) },
+                )
+                add(Tile(Icons.Rounded.Public, MaterialShapes.Pentagon.toShape(), stringResource(Res.string.network_title), proxySummary(settings.proxy)) { open(SettingsPage.Network) })
+                add(
+                    Tile(
+                        Icons.Rounded.SystemUpdate, MaterialShapes.Sunny.toShape(), stringResource(Res.string.settings_section_updates),
+                        when (val status = updateStatus) {
+                            UpdateStatus.Checking -> stringResource(Res.string.update_checking)
+                            is UpdateStatus.Available -> stringResource(Res.string.update_available, status.release.version)
+                            is UpdateStatus.Failed -> status.message.asString()
+                            UpdateStatus.Unknown, UpdateStatus.UpToDate -> stringResource(Res.string.update_installed, graph.updates.installedVersion)
                         },
-                    ),
-                    onAccount,
+                        // An update waiting is the one thing on this page that asks to be noticed.
+                        highlighted = updateStatus is UpdateStatus.Available,
+                    ) { open(SettingsPage.Updates) },
+                )
+                add(Tile(Icons.Rounded.Tune, MaterialShapes.Gem.toShape(), stringResource(Res.string.settings_section_app), stringResource(Res.string.settings_app_summary)) { open(SettingsPage.App) })
+                add(
+                    Tile(Icons.Rounded.Science, MaterialShapes.SoftBurst.toShape(), stringResource(Res.string.settings_section_experimental), stringResource(Res.string.account_title)) {
+                        onOpen(Route.Account)
+                    },
                 )
             }
+            // Two to a row, and each row as tall as its taller tile: a summary that wraps
+            // (a long language, a large font) grows both instead of leaving a ragged edge.
+            tiles.chunked(2).forEachIndexed { row, pair ->
+                Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    pair.forEachIndexed { column, tile ->
+                        CategoryTile(tile, accent = (row * 2 + column) % 3, modifier = Modifier.weight(1f).fillMaxHeight())
+                    }
+                }
+            }
+        }
+    }
+}
 
-            Section(stringResource(Res.string.settings_section_app))
-            Setting(
-                Icons.Rounded.Upload, stringResource(Res.string.settings_export),
-                stringResource(Res.string.settings_export_desc),
+private class Tile(
+    val icon: ImageVector,
+    val badge: Shape,
+    val title: String,
+    val summary: String,
+    val highlighted: Boolean = false,
+    val onClick: () -> Unit,
+)
+
+/**
+ * One page of settings as a tile: its name and what is set there now. The
+ * badge behind the icon is one of Material's expressive shapes, a different
+ * one per page and in one of three accent colours, so the grid is told apart
+ * by eye before a word is read.
+ */
+@Composable
+private fun CategoryTile(tile: Tile, accent: Int, modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    val (badge, onBadge) = when (accent) {
+        0 -> scheme.primaryContainer to scheme.onPrimaryContainer
+        1 -> scheme.tertiaryContainer to scheme.onTertiaryContainer
+        else -> scheme.secondaryContainer to scheme.onSecondaryContainer
+    }
+    // Surface(onClick): the ripple is clipped to the rounded tile.
+    Surface(
+        onClick = tile.onClick,
+        shape = MaterialTheme.shapes.large,
+        color = if (tile.highlighted) scheme.tertiaryContainer else scheme.surfaceContainer,
+        contentColor = if (tile.highlighted) scheme.onTertiaryContainer else scheme.onSurface,
+        modifier = modifier,
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(
+                Modifier.size(44.dp).background(if (tile.highlighted) scheme.tertiary else badge, tile.badge),
+                contentAlignment = Alignment.Center,
             ) {
-                // With an account connected, ask first whether its cookies go into the file.
-                if (accountState?.connected == true) {
-                    exportCookies = false
-                    askExport = true
-                } else {
-                    exportCookies = false
-                    exporter.launch(suggestedName = "lens-settings", extension = "json")
-                }
+                Icon(tile.icon, contentDescription = null, tint = if (tile.highlighted) scheme.onTertiary else onBadge, modifier = Modifier.size(22.dp))
             }
-            Setting(Icons.Rounded.Download, stringResource(Res.string.settings_import), stringResource(Res.string.settings_import_desc)) { importer.launch() }
-            Setting(Icons.Rounded.Info, stringResource(Res.string.about_title), stringResource(Res.string.settings_about_desc), onAbout)
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(tile.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(
+                    tile.summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (tile.highlighted) scheme.onTertiaryContainer else scheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The card at the top: what Seenly is set to do now. The two languages open
+ * their pickers; the chips under them switch the things one changes between
+ * one picture and the next, without a trip into a page.
+ */
+@Composable
+private fun SetupCard(
+    settings: AppSettings,
+    hasOnDevice: Boolean,
+    update: (transform: (AppSettings) -> AppSettings) -> Unit,
+    onAppearance: () -> Unit,
+    onNetwork: () -> Unit,
+) {
+    var picking by remember { mutableStateOf<Pick?>(null) }
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        shape = MaterialTheme.shapes.extraLarge,
+        color = scheme.primaryContainer,
+        contentColor = scheme.onPrimaryContainer,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(Res.string.settings_setup_title), style = MaterialTheme.typography.labelLarge, color = scheme.onPrimaryContainer.copy(alpha = 0.75f))
+            // A flow, not a row: two long language names at a large font go on two lines instead of being cut.
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                itemVerticalAlignment = Alignment.CenterVertically,
+            ) {
+                LanguagePill(languageName(settings.sourceLanguage)) { picking = Pick.Source }
+                Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null)
+                LanguagePill(languageName(settings.targetLanguage)) { picking = Pick.Target }
+            }
+            // No gap between the rows: each chip already stands in a touch target taller than itself.
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SetupChip(layoutIcon(settings.readingLayout), layoutLabel(settings.readingLayout)) { picking = Pick.Layout }
+                SetupChip(themeIcon(settings.theme), themeLabel(settings.theme)) {
+                    // One tap, the next of three: quicker than a menu for something tried and switched back.
+                    update { it.copy(theme = ThemeMode.entries[(it.theme.ordinal + 1) % ThemeMode.entries.size]) }
+                }
+                SetupChip(Icons.Rounded.Contrast, stringResource(Res.string.theme_amoled), active = settings.amoled) {
+                    update { it.copy(amoled = !it.amoled) }
+                }
+                if (hasOnDevice) {
+                    SetupChip(Icons.Rounded.CloudOff, stringResource(Res.string.settings_setup_offline), active = settings.onDevice.always) {
+                        update { it.copy(onDevice = it.onDevice.copy(always = !it.onDevice.always)) }
+                    }
+                }
+                SetupChip(
+                    Icons.Rounded.VpnLock,
+                    when (settings.proxy.mode) {
+                        ProxyMode.None -> stringResource(Res.string.network_setup_none)
+                        ProxyMode.System -> stringResource(Res.string.network_summary_system)
+                        ProxyMode.Http -> "HTTP"
+                        ProxyMode.Socks5 -> "SOCKS5"
+                    },
+                    active = settings.proxy.mode != ProxyMode.None,
+                    onClick = onNetwork,
+                )
+                val palette = shownThemeColor(settings.themeColor)
+                SetupChip(null, stringResource(palette.label()), swatch = swatchColor(palette), onClick = onAppearance)
+            }
         }
     }
 
-    if (askExport) {
-        AlertDialog(
-            onDismissRequest = { askExport = false },
-            title = { Text(stringResource(Res.string.settings_export)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(Res.string.settings_export_desc))
-                    Row(
-                        Modifier.fillMaxWidth().clickable { exportCookies = !exportCookies },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Checkbox(checked = exportCookies, onCheckedChange = { exportCookies = it })
-                        Text(stringResource(Res.string.settings_export_account))
-                    }
-                    if (exportCookies) {
-                        Text(
-                            stringResource(Res.string.settings_export_account_warning),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    askExport = false
-                    exporter.launch(suggestedName = "lens-settings", extension = "json")
-                }) { Text(stringResource(Res.string.settings_export_save)) }
-            },
-            dismissButton = { TextButton(onClick = { askExport = false }) { Text(stringResource(Res.string.cancel)) } },
+    when (picking) {
+        Pick.Target -> LanguagePickerSheet(settings.targetLanguage, allowAuto = false, onDismiss = { picking = null }) { code ->
+            if (code != null) update { it.copy(targetLanguage = code) }
+            picking = null
+        }
+        Pick.Source -> LanguagePickerSheet(settings.sourceLanguage, allowAuto = true, onDismiss = { picking = null }) { code ->
+            update { it.copy(sourceLanguage = code) }
+            picking = null
+        }
+        Pick.Layout -> LayoutSheet(settings.readingLayout, onDismiss = { picking = null }) { layout ->
+            update { it.copy(readingLayout = layout) }
+            picking = null
+        }
+        null -> Unit
+    }
+}
+
+private enum class Pick { Source, Target, Layout }
+
+@Composable
+private fun LanguagePill(name: String, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f),
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+    ) {
+        Text(
+            name,
+            style = MaterialTheme.typography.titleLarge,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         )
     }
-
-    when (picker) {
-        "target" -> LanguagePickerSheet(settings.targetLanguage, allowAuto = false, onDismiss = { picker = null }) { code ->
-            if (code != null) update { it.copy(targetLanguage = code) }
-            picker = null
-        }
-        "source" -> LanguagePickerSheet(settings.sourceLanguage, allowAuto = true, onDismiss = { picker = null }) { code ->
-            update { it.copy(sourceLanguage = code) }
-            picker = null
-        }
-        "ocr" -> LanguagePickerSheet(settings.ocrLanguage.ifEmpty { null }, allowAuto = true, onDismiss = { picker = null }) { code ->
-            update { it.copy(ocrLanguage = code.orEmpty()) }
-            picker = null
-        }
-    }
 }
 
+/**
+ * A chip on the setup card. An [active] one is filled in the card's own text
+ * colour, which stands out on every palette, AMOLED included, where a
+ * FilterChip's default colours would sink into the container.
+ */
 @Composable
-internal fun Section(title: String) {
-    Text(
-        title,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 4.dp),
-    )
-}
-
-/** The updater: whether it asks on its own, which channel, and the check itself. */
-@Composable
-private fun UpdateSettings(updates: UpdateController, settings: AppSettings, update: ((io.github.bropines.lens.app.data.UpdatePrefs) -> io.github.bropines.lens.app.data.UpdatePrefs) -> Unit) {
-    val status by updates.status.collectAsState()
-    Section(stringResource(Res.string.settings_section_updates))
-    Setting(
-        Icons.Rounded.SystemUpdate,
-        stringResource(Res.string.update_check),
-        when (val s = status) {
-            UpdateStatus.Unknown -> stringResource(Res.string.update_installed, updates.installedVersion)
-            UpdateStatus.Checking -> stringResource(Res.string.update_checking)
-            UpdateStatus.UpToDate -> stringResource(Res.string.update_up_to_date, updates.installedVersion)
-            is UpdateStatus.Available -> stringResource(Res.string.update_available, s.release.version)
-            is UpdateStatus.Failed -> s.message.asString()
-        },
+private fun SetupChip(icon: ImageVector?, label: String, active: Boolean = false, swatch: Color? = null, onClick: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    val container by animateColorAsState(if (active) scheme.onPrimaryContainer else scheme.onPrimaryContainer.copy(alpha = 0.1f))
+    val content by animateColorAsState(if (active) scheme.primaryContainer else scheme.onPrimaryContainer)
+    Surface(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.small,
+        color = container,
+        contentColor = content,
+        modifier = Modifier.semantics { selected = active },
     ) {
-        // An update already found is shown again; otherwise ask.
-        if (status is UpdateStatus.Available) updates.showDetails() else updates.check()
-    }
-    Toggle(
-        Icons.Rounded.Update, stringResource(Res.string.update_auto), stringResource(Res.string.update_auto_desc),
-        settings.updates.autoCheck,
-    ) { on -> update { it.copy(autoCheck = on) } }
-    Toggle(
-        Icons.Rounded.Science, stringResource(Res.string.update_beta), stringResource(Res.string.update_beta_desc),
-        settings.updates.beta,
-    ) { on -> update { it.copy(beta = on) } }
-    Setting(Icons.Rounded.NewReleases, stringResource(Res.string.whats_new), stringResource(Res.string.whats_new_desc), updates::showWhatsNew)
-}
-
-/** A setting that is on or off. */
-@Composable
-internal fun Toggle(icon: ImageVector, title: String, subtitle: String?, checked: Boolean, onChange: (Boolean) -> Unit) {
-    ListItem(
-        headlineContent = { Text(title) },
-        supportingContent = subtitle?.let { { Text(it) } },
-        leadingContent = { SettingIcon(icon) },
-        trailingContent = { Switch(checked = checked, onCheckedChange = onChange) },
-        modifier = Modifier.clickable { onChange(!checked) },
-    )
-}
-
-@Composable
-internal fun SettingIcon(icon: ImageVector) {
-    Box(
-        Modifier.size(40.dp).background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
-        contentAlignment = Alignment.Center,
-    ) { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(22.dp)) }
-}
-
-@Composable
-internal fun Setting(icon: ImageVector, title: String, value: String, onClick: () -> Unit) {
-    ListItem(
-        headlineContent = { Text(title) },
-        supportingContent = { Text(value) },
-        leadingContent = { SettingIcon(icon) },
-        trailingContent = { Icon(Icons.Rounded.ChevronRight, contentDescription = null) },
-        modifier = Modifier.clickable(onClick = onClick),
-    )
-}
-
-/** A setting with a few named values, picked in a connected segmented row under its title. */
-@Composable
-private fun <T> Segmented(icon: ImageVector, title: String, options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit) {
-    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            SettingIcon(icon)
-            Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 16.dp))
+        Row(
+            Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (icon != null) Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+            if (swatch != null) Box(Modifier.size(18.dp).background(swatch, CircleShape))
+            Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-            options.forEachIndexed { index, (value, label) ->
-                SegmentedButton(
-                    selected = value == selected,
-                    onClick = { onSelect(value) },
-                    shape = SegmentedButtonDefaults.itemShape(index, options.size),
-                    icon = {},
-                ) { Text(label, maxLines = 1, style = MaterialTheme.typography.labelMedium) }
+    }
+}
+
+/** The three layouts with what each is for: a quick pick, so a sheet. */
+@Composable
+private fun LayoutSheet(selected: ReadingLayout, onDismiss: () -> Unit, onPick: (ReadingLayout) -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.padding(bottom = 16.dp)) {
+            Text(
+                stringResource(Res.string.settings_section_overlay),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+            )
+            ReadingLayout.entries.forEach { layout ->
+                Surface(onClick = { onPick(layout) }, color = Color.Transparent) {
+                    ListItem(
+                        headlineContent = { Text(layoutLabel(layout)) },
+                        supportingContent = { Text(layoutDescription(layout)) },
+                        leadingContent = { SettingIcon(layoutIcon(layout)) },
+                        trailingContent = { if (layout == selected) Icon(Icons.Rounded.Check, contentDescription = stringResource(Res.string.language_selected)) },
+                        colors = rowColors(),
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun SliderSetting(
-    icon: ImageVector,
-    title: String,
-    valueLabel: String,
-    value: Float,
-    range: ClosedFloatingPointRange<Float>,
-    steps: Int,
-    onChange: (Float) -> Unit,
-) {
-    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            SettingIcon(icon)
-            Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 16.dp).weight(1f))
-            Text(valueLabel, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-        }
-        @Suppress("DEPRECATION")
-        Slider(value = value, onValueChange = onChange, valueRange = range, steps = steps, modifier = Modifier.padding(start = 56.dp))
-    }
+internal fun layoutLabel(layout: ReadingLayout): String = stringResource(
+    when (layout) {
+        ReadingLayout.Auto -> Res.string.layout_auto
+        ReadingLayout.InPlace -> Res.string.layout_in_place
+        ReadingLayout.Reflow -> Res.string.layout_reflow
+    },
+)
+
+@Composable
+internal fun layoutDescription(layout: ReadingLayout): String = stringResource(
+    when (layout) {
+        ReadingLayout.Auto -> Res.string.layout_auto_desc
+        ReadingLayout.InPlace -> Res.string.layout_in_place_desc
+        ReadingLayout.Reflow -> Res.string.layout_reflow_desc
+    },
+)
+
+internal fun layoutIcon(layout: ReadingLayout): ImageVector = when (layout) {
+    ReadingLayout.Auto -> Icons.Rounded.AutoAwesome
+    ReadingLayout.InPlace -> Icons.Rounded.ViewHeadline
+    ReadingLayout.Reflow -> Icons.Rounded.ChatBubbleOutline
 }
 
 @Composable
-private fun Choice(icon: ImageVector, title: String, subtitle: String?, selected: Boolean, onClick: () -> Unit) {
-    ListItem(
-        headlineContent = { Text(title) },
-        supportingContent = subtitle?.let { { Text(it) } },
-        leadingContent = { SettingIcon(icon) },
-        trailingContent = { RadioButton(selected = selected, onClick = null) },
-        modifier = Modifier.clickable(onClick = onClick),
-    )
+internal fun themeLabel(mode: ThemeMode): String = stringResource(
+    when (mode) {
+        ThemeMode.System -> Res.string.theme_system
+        ThemeMode.Light -> Res.string.theme_light
+        ThemeMode.Dark -> Res.string.theme_dark
+    },
+)
+
+internal fun themeIcon(mode: ThemeMode): ImageVector = when (mode) {
+    ThemeMode.System -> Icons.Rounded.BrightnessAuto
+    ThemeMode.Light -> Icons.Rounded.LightMode
+    ThemeMode.Dark -> Icons.Rounded.DarkMode
+}
+
+/** The colour a palette is known by: its seed, or the scheme's own primary for the wallpaper's. */
+@Composable
+private fun swatchColor(color: ThemeColor): Color =
+    if (color == ThemeColor.Wallpaper) MaterialTheme.colorScheme.primary else color.seed()
+
+/** Where requests go, in a few words: for the Network tile and the page's top bar. */
+@Composable
+internal fun proxySummary(prefs: ProxyPrefs): String = when (prefs.mode) {
+    ProxyMode.None -> stringResource(Res.string.network_summary_direct)
+    ProxyMode.System -> stringResource(Res.string.network_summary_system)
+    ProxyMode.Http -> "HTTP · ${prefs.host}:${prefs.port}"
+    ProxyMode.Socks5 -> "SOCKS5 · ${prefs.host}:${prefs.port}"
 }

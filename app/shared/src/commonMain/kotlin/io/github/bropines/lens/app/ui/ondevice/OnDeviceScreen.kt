@@ -1,13 +1,8 @@
 package io.github.bropines.lens.app.ui.ondevice
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Download
@@ -19,11 +14,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,7 +33,10 @@ import io.github.bropines.lens.app.ondevice.OnDeviceMl
 import io.github.bropines.lens.app.ondevice.OnDeviceModel
 import io.github.bropines.lens.app.resources.*
 import io.github.bropines.lens.app.ui.components.localizedLanguageName
-import io.github.bropines.lens.app.ui.settings.Section
+import io.github.bropines.lens.app.ui.settings.Footnote
+import io.github.bropines.lens.app.ui.settings.SettingsCard
+import io.github.bropines.lens.app.ui.settings.SettingsScaffold
+import io.github.bropines.lens.app.ui.settings.rowColors
 import io.github.bropines.lens.app.ui.settings.Toggle
 import io.github.bropines.lens.translate.Languages
 import kotlinx.coroutines.CancellationException
@@ -88,23 +83,21 @@ fun OnDeviceScreen(repository: SettingsRepository, settings: AppSettings, ml: On
         reload()
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbar) },
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(Res.string.on_device_title)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(Res.string.back)) } },
-            )
-        },
-    ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
-            Text(
-                stringResource(Res.string.on_device_intro),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(16.dp),
-            )
-            val prefs = settings.onDevice
+    val prefs = settings.onDevice
+    SettingsScaffold(
+        title = stringResource(Res.string.on_device_title),
+        subtitle = stringResource(
+            when {
+                prefs.always -> Res.string.on_device_summary_always
+                prefs.fallback -> Res.string.on_device_summary_fallback
+                else -> Res.string.on_device_summary_off
+            },
+        ),
+        onBack = onBack,
+        snackbar = snackbar,
+    ) {
+        Footnote(stringResource(Res.string.on_device_intro))
+        SettingsCard {
             Toggle(
                 Icons.Rounded.CloudOff, stringResource(Res.string.on_device_fallback), stringResource(Res.string.on_device_fallback_desc),
                 prefs.fallback,
@@ -117,19 +110,21 @@ fun OnDeviceScreen(repository: SettingsRepository, settings: AppSettings, ml: On
                 Icons.Rounded.Wifi, stringResource(Res.string.on_device_wifi), stringResource(Res.string.on_device_wifi_desc),
                 prefs.wifiOnly,
             ) { on -> update { it.copy(wifiOnly = on) } }
+        }
 
-            val all = models
-            if (all == null) {
-                CircularProgressIndicator(Modifier.padding(24.dp).size(28.dp))
-                return@Column
-            }
+        val all = models
+        if (all == null) {
+            CircularProgressIndicator(Modifier.padding(24.dp).size(28.dp))
+            return@SettingsScaffold
+        }
 
-            Section(stringResource(Res.string.on_device_recognizers))
+        SettingsCard(stringResource(Res.string.on_device_recognizers)) {
             all.filter { it.kind == OnDeviceModel.Kind.Recognizer }.forEach { model ->
                 ModelRow(model, scriptName(model.id), downloading, ::download, ::delete)
             }
+        }
 
-            Section(stringResource(Res.string.on_device_languages))
+        SettingsCard(stringResource(Res.string.on_device_languages)) {
             val languages = all.filter { it.kind == OnDeviceModel.Kind.Translation }.map { it to modelLanguageName(it.id) }
             // What is on the device first: that is the list a person comes to check or trim.
             languages.sortedWith(compareByDescending<Pair<OnDeviceModel, String>> { it.first.downloaded }.thenBy { it.second })
@@ -148,6 +143,7 @@ private fun ModelRow(
 ) {
     val busy = model in downloading
     ListItem(
+        colors = rowColors(),
         headlineContent = { Text(name) },
         supportingContent = {
             Text(

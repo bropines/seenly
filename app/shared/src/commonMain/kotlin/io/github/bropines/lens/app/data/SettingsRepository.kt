@@ -57,6 +57,33 @@ data class AppSettings(
     val updates: UpdatePrefs = UpdatePrefs(),
     val onDevice: OnDevicePrefs = OnDevicePrefs(),
     val account: AccountPrefs = AccountPrefs(),
+    val proxy: ProxyPrefs = ProxyPrefs(),
+)
+
+/** Where the app's own requests go out through. */
+enum class ProxyMode {
+    /** Straight to the network, whatever the system's proxy says. */
+    None,
+
+    /** The proxy the system has for the current network (Android's Wi-Fi proxy, Java's proxy properties). */
+    System,
+    Http,
+    Socks5,
+}
+
+/**
+ * The optional proxy for the app's requests. The password is a secret and is
+ * not kept here: see `AppNetwork`.
+ */
+@Serializable
+data class ProxyPrefs(
+    // System by default: what OkHttp did before there was a setting, so a Wi-Fi proxy keeps working.
+    val mode: ProxyMode = ProxyMode.System,
+    val host: String = "",
+    /** 0 = not set. */
+    val port: Int = 0,
+    /** Empty = the proxy asks for no sign-in. */
+    val username: String = "",
 )
 
 /** The in-app updater's preferences. When it last asked is state, not a preference, and lives elsewhere. */
@@ -186,6 +213,10 @@ class SettingsRepository(services: PlatformServices) {
             p[LOCAL_ALWAYS] = next.onDevice.always
             p[LOCAL_WIFI] = next.onDevice.wifiOnly
             p[ACCOUNT_LENS] = next.account.useForLens
+            p[PROXY_MODE] = next.proxy.mode.name
+            p[PROXY_HOST] = next.proxy.host
+            p[PROXY_PORT] = next.proxy.port
+            p[PROXY_USER] = next.proxy.username
         }
     }
 
@@ -196,18 +227,23 @@ class SettingsRepository(services: PlatformServices) {
      *
      * [googleCookies] is the Google account's session, and goes in only when
      * the user asked for it: whoever reads the file is signed in as them.
+     * [proxyPassword] likewise: the proxy's address and user name are settings,
+     * its password only goes in when asked.
      */
-    suspend fun exportJson(googleCookies: String? = null): String = backupJson.encodeToString(
+    suspend fun exportJson(googleCookies: String? = null, proxyPassword: String? = null): String = backupJson.encodeToString(
         Backup.serializer(),
-        Backup(settings = settings.first().copy(lastFolder = null), googleCookies = googleCookies),
+        Backup(settings = settings.first().copy(lastFolder = null), googleCookies = googleCookies, proxyPassword = proxyPassword),
     )
+
+    /** The secrets a settings file carried, for the caller to put where secrets are kept. */
+    data class ImportedSecrets(val googleCookies: String?, val proxyPassword: String?)
 
     /**
      * Replaces the settings with a file [exportJson] wrote, and returns the
-     * Google cookies it carried, if any, for the caller to connect.
+     * secrets it carried, if any, for the caller to store.
      * Throws [IllegalArgumentException] on anything else.
      */
-    suspend fun importJson(text: String): String? {
+    suspend fun importJson(text: String): ImportedSecrets {
         val backup = try {
             backupJson.decodeFromString(Backup.serializer(), text)
         } catch (e: SerializationException) {
@@ -215,7 +251,7 @@ class SettingsRepository(services: PlatformServices) {
         }
         require(backup.format == BACKUP_FORMAT) { "not a settings file" }
         update { backup.settings.copy(lastFolder = it.lastFolder) }
-        return backup.googleCookies
+        return ImportedSecrets(backup.googleCookies, backup.proxyPassword)
     }
 
     @Serializable
@@ -224,6 +260,7 @@ class SettingsRepository(services: PlatformServices) {
         val version: Int = 1,
         val settings: AppSettings,
         val googleCookies: String? = null,
+        val proxyPassword: String? = null,
     )
 
     private val backupJson = Json {
@@ -264,6 +301,12 @@ class SettingsRepository(services: PlatformServices) {
             wifiOnly = this[LOCAL_WIFI] ?: true,
         ),
         account = AccountPrefs(useForLens = this[ACCOUNT_LENS] ?: true),
+        proxy = ProxyPrefs(
+            mode = this[PROXY_MODE].toEnum(ProxyMode.System),
+            host = this[PROXY_HOST].orEmpty(),
+            port = (this[PROXY_PORT] ?: 0).coerceIn(0, 65535),
+            username = this[PROXY_USER].orEmpty(),
+        ),
     )
 
     private inline fun <reified E : Enum<E>> String?.toEnum(default: E): E =
@@ -297,5 +340,9 @@ class SettingsRepository(services: PlatformServices) {
         val LOCAL_ALWAYS = booleanPreferencesKey("on_device_always")
         val LOCAL_WIFI = booleanPreferencesKey("on_device_wifi_only")
         val ACCOUNT_LENS = booleanPreferencesKey("account_use_for_lens")
+        val PROXY_MODE = stringPreferencesKey("proxy_mode")
+        val PROXY_HOST = stringPreferencesKey("proxy_host")
+        val PROXY_PORT = intPreferencesKey("proxy_port")
+        val PROXY_USER = stringPreferencesKey("proxy_username")
     }
 }

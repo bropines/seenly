@@ -37,6 +37,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import io.github.bropines.lens.app.data.GalleryItem
 import io.github.bropines.lens.app.ui.camera.CameraScreen
 import io.github.bropines.lens.app.ui.about.AboutScreen
+import io.github.bropines.lens.app.ui.settings.SettingsPage
+import io.github.bropines.lens.app.ui.settings.SettingsPageScreen
 import io.github.bropines.lens.app.ui.settings.TranslatorsScreen
 import io.github.bropines.lens.app.ui.account.AccountRefusedDialog
 import io.github.bropines.lens.app.ui.account.AccountScreen
@@ -66,6 +68,9 @@ sealed interface Route {
     data object OnDevice : Route
     data object Account : Route
     data object GoogleSignIn : Route
+
+    /** One of the pages behind the Settings tab's tiles. */
+    data class Settings(val page: SettingsPage) : Route
     data class TextTranslate(val initial: String) : Route
 }
 
@@ -130,10 +135,7 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
                         onTab = { tab = it },
                         onOpenViewer = { backStack.add(Route.Viewer) },
                         onOpenCamera = { backStack.add(Route.Camera) },
-                        onOpenAbout = { backStack.add(Route.About) },
-                        onOpenTranslators = { backStack.add(Route.Translators) },
-                        onOpenAccount = { backStack.add(Route.Account) },
-                        onOpenOnDevice = { backStack.add(Route.OnDevice) },
+                        onOpen = { backStack.add(it) },
                         onOpenHistory = { entry ->
                             scope.launch {
                                 val item = GalleryItem(PlatformFile(entry.imagePath), entry.title)
@@ -146,6 +148,9 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
                             }
                         },
                     )
+                }
+                entry<Route.Settings> { route ->
+                    SettingsPageScreen(route.page, graph, settings, onOpen = { backStack.add(it) }, onBack = ::pop)
                 }
                 entry<Route.About> { AboutScreen(graph.services, onBack = ::pop) }
                 entry<Route.Translators> { TranslatorsScreen(graph.settings, settings, graph.translator, onBack = ::pop) }

@@ -17,9 +17,8 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import io.github.bropines.lens.app.data.AppSettings
-import io.github.bropines.lens.app.data.ReadingLayout
 import io.github.bropines.lens.app.di.AppGraph
-import io.github.bropines.lens.app.ui.viewer.withPrefs
+import io.github.bropines.lens.app.ui.viewer.overlayStyle
 import io.github.bropines.lens.overlay.OverlayStyle
 import io.github.bropines.lens.overlay.decodeOverlay
 import io.github.bropines.lens.overlay.renderTranslatedBitmap
@@ -28,7 +27,6 @@ import io.github.bropines.lens.protocol.Paragraph
 import io.github.bropines.lens.protocol.Tiling
 import io.github.bropines.lens.protocol.Raster
 import io.github.bropines.lens.protocol.ScanResult
-import io.github.bropines.lens.protocol.WritingDirection
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -560,15 +558,7 @@ internal class ScreenTranslator(
     }
 
     /** The same choice the viewer makes: bubbles reflow, everything else is set in place. */
-    private fun styleFor(result: ScanResult, settings: AppSettings): OverlayStyle {
-        val manga = when (settings.readingLayout) {
-            ReadingLayout.InPlace -> false
-            ReadingLayout.Reflow -> true
-            ReadingLayout.Auto -> result.paragraphs.any { it.writingDirection == WritingDirection.TopToBottom }
-        }
-        val base = if (manga) OverlayStyle.Manga.copy(reflowGrowth = 1.25f) else OverlayStyle.Chromium
-        return base.withPrefs(settings.overlay)
-    }
+    private fun styleFor(result: ScanResult, settings: AppSettings): OverlayStyle = settings.overlayStyle(result)
 
     /**
      * Makes every pixel of [rendered] that equals [frame]'s transparent and

@@ -6,6 +6,14 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ## [Unreleased]
 
+### Added
+
+- A proxy for the app's own requests, in Settings → Network: none, the system's, HTTP or SOCKS5, with an optional user name and password and a "Test connection" button that makes one small request through what is on screen and reports the time or the error. It covers Lens scans and search, the text translators and the updater, and takes effect without a restart. Not covered, and the page says so: Google's sign-in page inside the app, on-device model downloads and links opened in the browser. A proxy that is set but cannot be reached fails requests instead of letting them out directly. The password is kept with the other secrets (encrypted on Android) and goes into a settings export only when asked.
+- A live preview on the overlay page: a made-up sign and a manga panel drawn with the current layout and style, by the same code as real pages.
+
+### Changed
+
+- Settings is no longer one long list. The tab opens on a card that says what Seenly is set to do (languages, layout, theme, AMOLED, on-device mode, proxy, colour) and changes most of it in place, over a grid of tiles for Translation, Overlay & style, Screen translation, Appearance, Network, Updates, App and Experimental; each tile shows what is set inside and opens its own page. Choices between a few values are chips instead of radio lists, and every page has its current state under the title.
 ## [0.3.0] - 2026-11-25
 
 ### Added

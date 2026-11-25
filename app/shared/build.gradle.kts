@@ -33,6 +33,12 @@ kotlin {
     }
 
     sourceSets {
+        // Code for both JVM targets that needs java.net and OkHttp (the proxied HTTP client).
+        // Kotlin has no source set shared by Android and the desktop JVM that sees the JDK,
+        // so each of the two compiles this directory as its own.
+        androidMain { kotlin.srcDir("src/jvmShared/kotlin") }
+        jvmMain { kotlin.srcDir("src/jvmShared/kotlin") }
+
         commonMain.dependencies {
             implementation(projects.lensProtocol)
             implementation(projects.lensOverlay)
@@ -66,6 +72,9 @@ kotlin {
             implementation(libs.kotest.assertions)
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.turbine)
+        }
+        jvmTest.dependencies {
+            implementation(libs.ktor.client.okhttp)
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Gavel
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Lock
@@ -17,11 +16,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import io.github.bropines.lens.app.ui.components.AppTopBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,12 +45,7 @@ fun AboutScreen(services: PlatformServices, onBack: () -> Unit) {
         return
     }
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(Res.string.about_title)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(Res.string.back)) } },
-            )
-        },
+        topBar = { AppTopBar(stringResource(Res.string.about_title), stringResource(Res.string.about_version, services.appVersion), onBack) },
     ) { padding ->
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
@@ -109,12 +102,7 @@ private fun Block(icon: ImageVector, title: String, content: @Composable () -> U
 private fun LicencesScreen(onBack: () -> Unit) {
     val libraries by produceLibraries { Res.readBytes("files/aboutlibraries.json").decodeToString() }
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(Res.string.licences_title)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(Res.string.back)) } },
-            )
-        },
+        topBar = { AppTopBar(stringResource(Res.string.licences_title), onBack = onBack) },
     ) { padding ->
         LibrariesContainer(libraries, Modifier.fillMaxSize().padding(padding))
     }

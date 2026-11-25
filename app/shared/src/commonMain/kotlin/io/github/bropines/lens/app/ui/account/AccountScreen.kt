@@ -2,15 +2,11 @@ package io.github.bropines.lens.app.ui.account
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Login
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.AccountCircle
@@ -24,12 +20,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -44,7 +37,10 @@ import io.github.bropines.lens.app.data.GoogleAccount
 import io.github.bropines.lens.app.data.SettingsRepository
 import io.github.bropines.lens.app.resources.*
 import io.github.bropines.lens.app.ui.history.ago
-import io.github.bropines.lens.app.ui.settings.Section
+import io.github.bropines.lens.app.ui.settings.Footnote
+import io.github.bropines.lens.app.ui.settings.SettingsCard
+import io.github.bropines.lens.app.ui.settings.SettingsScaffold
+import io.github.bropines.lens.app.ui.settings.rowColors
 import io.github.bropines.lens.app.ui.settings.Setting
 import io.github.bropines.lens.app.ui.settings.SettingIcon
 import io.github.bropines.lens.app.ui.settings.Toggle
@@ -87,36 +83,28 @@ fun AccountScreen(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbar) },
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(Res.string.account_title)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(Res.string.back)) } },
-            )
+    val summary = stringResource(
+        when {
+            !state.connected -> Res.string.account_summary_none
+            state.rejected -> Res.string.account_summary_rejected
+            else -> Res.string.account_summary_connected
         },
-    ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
-            Text(
-                stringResource(Res.string.account_intro) + " " +
-                    stringResource(if (account.encrypted) Res.string.account_storage_encrypted else Res.string.account_storage_plain),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(16.dp),
-            )
+    )
+    SettingsScaffold(
+        title = stringResource(Res.string.account_title),
+        subtitle = stringResource(Res.string.settings_section_experimental),
+        onBack = onBack,
+        snackbar = snackbar,
+    ) {
+        Footnote(
+            stringResource(Res.string.account_intro) + " " +
+                stringResource(if (account.encrypted) Res.string.account_storage_encrypted else Res.string.account_storage_plain),
+        )
+        SettingsCard {
             ListItem(
+                colors = rowColors(),
                 leadingContent = { SettingIcon(Icons.Rounded.AccountCircle) },
-                headlineContent = {
-                    Text(
-                        stringResource(
-                            when {
-                                !state.connected -> Res.string.account_summary_none
-                                state.rejected -> Res.string.account_summary_rejected
-                                else -> Res.string.account_summary_connected
-                            },
-                        ),
-                    )
-                },
+                headlineContent = { Text(summary) },
                 supportingContent = if (!state.connected) null else ({
                     val used = state.lastUsed
                     Column {
@@ -144,8 +132,9 @@ fun AccountScreen(
                     scope.launch { snackbar.showSnackbar(getString(Res.string.account_removed)) }
                 }
             }
+        }
 
-            Section(stringResource(if (state.connected) Res.string.account_replace else Res.string.account_connect))
+        SettingsCard(stringResource(if (state.connected) Res.string.account_replace else Res.string.account_connect)) {
             if (googleSignInSupported) {
                 Setting(Icons.AutoMirrored.Rounded.Login, stringResource(Res.string.account_sign_in), stringResource(Res.string.account_sign_in_desc), onSignIn)
             }

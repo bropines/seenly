@@ -4,14 +4,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Key
@@ -23,10 +21,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,50 +63,49 @@ fun TranslatorsScreen(repository: SettingsRepository, settings: AppSettings, tra
     val enabled = prefs.enabled.mapNotNull { id -> all.firstOrNull { it.id == id } }
     val disabled = all.filter { it.id !in prefs.enabled }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(Res.string.translators)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(Res.string.back)) } },
-            )
-        },
-    ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
-            Text(
-                stringResource(Res.string.translators_intro),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(16.dp),
-            )
+    SettingsScaffold(
+        title = stringResource(Res.string.translators),
+        subtitle = enabled.joinToString(" → ") { it.name }.ifEmpty { stringResource(Res.string.translators_none) },
+        onBack = onBack,
+    ) {
+        Footnote(stringResource(Res.string.translators_intro))
+        SettingsCard {
             ListItem(
                 headlineContent = { Text(stringResource(Res.string.translators_failover)) },
                 supportingContent = { Text(stringResource(Res.string.translators_failover_desc)) },
                 trailingContent = { Switch(checked = prefs.failOver, onCheckedChange = { on -> update { it.copy(failOver = on) } }) },
+                colors = rowColors(),
             )
+        }
 
-            SectionTitle(stringResource(Res.string.translators_enabled))
-            enabled.forEachIndexed { index, provider ->
-                EngineRow(
-                    provider = provider,
-                    on = true,
-                    needsSetup = translator.needsSetup(provider),
-                    onToggle = { update { it.copy(enabled = it.enabled - provider.id) } },
-                    onClick = { editing = provider },
-                    onUp = if (index > 0) ({ update { it.copy(enabled = it.enabled.move(index, index - 1)) } }) else null,
-                    onDown = if (index < enabled.lastIndex) ({ update { it.copy(enabled = it.enabled.move(index, index + 1)) } }) else null,
-                )
+        if (enabled.isNotEmpty()) {
+            SettingsCard(stringResource(Res.string.translators_enabled)) {
+                enabled.forEachIndexed { index, provider ->
+                    EngineRow(
+                        provider = provider,
+                        on = true,
+                        needsSetup = translator.needsSetup(provider),
+                        onToggle = { update { it.copy(enabled = it.enabled - provider.id) } },
+                        onClick = { editing = provider },
+                        onUp = if (index > 0) ({ update { it.copy(enabled = it.enabled.move(index, index - 1)) } }) else null,
+                        onDown = if (index < enabled.lastIndex) ({ update { it.copy(enabled = it.enabled.move(index, index + 1)) } }) else null,
+                    )
+                }
             }
-            if (disabled.isNotEmpty()) SectionTitle(stringResource(Res.string.translators_available))
-            disabled.forEach { provider ->
-                EngineRow(
-                    provider = provider,
-                    on = false,
-                    needsSetup = provider.needsCredentials && translator.needsSetup(provider),
-                    onToggle = { update { it.copy(enabled = it.enabled + provider.id) } },
-                    onClick = { editing = provider },
-                    onUp = null,
-                    onDown = null,
-                )
+        }
+        if (disabled.isNotEmpty()) {
+            SettingsCard(stringResource(Res.string.translators_available)) {
+                disabled.forEach { provider ->
+                    EngineRow(
+                        provider = provider,
+                        on = false,
+                        needsSetup = provider.needsCredentials && translator.needsSetup(provider),
+                        onToggle = { update { it.copy(enabled = it.enabled + provider.id) } },
+                        onClick = { editing = provider },
+                        onUp = null,
+                        onDown = null,
+                    )
+                }
             }
         }
     }
@@ -148,16 +144,6 @@ private val DESCRIPTIONS: Map<String, StringResource> = mapOf(
     "openai" to Res.string.engine_openai,
     "ondevice" to Res.string.engine_ondevice,
 )
-
-@Composable
-private fun SectionTitle(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 4.dp),
-    )
-}
 
 @Composable
 private fun EngineRow(
@@ -200,6 +186,7 @@ private fun EngineRow(
                 Switch(checked = on, onCheckedChange = { onToggle() })
             }
         },
+        colors = rowColors(),
         modifier = Modifier.clickable(enabled = provider.options.isNotEmpty(), onClick = onClick),
     )
 }
@@ -212,7 +199,7 @@ private fun EngineOptionsSheet(
     onChange: (String, String) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -257,6 +244,7 @@ private fun OptionField(spec: OptionSpec, value: String, onChange: (String) -> U
                     else -> KeyboardType.Text
                 },
             ),
+            shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth(),
         )
     }

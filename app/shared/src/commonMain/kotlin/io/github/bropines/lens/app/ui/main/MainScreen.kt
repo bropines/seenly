@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.bropines.lens.app.Route
 import io.github.bropines.lens.app.data.AppSettings
 import io.github.bropines.lens.app.data.history.HistoryEntry
 import io.github.bropines.lens.app.di.AppGraph
@@ -73,10 +74,8 @@ fun MainScreen(
     onOpenViewer: () -> Unit,
     onOpenCamera: () -> Unit,
     onOpenHistory: (HistoryEntry) -> Unit,
-    onOpenAbout: () -> Unit,
-    onOpenTranslators: () -> Unit,
-    onOpenAccount: () -> Unit = {},
-    onOpenOnDevice: () -> Unit = {},
+    /** Opens a page from Settings: one of its own, or the translators, the account, About. */
+    onOpen: (Route) -> Unit = {},
 ) {
     val textVm = viewModel { TextTranslateViewModel(graph.translator, graph.settings, "") }
     // An update found on start is offered in passing: a snackbar that waits, with the notes one tap away.
@@ -122,15 +121,7 @@ fun MainScreen(
                     Tab.Images -> HomeScreen(graph, settings, onOpenViewer = onOpenViewer)
                     Tab.History -> HistoryScreen(graph.history, onOpen = onOpenHistory)
                     Tab.Text -> TextTranslateScreen(textVm, graph.services, onBack = null)
-                    Tab.Settings -> SettingsScreen(
-                        graph.settings, settings, onBack = null, onAbout = onOpenAbout, onTranslators = onOpenTranslators,
-                        translatorsSummary = settings.translators.enabled.joinToString(" → ") { graph.translator.nameOf(it) }.ifEmpty { stringResource(Res.string.translators_none) },
-                        screen = graph.services.screenTranslate,
-                        updates = graph.updates,
-                        account = graph.account,
-                        onAccount = onOpenAccount,
-                        onOnDevice = onOpenOnDevice.takeIf { graph.services.onDevice != null },
-                    )
+                    Tab.Settings -> SettingsScreen(graph, settings, onOpen)
                 }
             }
         }
