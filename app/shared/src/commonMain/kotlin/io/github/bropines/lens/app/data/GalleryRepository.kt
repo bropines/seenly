@@ -30,9 +30,13 @@ import kotlin.time.ExperimentalTime
  * stored copy of that entry, and its result is already on disk.
  */
 class GalleryItem(val file: PlatformFile, private val displayName: String? = null, val historyId: Long? = null) {
-    val key: String = file.toString()
+    // Two history entries can share one stored picture (the same image in two languages); each is a page of its own.
+    val key: String = if (historyId == null) file.toString() else "$file#$historyId"
     val name: String get() = displayName ?: file.name
 }
+
+/** A history entry as a page: its stored copy, under the name it was scanned with. */
+fun historyItem(entry: HistoryEntry): GalleryItem = GalleryItem(PlatformFile(entry.imagePath), entry.title, historyId = entry.id)
 
 /** Where a gallery came from: what closing it goes back to, and whether it has a grid of its own. */
 enum class GalleryOrigin { Files, Folder, History, Camera }
@@ -83,13 +87,16 @@ class GalleryRepository(services: PlatformServices, private val history: History
     }
 
     fun openItems(items: List<GalleryItem>, title: String, startIndex: Int = 0, origin: GalleryOrigin = GalleryOrigin.Files) {
-        if (items.isNotEmpty()) _current.value = Gallery(title, items, startIndex.coerceIn(items.indices), origin = origin)
+        if (items.isEmpty()) return
+        // A picture given twice is one page: the pager tells its pages apart by their keys.
+        val pages = items.distinctBy { it.key }
+        val start = pages.indexOfFirst { it.key == items.getOrNull(startIndex)?.key }.coerceAtLeast(0)
+        _current.value = Gallery(title, pages, start, origin = origin)
     }
 
     /** History entries as a gallery of their stored copies, opened at [index]: swiping goes through history. */
     fun openHistory(entries: List<HistoryEntry>, index: Int, title: String? = null) {
-        val items = entries.map { GalleryItem(PlatformFile(it.imagePath), it.title, historyId = it.id) }
-        openItems(items, title ?: entries.getOrNull(index)?.title.orEmpty(), index, GalleryOrigin.History)
+        openItems(entries.map(::historyItem), title ?: entries.getOrNull(index)?.title.orEmpty(), index, GalleryOrigin.History)
     }
 
     /**

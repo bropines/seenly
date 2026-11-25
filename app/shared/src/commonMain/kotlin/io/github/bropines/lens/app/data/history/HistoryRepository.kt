@@ -71,7 +71,7 @@ class HistoryRepository(private val services: PlatformServices) {
     fun translatedKeys(target: String): Flow<Set<String>> = dao.keys(target).map { it.toSet() }.distinctUntilChanged()
 
     /** Whether [item] is one of our own copies, i.e. was opened from history. */
-    fun isOwnCopy(item: GalleryItem): Boolean = item.historyId != null || item.key.contains(dir.toString())
+    fun isOwnCopy(item: GalleryItem): Boolean = item.historyId != null || item.file.toString().contains(dir.toString())
 
     /**
      * The result stored for [item] in [target], when it is the scan [stamp]

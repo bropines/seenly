@@ -12,9 +12,38 @@ import androidx.compose.ui.graphics.ImageBitmap
 import coil3.PlatformContext
 import coil3.compose.LocalPlatformContext
 import io.github.vinceglb.filekit.PlatformFile
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
-/** Decodes [file] for display, bounded to [maxSide] px so a 50 MP photo cannot exhaust memory. */
+/**
+ * Decodes [file] for display. [maxSide] bounds an ordinary picture's longer
+ * side, so a 50 MP photo cannot exhaust memory; a strip many times longer
+ * than wide keeps more of its length (see [displayBound]).
+ */
 expect suspend fun loadImageBitmap(context: PlatformContext, file: PlatformFile, maxSide: Int): ImageBitmap?
+
+/**
+ * The side of the square a [width] x [height] picture is fitted into when it
+ * is decoded for display.
+ *
+ * An ordinary picture is bounded by [maxSide] on its longer side. Bounding a
+ * webtoon strip or a long screenshot that way leaves a sliver a couple of
+ * hundred pixels wide, unreadable once it is zoomed to the screen's width. A
+ * long picture may therefore keep as many pixels as a 2:3 page bounded by
+ * [maxSide] has: it costs the same memory and stays sharp. [sideLimit] is
+ * the longest side the platform can draw.
+ */
+internal fun displayBound(width: Int, height: Int, maxSide: Int, sideLimit: Int): Int {
+    val long = max(width, height)
+    if (width <= 0 || height <= 0 || long <= maxSide) return maxSide
+    val bySide = maxSide.toDouble() / long
+    val budget = maxSide.toDouble() * (maxSide * 2 / 3)
+    val byArea = sqrt(budget / (width.toDouble() * height))
+    val scale = min(1.0, max(bySide, byArea))
+    return (long * scale).roundToInt().coerceIn(maxSide, max(maxSide, sideLimit))
+}
 
 sealed interface ImageState {
     data object Loading : ImageState

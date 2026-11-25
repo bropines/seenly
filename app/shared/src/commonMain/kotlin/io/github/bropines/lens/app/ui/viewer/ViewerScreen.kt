@@ -1,12 +1,18 @@
 package io.github.bropines.lens.app.ui.viewer
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,22 +23,25 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.automirrored.rounded.Notes
 import androidx.compose.material.icons.automirrored.rounded.RotateRight
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
-import androidx.compose.material3.FilledTonalIconToggleButton
 import io.github.bropines.lens.app.ui.components.languageName
 import io.github.bropines.lens.app.ui.UiText
 import io.github.bropines.lens.app.ui.asString
 import io.github.bropines.lens.app.resources.*
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.material.icons.rounded.ImageSearch
 import androidx.compose.material3.AlertDialog
@@ -40,15 +49,17 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import io.github.bropines.lens.protocol.Region
-import androidx.compose.material.icons.rounded.AddPhotoAlternate
 import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Notes
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.GridView
+import androidx.compose.material.icons.rounded.HourglassTop
+import androidx.compose.material.icons.rounded.SearchOff
 import androidx.compose.material.icons.rounded.SelectAll
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.ErrorOutline
-import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material3.Button
@@ -57,11 +68,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -69,27 +83,75 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import io.github.bropines.lens.app.data.GalleryOrigin
 import io.github.bropines.lens.app.data.ReadingLayout
 import io.github.bropines.lens.app.platform.PlatformServices
 import io.github.bropines.lens.app.platform.encodePng
 import io.github.bropines.lens.app.ui.components.LanguageBar
 import io.github.bropines.lens.app.data.TextTranslator
+import io.github.bropines.lens.app.ui.gallery.HeroFlight
+import io.github.bropines.lens.app.ui.gallery.LocalHeroRegistry
+import io.github.bropines.lens.app.ui.gallery.PageBadge
+import io.github.bropines.lens.app.ui.gallery.dragProgress
+import io.github.bropines.lens.app.ui.gallery.dragWindow
+import io.github.bropines.lens.app.ui.gallery.heroFrame
+import io.github.bropines.lens.app.ui.gallery.scaledAboutCenter
 import io.github.bropines.lens.overlay.OverlayMode
 import io.github.bropines.lens.overlay.OverlayStyle
 import io.github.bropines.lens.overlay.rememberTextSelectionState
 import io.github.bropines.lens.overlay.renderTranslatedBitmap
+import io.github.bropines.lens.overlay.wordCount
 import io.github.bropines.lens.protocol.ScanResult
 import io.github.bropines.lens.protocol.WritingDirection
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.saveImageToGallery
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.NavigationEventTransitionState
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -97,6 +159,28 @@ private val Scrim = Color.Black.copy(alpha = 0.6f)
 private val FastIn = fadeIn(tween(120))
 private val FastOut = fadeOut(tween(90))
 
+/** How far down, as a share of the screen's height, a pull has to go to put the page away when it is let go. */
+private const val PULL_AWAY = 0.16f
+
+/** The pull that takes the page as far from itself as it gets: smaller, the dark behind it nearly gone. */
+private const val PULL_TRAVEL = 0.55f
+
+/** A flick down this fast, in dp per second, puts the page away however short it was. */
+private const val FLICK_AWAY_DP = 420f
+
+/** How long the eye has to be held before it peeks rather than toggles. */
+private const val PEEK_AFTER_MS = 200L
+
+/**
+ * The viewer: the gallery's pictures one at a time, each with its translation
+ * drawn over it.
+ *
+ * Swipe sideways between pictures; pinch or double-tap to zoom; tap for the
+ * controls. Pull a picture down to put it away: it follows the finger and
+ * goes back into the thumbnail it came from (the gallery's own grid, or the
+ * history grid beneath), or the viewer closes. Hold a picture for the quick
+ * actions, hold the eye to peek at the original.
+ */
 @Composable
 fun ViewerScreen(
     vm: ViewerViewModel,
@@ -118,6 +202,7 @@ fun ViewerScreen(
     var searchMode by rememberSaveable { mutableStateOf(false) }
     var overlayHidden by rememberSaveable { mutableStateOf(false) }
     val stale by vm.stale.collectAsState()
+    val failed by vm.failed.collectAsState()
     var askAi by remember { mutableStateOf(false) }
     var lastRegion by remember { mutableStateOf<Region?>(null) }
     val searching by vm.searching.collectAsState()
@@ -127,6 +212,10 @@ fun ViewerScreen(
     val renders = remember { mutableStateMapOf<Int, PageRender>() }
     val scope = rememberCoroutineScope()
     val highlight = MaterialTheme.colorScheme.primary
+    val haptics = LocalHapticFeedback.current
+    val density = LocalDensity.current
+    val registry = LocalHeroRegistry.current
+    val goBack by rememberUpdatedState(onBack)
     fun styleFor(scan: ScanResult?): OverlayStyle {
         val manga = when (settings.readingLayout) {
             ReadingLayout.InPlace -> false
@@ -142,56 +231,369 @@ fun ViewerScreen(
 
     val selection = rememberTextSelectionState()
 
+    // The page in flight, and what the page in front says of itself.
+    val flight = remember { HeroFlight() }
+    val handle = remember { PageHandle() }
+    val leave = remember { Animatable(1f) }
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    var viewport by remember { mutableStateOf(IntSize.Zero) }
+    // A gallery of several pictures has a grid of its own to go back to; history's is the grid beneath.
+    val ownGrid = items.size > 1 && vm.gallery.origin != GalleryOrigin.History
+    var showGrid by rememberSaveable { mutableStateOf(false) }
+    var gridMade by remember { mutableStateOf(showGrid) }
+    val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = vm.gallery.startIndex)
+    var opened by rememberSaveable { mutableStateOf(false) }
+    var leaving by remember { mutableStateOf(false) }
+    var landing by remember { mutableStateOf(false) }
+    var scrubbing by remember { mutableStateOf(false) }
+    var peeking by remember { mutableStateOf(false) }
+    var menuAt by remember { mutableStateOf<Offset?>(null) }
+    var sharing by remember { mutableStateOf(false) }
+    var exporting by remember { mutableStateOf(false) }
+    var grab by remember { mutableStateOf(Offset.Zero) }
+    var armed by remember { mutableStateOf(false) }
+    val snackbar = remember { SnackbarHostState() }
+    val focus = remember { FocusRequester() }
+    val clip = remember { Path() }
+    val cellCorner = with(density) { GridCellCorner.toPx() }
+    val flickAway = with(density) { FLICK_AWAY_DP.dp.toPx() }
+
+    /** Where [index]'s thumbnail is on screen, in the viewer's own pixels, if one is. */
+    fun thumbOf(index: Int): Rect? = registry?.boundsOf(items[index].key)?.translate(-origin.x, -origin.y)
+
+    /** Where the picture of [key] rests, once the page showing it has said. */
+    suspend fun restOf(key: String): Rect =
+        snapshotFlow { if (handle.owner == key) handle.picture else Rect.Zero }.first { !it.isEmpty }
+
+    LaunchedEffect(Unit) {
+        flight.corner = cellCorner
+        runCatching { focus.requestFocus() }
+        if (opened) {
+            // Restored, not opened: everything is where it was left.
+            if (showGrid) flight.clear() else flight.settle()
+            return@LaunchedEffect
+        }
+        val index = pager.currentPage
+        val key = items[index].key
+        val rest = restOf(key)
+        // Only now is the thumbnail taken out of its cell: in the same frame the page appears in its place.
+        val from = if (ownGrid) null else thumbOf(index)
+        registry?.shown = key
+        if (from != null) flight.open(from, rest) else flight.appear(rest)
+        opened = true
+    }
+
     LaunchedEffect(pager) {
         snapshotFlow { pager.currentPage }.collect {
             zoomed = false
             selection.clear()
-            vm.onPageVisible(it)
+            if (opened && !showGrid && !leaving) registry?.shown = items[it].key
+        }
+    }
+    // A page the strip is being dragged past is looked at, not read: only where it stops.
+    LaunchedEffect(pager, scrubbing) {
+        if (!scrubbing) snapshotFlow { pager.currentPage }.collect { vm.onPageVisible(it) }
+    }
+    // The grid, once made, follows the reader, so the page finds its cell when it is put away.
+    LaunchedEffect(gridMade) {
+        if (!gridMade) return@LaunchedEffect
+        snapshotFlow { pager.currentPage }.collect { page ->
+            if (!showGrid && gridState.layoutInfo.visibleItemsInfo.none { it.index == page }) gridState.scrollToItem(page)
+        }
+    }
+    if (registry != null) {
+        // What lies beneath need not be drawn while it cannot be seen.
+        LaunchedEffect(registry) {
+            snapshotFlow {
+                !leaving && leave.value >= 0.999f &&
+                    ((ownGrid && gridMade) || (!flight.active && flight.shownBackdrop >= 0.999f && flight.shownPresence >= 0.999f))
+            }.collect { registry.covered = it }
+        }
+        DisposableEffect(registry) {
+            onDispose {
+                registry.covered = false
+                registry.shown = null
+            }
         }
     }
 
     // In search mode, upload the visible page for search right away so its object dots show up.
     LaunchedEffect(searchMode, pager.currentPage) { if (searchMode) vm.prepareSearch(pager.currentPage) }
 
-    val current = pages[pager.currentPage]
+    val front = pager.currentPage
+    val current = pages[front]
     val result = (current as? PageState.Ready)?.result
     val style = styleFor(result)
+    // Holding the eye shows the other of the two for as long as it is held.
+    val original = overlayHidden != peeking
 
-    fun exportImage() {
-        val render = renders[pager.currentPage] ?: return
-        val overlay = render.overlay ?: return
-        val scan = result ?: return
-        val name = items[pager.currentPage].name.substringBeforeLast('.') + "-translated.png"
+    /** Closes the viewer: the picture goes back into the thumbnail beneath it, or everything steps back. */
+    fun close(velocity: Offset = Offset.Zero) {
+        if (leaving) return
+        leaving = true
         scope.launch {
-            val png = withContext(Dispatchers.Default) { renderTranslatedBitmap(render.bitmap, scan, style, overlay).encodePng() }
-            services.shareImage(png, name)
+            if (showGrid || ownGrid) {
+                leave.animateTo(0f, tween(150))
+            } else {
+                handle.resetZoom()
+                landing = true
+                val to = thumbOf(pager.currentPage)
+                if (to != null) flight.land(handle.picture, to, velocity) else flight.vanish(handle.picture, velocity)
+            }
+            registry?.shown = null
+            goBack()
         }
     }
 
-    Box(Modifier.fillMaxSize().background(Color.Black)) {
+    /** Puts the page in front away into its cell of the gallery's own grid. */
+    fun toGrid(velocity: Offset = Offset.Zero) {
+        if (!ownGrid || showGrid || leaving) return
+        scope.launch {
+            gridMade = true
+            handle.resetZoom()
+            landing = true
+            // The grid may have been made this very moment: give its cells a few frames to be laid out.
+            var to = thumbOf(pager.currentPage)
+            var waited = 0
+            while (to == null && waited++ < 4) {
+                androidx.compose.runtime.withFrameNanos { }
+                to = thumbOf(pager.currentPage)
+            }
+            if (to != null) flight.land(handle.picture, to, velocity) else flight.vanish(handle.picture, velocity)
+            showGrid = true
+            registry?.shown = null
+            flight.clear()
+            landing = false
+        }
+    }
+
+    /** Out of the grid: page [index] flies out of its cell. */
+    fun fromGrid(index: Int) {
+        if (flight.flying || leaving) return
+        scope.launch {
+            val key = items[index].key
+            val from = thumbOf(index)
+            pager.scrollToPage(index)
+            val rest = restOf(key)
+            registry?.shown = key
+            showGrid = false
+            if (from != null) flight.open(from, rest) else flight.appear(rest)
+        }
+    }
+
+    fun turn(by: Int) {
+        val target = (pager.currentPage + by).coerceIn(0, items.lastIndex)
+        if (target != pager.currentPage && !showGrid) scope.launch { pager.animateScrollToPage(target) }
+    }
+
+    val gestures = remember {
+        PageGestures(
+            canDismiss = {
+                !zoomed && !searchMode && !showGrid && !leaving && !flight.flying && !handle.strip &&
+                    !pager.isScrollInProgress && selection.selection == null
+            },
+            onDismissStart = { at ->
+                grab = at
+                armed = false
+                if (ownGrid) gridMade = true
+            },
+            onDismissDrag = { total ->
+                val travel = viewport.height * PULL_TRAVEL
+                flight.hold(dragWindow(handle.picture, grab, total, travel), 1f - 0.85f * dragProgress(total, travel))
+                val far = total.y > viewport.height * PULL_AWAY
+                if (far != armed) {
+                    armed = far
+                    haptics.performHapticFeedback(if (far) HapticFeedbackType.GestureThresholdActivate else HapticFeedbackType.SegmentTick)
+                }
+            },
+            onDismissEnd = { velocity ->
+                when {
+                    !armed && velocity.y < flickAway -> scope.launch { flight.release(handle.picture, velocity) }
+                    ownGrid -> toGrid(velocity)
+                    else -> close(velocity)
+                }
+            },
+            onDismissCancel = { scope.launch { flight.release(handle.picture) } },
+            canHold = { !searchMode && mode != OverlayMode.TextBoxes && !showGrid && !leaving && !flight.active },
+            onHold = { at ->
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                menuAt = at
+            },
+        )
+    }
+
+    // Back, by button or by the system's gesture. While the gesture is under way the page draws back
+    // with it (or, where the whole viewer leaves, the viewer does); let go, it leaves; taken back, it returns.
+    val back = rememberNavigationEventState(NavigationEventInfo.None)
+    NavigationBackHandler(
+        state = back,
+        onBackCancelled = {
+            scope.launch { if (showGrid || ownGrid) leave.animateTo(1f, spring()) else flight.release(handle.picture) }
+        },
+        onBackCompleted = { close() },
+    )
+    LaunchedEffect(back) {
+        snapshotFlow { (back.transitionState as? NavigationEventTransitionState.InProgress)?.latestEvent?.progress }
+            .collect { progress ->
+                when {
+                    progress == null || leaving -> Unit
+                    showGrid || ownGrid -> leave.snapTo(1f - 0.3f * progress)
+                    !flight.flying -> flight.hold(handle.picture.scaledAboutCenter(1f - 0.12f * progress), 1f - 0.4f * progress)
+                }
+            }
+    }
+
+    /** The page in front with its translation drawn in, as a PNG and a name for it. */
+    suspend fun translatedPng(): Pair<ByteArray, String>? {
+        val index = pager.currentPage
+        val render = renders[index] ?: return null
+        val overlay = render.overlay ?: return null
+        val scan = (pages[index] as? PageState.Ready)?.result ?: return null
+        val name = items[index].name.substringBeforeLast('.') + "-" + settings.targetLanguage + ".png"
+        exporting = true
+        try {
+            val png = withContext(Dispatchers.Default) { renderTranslatedBitmap(render.bitmap, scan, styleFor(scan), overlay).encodePng() }
+            return png to name
+        } finally {
+            exporting = false
+        }
+    }
+
+    fun shareImage(withText: Boolean) {
+        scope.launch {
+            val (png, name) = translatedPng() ?: return@launch
+            val text = result?.let(::shareableText)
+            if (withText && text != null) services.shareImage(png, name, text) else services.shareImage(png, name)
+        }
+    }
+
+    fun saveImage() {
+        scope.launch {
+            val (png, name) = translatedPng() ?: return@launch
+            val saved = runCatching { FileKit.saveImageToGallery(png, name).getOrThrow() }
+            snackbar.showSnackbar(
+                if (saved.isSuccess) {
+                    getString(Res.string.viewer_saved)
+                } else {
+                    getString(Res.string.viewer_save_failed, saved.exceptionOrNull()?.message.orEmpty())
+                },
+            )
+        }
+    }
+
+    val canExportImage = result != null && renders[front]?.overlay != null
+
+    Box(
+        Modifier
+            .fillMaxSize()
+            .onGloballyPositioned {
+                origin = it.positionInRoot()
+                viewport = it.size
+            }
+            .graphicsLayer {
+                alpha = leave.value
+                val step = 0.95f + 0.05f * leave.value
+                scaleX = step
+                scaleY = step
+            }
+            .focusRequester(focus)
+            .focusable()
+            .onKeyEvent { event ->
+                if (event.type != KeyEventType.KeyDown) return@onKeyEvent false
+                when (event.key) {
+                    Key.DirectionRight, Key.PageDown -> turn(1)
+                    Key.DirectionLeft, Key.PageUp -> turn(-1)
+                    Key.Escape -> close()
+                    else -> return@onKeyEvent false
+                }
+                true
+            },
+    ) {
+        if (ownGrid && gridMade) {
+            val translated by vm.translated.collectAsState()
+            val done by vm.done.collectAsState()
+            fun badgeOf(index: Int): PageBadge? = when {
+                index in failed -> PageBadge.Failed
+                index in done || items[index].key in translated -> PageBadge.Translated
+                else -> null
+            }
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    // Above the page only when it is the grid's turn; beneath it while a page flies or is pulled.
+                    .zIndex(if (showGrid && !flight.active) 1f else 0f)
+                    .graphicsLayer { alpha = if (showGrid || flight.shownBackdrop < 0.999f) 1f else 0f },
+            ) {
+                GalleryGrid(
+                    title = vm.gallery.title,
+                    items = items,
+                    current = front,
+                    translatedCount = items.indices.count { badgeOf(it) == PageBadge.Translated },
+                    badge = ::badgeOf,
+                    state = gridState,
+                    registry = registry,
+                    onOpen = ::fromGrid,
+                    onClose = { close() },
+                )
+            }
+        }
+
+        // The dark behind the page: thinned while the page is pulled or in flight, to show what it goes back to.
+        Box(Modifier.fillMaxSize().graphicsLayer { alpha = if (showGrid && !flight.active) 0f else flight.shownBackdrop }.background(Color.Black))
+
         HorizontalPager(
             state = pager,
             beyondViewportPageCount = 1,
             key = { items[it].key },
             // A zoomed page pans with one finger, and in search mode a finger draws; neither turns the page.
-            userScrollEnabled = !zoomed && !searchMode,
-            modifier = Modifier.fillMaxSize(),
+            userScrollEnabled = !zoomed && !searchMode && !showGrid && !flight.active,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    alpha = if (showGrid && !flight.active) 0f else flight.shownPresence
+                    val picture = handle.picture
+                    if (flight.active && !picture.isEmpty && size.width > 0f && size.height > 0f) {
+                        val frame = heroFrame(flight.shownWindow, picture)
+                        transformOrigin = TransformOrigin(picture.center.x / size.width, picture.center.y / size.height)
+                        scaleX = frame.scale
+                        scaleY = frame.scale
+                        translationX = frame.translation.x
+                        translationY = frame.translation.y
+                    }
+                }
+                .drawWithContent {
+                    val picture = handle.picture
+                    if (flight.active && !picture.isEmpty) {
+                        val frame = heroFrame(flight.shownWindow, picture, flight.shownCorner(picture))
+                        clip.rewind()
+                        clip.addRoundRect(RoundRect(frame.clip, CornerRadius(frame.corner)))
+                        clipPath(clip) { this@drawWithContent.drawContent() }
+                    } else {
+                        drawContent()
+                    }
+                },
         ) { index ->
+            val inFront = index == pager.currentPage
             Box(Modifier.fillMaxSize()) {
                 PageView(
                     item = items[index],
                     state = pages[index],
-                    mode = if (overlayHidden) OverlayMode.Original else mode,
+                    // Going back into its thumbnail a picture is itself again: the thumbnail has no translation on it.
+                    mode = if (original || landing) OverlayMode.Original else mode,
                     style = styleFor((pages[index] as? PageState.Ready)?.result),
                     onTap = { chrome = !chrome },
                     onParagraphTap = { if (index == pager.currentPage) tappedParagraph = it },
                     onZoomed = { if (index == pager.currentPage) zoomed = it },
                     onRender = { render -> if (render == null) renders.remove(index) else renders[index] = render },
-                    selection = if (index == pager.currentPage) selection else null,
+                    selection = if (inFront) selection else null,
                     rotation = rotations[items[index].key] ?: 0,
+                    handle = if (inFront) handle else null,
+                    gestures = if (inFront) gestures else null,
+                    light = scrubbing,
+                    scanning = inFront && !scrubbing && pages[index] is PageState.Loading,
                 )
                 val render = renders[index]
-                if (searchMode && index == pager.currentPage && render != null) {
+                if (searchMode && inFront && render != null) {
                     SearchLayer(
                         image = render.bitmap,
                         objects = objects[index].orEmpty().map { Tappable(it.id, it.box) },
@@ -206,13 +608,18 @@ fun ViewerScreen(
             }
         }
 
+        val quiet = !showGrid && !flight.active && !leaving
+
         // Lens-style actions right above the selected text.
         val selectedText = selection.selectedText
         val bounds = selection.boundsInView
-        if (mode == OverlayMode.TextBoxes && selectedText != null && bounds != null && !selection.isDragging) {
+        if (quiet && mode == OverlayMode.TextBoxes && selectedText != null && bounds != null && !selection.isDragging) {
+            // Everything selected is copied as it is read, not as Lens happened to list it.
+            val everything = result != null && selection.selection?.count == result.wordCount
             SelectionActions(
-                bounds = bounds,
-                onCopy = { services.copyText(selectedText); selection.clear() },
+                // A strip's selection is measured in the strip, which is scrolled under the screen.
+                bounds = bounds.translate(0f, -handle.scrollY),
+                onCopy = { services.copyText(if (everything) result.readableText() else selectedText); selection.clear() },
                 onTranslate = { quickTranslate = selectedText },
                 onSelectAll = { result?.let(selection::selectAll) },
                 onShare = { services.shareText(selectedText) },
@@ -220,16 +627,32 @@ fun ViewerScreen(
             )
         }
 
+        QuickMenu(
+            at = menuAt,
+            hasText = result != null && result.paragraphs.isNotEmpty(),
+            hasTranslation = result?.translation != null,
+            canExport = canExportImage,
+            showingOriginal = overlayHidden,
+            onDismiss = { menuAt = null },
+            onCopyTranslation = { result?.translatedText()?.let(services::copyText) },
+            onCopyOriginal = { result?.let { services.copyText(it.readableText()) } },
+            onShare = { sharing = true },
+            onSave = ::saveImage,
+            onRescan = { vm.rescan(pager.currentPage) },
+            onToggleOriginal = { overlayHidden = !overlayHidden; selection.clear() },
+        )
+
         AnimatedVisibility(
-            chrome,
+            chrome && quiet,
             enter = FastIn + slideInVertically(tween(160)) { -it / 3 },
             exit = FastOut,
             modifier = Modifier.align(Alignment.TopCenter),
         ) {
             ViewerTopBar(
-                title = items[pager.currentPage].name,
-                counter = if (items.size > 1) "${pager.currentPage + 1} / ${items.size}" else null,
-                onBack = onBack,
+                title = items[front].name,
+                counter = if (items.size > 1) "${front + 1} / ${items.size}" else null,
+                onBack = { close() },
+                onGrid = if (ownGrid) ({ toGrid() }) else null,
             )
         }
 
@@ -237,73 +660,104 @@ fun ViewerScreen(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            ScanStatus(
-                current,
-                refreshingTo = if (pager.currentPage in stale) languageName(settings.targetLanguage) else null,
-                onRetry = { vm.retry(pager.currentPage) },
-                retryOnline = !settings.onDevice.always,
-            )
-            SearchStatus(searching, searchError, onDismiss = vm::dismissSearchError)
-            AnimatedVisibility(chrome, enter = FastIn + slideInVertically(tween(160)) { it / 3 }, exit = FastOut + slideOutVertically(tween(120)) { it / 3 }) {
-                Column {
-                // Thumb row: language pair on the left, the eye on the right, right above the panel.
-                Row(
-                    Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    LanguageBar(
-                        settings.sourceLanguage, settings.targetLanguage, vm::setSource, vm::setTarget,
-                        modifier = Modifier.weight(1f),
-                        onDark = true,
-                        compact = true,
-                    )
-                    // A sideways photo reads badly: turn it upright, a quarter per tap, and it is read again.
-                    FilledTonalIconButton(
-                        onClick = {
-                            selection.clear()
-                            tappedParagraph = null
-                            lastRegion = null
-                            vm.rotate(pager.currentPage)
-                        },
-                        modifier = Modifier.padding(start = 8.dp).size(56.dp),
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Rounded.RotateRight,
-                            contentDescription = stringResource(Res.string.viewer_rotate),
-                            modifier = Modifier.size(28.dp),
-                        )
-                    }
-                    FilledTonalIconToggleButton(
-                        checked = overlayHidden,
-                        onCheckedChange = { overlayHidden = !overlayHidden; selection.clear() },
-                        modifier = Modifier.padding(start = 8.dp).size(56.dp),
-                    ) {
-                        Icon(
-                            if (overlayHidden) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
-                            contentDescription = stringResource(if (overlayHidden) Res.string.viewer_show_translation else Res.string.viewer_hide_translation),
-                            modifier = Modifier.size(28.dp),
-                        )
-                    }
-                }
-                ViewerBottomPanel(
-                    mode = mode,
-                    onMode = { mode = it; searchMode = false },
-                    searchMode = searchMode,
-                    onSearchMode = { searchMode = true; selection.clear() },
-                    onSearchWhole = { vm.visualSearch(pager.currentPage, services::openUrl) { it.searchImageUrl() } },
-                    onAskAi = { askAi = true },
-                    result = result,
-                    canExportImage = result != null && renders[pager.currentPage]?.overlay != null,
-                    onCopyOriginal = { result?.let { services.copyText(it.readableText()) } },
-                    onCopyTranslation = { result?.translation?.let(services::copyText) },
-                    onShowText = { showText = true },
-                    onShareText = { result?.let { services.shareText(shareableText(it)) } },
-                    onExportImage = ::exportImage,
-                    onSelectAll = { result?.let(selection::selectAll) },
+            SnackbarHost(snackbar)
+            if (quiet) {
+                // With the controls away, a turned page says which one it is, and then is quiet again.
+                PageNumber(front, items.size, visible = !chrome && items.size > 1)
+                ScanStatus(
+                    current,
+                    refreshingTo = if (front in stale) languageName(settings.targetLanguage) else null,
+                    onRetry = { vm.retry(front) },
+                    retryOnline = !settings.onDevice.always,
                 )
+                BusyStatus(exporting, stringResource(Res.string.viewer_preparing_image))
+                SearchStatus(searching, searchError, onDismiss = vm::dismissSearchError)
+            }
+            AnimatedVisibility(
+                chrome && quiet,
+                enter = FastIn + slideInVertically(tween(160)) { it / 3 },
+                exit = FastOut + slideOutVertically(tween(120)) { it / 3 },
+            ) {
+                Column {
+                    // Darkened towards the panel: the controls over the picture read on a white page too.
+                    Column(
+                        Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)))).padding(top = 20.dp),
+                    ) {
+                        if (items.size > 1) {
+                            Filmstrip(
+                                items = items,
+                                current = front,
+                                failed = failed,
+                                onPick = { scope.launch { pager.animateScrollToPage(it) } },
+                                onScrub = { scope.launch { pager.scrollToPage(it) } },
+                                onScrubbing = { scrubbing = it },
+                            )
+                        }
+                        // Thumb row: language pair on the left, the eye on the right, right above the panel.
+                        Row(
+                            Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            LanguageBar(
+                                settings.sourceLanguage, settings.targetLanguage, vm::setSource, vm::setTarget,
+                                modifier = Modifier.weight(1f),
+                                onDark = true,
+                                compact = true,
+                            )
+                            // A sideways photo reads badly: turn it upright, a quarter per tap, and it is read again.
+                            FilledTonalIconButton(
+                                onClick = {
+                                    selection.clear()
+                                    tappedParagraph = null
+                                    lastRegion = null
+                                    vm.rotate(pager.currentPage)
+                                },
+                                modifier = Modifier.padding(start = 8.dp).size(56.dp),
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Rounded.RotateRight,
+                                    contentDescription = stringResource(Res.string.viewer_rotate),
+                                    modifier = Modifier.size(28.dp),
+                                )
+                            }
+                            PeekButton(
+                                hidden = overlayHidden,
+                                onToggle = { overlayHidden = !overlayHidden; selection.clear() },
+                                onPeek = { peeking = it },
+                                modifier = Modifier.padding(start = 8.dp),
+                            )
+                        }
+                    }
+                    ViewerBottomPanel(
+                        mode = mode,
+                        onMode = { mode = it; searchMode = false },
+                        searchMode = searchMode,
+                        onSearchMode = { searchMode = true; selection.clear() },
+                        onSearchWhole = { vm.visualSearch(pager.currentPage, services::openUrl) { it.searchImageUrl() } },
+                        onAskAi = { askAi = true },
+                        result = result,
+                        canExportImage = canExportImage,
+                        onCopyOriginal = { result?.let { services.copyText(it.readableText()) } },
+                        onCopyTranslation = { result?.translatedText()?.let(services::copyText) },
+                        onShowText = { showText = true },
+                        onShareText = { result?.let { services.shareText(shareableText(it)) } },
+                        onShare = { sharing = true },
+                        onSaveImage = ::saveImage,
+                        onSelectAll = { result?.let(selection::selectAll) },
+                    )
                 }
             }
         }
+    }
+
+    if (sharing) {
+        ShareSheet(
+            canExport = canExportImage,
+            onDismiss = { sharing = false },
+            onImage = { shareImage(withText = false) },
+            onText = { result?.let { services.shareText(shareableText(it)) } },
+            onBoth = { shareImage(withText = true) },
+        )
     }
 
     if (askAi) {
@@ -352,6 +806,7 @@ private fun ViewerTopBar(
     title: String,
     counter: String?,
     onBack: () -> Unit,
+    onGrid: (() -> Unit)?,
 ) {
     Column(Modifier.fillMaxWidth().background(Scrim).statusBarsPadding().padding(bottom = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -360,6 +815,95 @@ private fun ViewerTopBar(
                 Text(title, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
                 counter?.let { Text(it, color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelMedium) }
             }
+            if (onGrid != null) {
+                IconButton(onClick = onGrid) {
+                    Icon(Icons.Rounded.GridView, contentDescription = stringResource(Res.string.viewer_all_pages), tint = Color.White)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The eye: a tap hides the translation or brings it back; held, it shows the
+ * other of the two for as long as it is held, to compare with the original at
+ * a glance.
+ */
+@Composable
+private fun PeekButton(hidden: Boolean, onToggle: () -> Unit, onPeek: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+    val haptics = LocalHapticFeedback.current
+    val toggle by rememberUpdatedState(onToggle)
+    val peek by rememberUpdatedState(onPeek)
+    val label = stringResource(if (hidden) Res.string.viewer_show_translation else Res.string.viewer_hide_translation)
+    val hint = stringResource(Res.string.viewer_hold_to_peek)
+    var held by remember { mutableStateOf(false) }
+    Box(
+        modifier
+            .size(56.dp)
+            .clip(CircleShape)
+            .background(if (hidden || held) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer)
+            .semantics(mergeDescendants = true) {
+                role = Role.Switch
+                contentDescription = label
+                onClick(hint) { toggle(); true }
+            }
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitFirstDown().consume()
+                    var lifted = false
+                    val quick = withTimeoutOrNull(PEEK_AFTER_MS) {
+                        lifted = waitForUpOrCancellation() != null
+                        true
+                    }
+                    if (quick != null) {
+                        if (lifted) toggle()
+                    } else {
+                        held = true
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        peek(true)
+                        try {
+                            waitForUpOrCancellation()
+                        } finally {
+                            held = false
+                            peek(false)
+                        }
+                    }
+                }
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            if (hidden != held) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
+            contentDescription = null,
+            tint = if (hidden || held) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.size(28.dp),
+        )
+    }
+}
+
+/** "12 / 48", shown for a moment after the page turns while the controls are away. */
+@Composable
+private fun PageNumber(page: Int, count: Int, visible: Boolean) {
+    var shown by remember { mutableStateOf(false) }
+    // Not for the page the controls were hidden on: only for the ones turned to after.
+    var last by remember { mutableStateOf(page) }
+    LaunchedEffect(page, visible) {
+        val turned = page != last
+        last = page
+        if (visible && turned) {
+            shown = true
+            delay(1300)
+        }
+        shown = false
+    }
+    AnimatedVisibility(shown && visible, enter = FastIn, exit = fadeOut(tween(260))) {
+        Surface(shape = MaterialTheme.shapes.extraLarge, color = Color.Black.copy(alpha = 0.6f), modifier = Modifier.navigationBarsPadding().padding(12.dp)) {
+            Text(
+                "${page + 1} / $count",
+                color = Color.White,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+            )
         }
     }
 }
@@ -371,7 +915,17 @@ private fun ScanStatus(state: PageState?, refreshingTo: String?, onRetry: () -> 
     var language by remember { mutableStateOf("") }
     if (refreshingTo != null) language = refreshingTo
     val offline = state is PageState.Ready && state.offline && refreshingTo == null
-    AnimatedVisibility(state !is PageState.Ready || refreshingTo != null || offline, enter = FastIn, exit = FastOut) {
+    // A page with nothing to read says so once, briefly: otherwise it looks as if nothing happened.
+    val empty = state is PageState.Ready && state.result.paragraphs.isEmpty() && refreshingTo == null && !offline
+    var emptyShown by remember { mutableStateOf(false) }
+    LaunchedEffect(state, empty) {
+        emptyShown = empty
+        if (empty) {
+            delay(2600)
+            emptyShown = false
+        }
+    }
+    AnimatedVisibility(state != null && (state !is PageState.Ready || refreshingTo != null || offline || (empty && emptyShown)), enter = FastIn, exit = FastOut) {
         when {
             // Scanned on the device: say so, since it reads and translates less well than Lens.
             offline -> Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.tertiaryContainer, modifier = Modifier.padding(12.dp)) {
@@ -382,6 +936,12 @@ private fun ScanStatus(state: PageState?, refreshingTo: String?, onRetry: () -> 
                     if (retryOnline) TextButton(onClick = onRetry) { Text(stringResource(Res.string.viewer_offline_retry)) }
                 }
             }
+            empty -> Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.padding(12.dp)) {
+                Row(Modifier.padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Rounded.SearchOff, contentDescription = null)
+                    Text(stringResource(Res.string.viewer_no_text))
+                }
+            }
             state is PageState.Ready -> Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.padding(12.dp)) {
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     LoadingIndicator(Modifier.size(28.dp))
@@ -390,7 +950,15 @@ private fun ScanStatus(state: PageState?, refreshingTo: String?, onRetry: () -> 
             }
             state is PageState.Failed -> Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.padding(12.dp)) {
                 Row(Modifier.padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Rounded.ErrorOutline, contentDescription = null)
+                    // What went wrong at a glance: no network, told to wait, or something else.
+                    Icon(
+                        when (state.kind) {
+                            FailKind.Offline -> Icons.Rounded.WifiOff
+                            FailKind.RateLimited -> Icons.Rounded.HourglassTop
+                            FailKind.Other -> Icons.Rounded.ErrorOutline
+                        },
+                        contentDescription = null,
+                    )
                     Text(state.message.asString(), maxLines = 2, modifier = Modifier.weight(1f, fill = false))
                     Button(onClick = onRetry) { Text(stringResource(Res.string.retry)) }
                 }
@@ -400,6 +968,19 @@ private fun ScanStatus(state: PageState?, refreshingTo: String?, onRetry: () -> 
                     LoadingIndicator(Modifier.size(28.dp))
                     Text(stringResource(Res.string.viewer_recognising), Modifier.padding(start = 8.dp))
                 }
+            }
+        }
+    }
+}
+
+/** Something that takes a moment is under way (the translated picture being drawn for export). */
+@Composable
+private fun BusyStatus(busy: Boolean, label: String) {
+    AnimatedVisibility(busy, enter = FastIn, exit = FastOut) {
+        Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.padding(12.dp)) {
+            Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                LoadingIndicator(Modifier.size(28.dp))
+                Text(label, Modifier.padding(start = 8.dp))
             }
         }
     }
@@ -415,7 +996,8 @@ private fun ViewerBottomPanel(
     onCopyTranslation: () -> Unit,
     onShowText: () -> Unit,
     onShareText: () -> Unit,
-    onExportImage: () -> Unit,
+    onShare: () -> Unit,
+    onSaveImage: () -> Unit,
     onSelectAll: () -> Unit,
     searchMode: Boolean,
     onSearchMode: () -> Unit,
@@ -472,14 +1054,15 @@ private fun ViewerBottomPanel(
                 if (searchMode) {
                     ActionChip(Icons.Rounded.ImageSearch, stringResource(Res.string.viewer_whole_image), true, onSearchWhole, cell)
                     ActionChip(Icons.Rounded.AutoAwesome, stringResource(Res.string.viewer_ask_ai), true, onAskAi, cell)
-                    ActionChip(Icons.Rounded.Notes, stringResource(Res.string.viewer_all_text), hasText, onShowText, cell)
+                    ActionChip(Icons.AutoMirrored.Rounded.Notes, stringResource(Res.string.viewer_all_text), hasText, onShowText, cell)
                     return@Row
                 }
                 when (mode) {
                     OverlayMode.Translated -> {
                         ActionChip(Icons.Rounded.ContentCopy, stringResource(Res.string.copy), hasTranslation, onCopyTranslation, cell)
-                        ActionChip(Icons.Rounded.AddPhotoAlternate, stringResource(Res.string.viewer_as_image), canExportImage, onExportImage, cell)
-                        ActionChip(Icons.Rounded.Share, stringResource(Res.string.share), hasText, onShareText, cell)
+                        // To the gallery; sending it somewhere is under Share, with the text or without.
+                        ActionChip(Icons.Rounded.Download, stringResource(Res.string.viewer_save), canExportImage, onSaveImage, cell)
+                        ActionChip(Icons.Rounded.Share, stringResource(Res.string.share), hasText, onShare, cell)
                     }
                     OverlayMode.TextBoxes -> {
                         ActionChip(Icons.Rounded.SelectAll, stringResource(Res.string.select_all), hasText, onSelectAll, cell)
@@ -491,7 +1074,7 @@ private fun ViewerBottomPanel(
                         ActionChip(Icons.Rounded.Share, stringResource(Res.string.share), hasText, onShareText, cell)
                     }
                 }
-                ActionChip(Icons.Rounded.Notes, stringResource(Res.string.viewer_all_text), hasText, onShowText, cell)
+                ActionChip(Icons.AutoMirrored.Rounded.Notes, stringResource(Res.string.viewer_all_text), hasText, onShowText, cell)
             }
         }
     }
@@ -615,8 +1198,8 @@ private fun ActionChip(icon: ImageVector, label: String, enabled: Boolean, onCli
     }
 }
 
-/** Original and translation, paragraph by paragraph: what "share" and "export text" produce. */
+/** Original and translation, paragraph by paragraph in reading order: what "share" and "export text" produce. */
 fun shareableText(result: ScanResult): String =
-    result.paragraphs.joinToString("\n\n") { p ->
+    result.inReadingOrder().joinToString("\n\n") { p ->
         listOfNotNull(p.readableText(), p.translation?.text).joinToString("\n")
     }

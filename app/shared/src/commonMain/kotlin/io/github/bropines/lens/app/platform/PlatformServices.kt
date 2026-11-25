@@ -20,6 +20,9 @@ interface PlatformServices {
     /** Shares an exported image file. */
     fun shareImage(bytes: ByteArray, fileName: String)
 
+    /** Shares an exported image with [text] as its caption, where the platform can send both at once; else the image alone. */
+    fun shareImage(bytes: ByteArray, fileName: String, text: String) = shareImage(bytes, fileName)
+
     /**
      * Opens [url] in the user's own browser. Lens results pages must open
      * there: a WebView or a fresh profile gets Google's captcha.

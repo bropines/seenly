@@ -13,6 +13,7 @@ import io.github.bropines.lens.app.data.SettingsRepository
 import io.github.bropines.lens.app.data.TextTranslator
 import io.github.bropines.lens.app.data.ThemeMode
 import io.github.bropines.lens.app.data.TranslatorPrefs
+import io.github.bropines.lens.app.data.history.FakeHistoryDao
 import io.github.bropines.lens.app.data.history.HistoryRepository
 import io.github.bropines.lens.app.data.history.LensDatabase
 import io.github.bropines.lens.app.di.AppGraph
@@ -91,8 +92,8 @@ class DemoGraph(override val services: DemoServices) : AppGraph {
     override val settings = SettingsRepository(services)
     override val lens = LensClient(offline)
 
-    /** Scans come primed from the saved results, so history never records one and its database stays shut. */
-    override val history: HistoryRepository = allocateUnconstructed(HistoryRepository::class.java)
+    /** History over a table in memory: the renders cannot open the database, and need not. */
+    override val history: HistoryRepository = HistoryRepository(services, FakeHistoryDao())
     override val gallery = GalleryRepository(services, history)
     override val scans = ScanRepository(lens, history, services)
     override val updates = io.github.bropines.lens.app.update.UpdateController(offline, settings, services)
@@ -119,13 +120,6 @@ class DemoGraph(override val services: DemoServices) : AppGraph {
     }
 }
 
-/** An instance whose constructor never ran: for a dependency the renders must hold but never use. */
-@Suppress("UNCHECKED_CAST")
-private fun <T> allocateUnconstructed(type: Class<T>): T {
-    val unsafeClass = Class.forName("sun.misc.Unsafe")
-    val unsafe = unsafeClass.getDeclaredField("theUnsafe").apply { isAccessible = true }.get(null)
-    return unsafeClass.getMethod("allocateInstance", Class::class.java).invoke(unsafe, type) as T
-}
 
 /** The app's theme as the screenshots show it: dark, in Seenly's own colours rather than a wallpaper's. */
 @Composable

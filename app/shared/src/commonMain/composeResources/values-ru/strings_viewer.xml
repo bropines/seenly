@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Русские строки экранов с картинками: просмотр, его галерея, история и главный экран.
+     Английские — в values/strings_viewer.xml; правьте оба файла вместе. -->
+<resources>
+    <!-- Viewer -->
+    <string name="viewer_all_pages">Все страницы</string>
+    <string name="viewer_save">Сохранить</string>
+    <string name="viewer_saved">Сохранено в галерею</string>
+    <string name="viewer_save_failed">Не удалось сохранить: %1$s</string>
+    <string name="viewer_preparing_image">Готовлю картинку…</string>
+    <string name="viewer_hold_to_peek">Нажмите, чтобы скрыть перевод; удерживайте, чтобы взглянуть на оригинал</string>
+    <string name="viewer_page_number">Страница %1$d из %2$d</string>
+    <string name="viewer_no_text">На картинке не нашлось текста</string>
+    <string name="viewer_rescan">Перевести заново</string>
+    <string name="viewer_copied_translation">Перевод скопирован</string>
+    <string name="viewer_copied_original">Оригинал скопирован</string>
+
+    <!-- Quick actions (hold the image) and sharing -->
+    <string name="quick_copy_translation">Копировать перевод</string>
+    <string name="quick_copy_original">Копировать оригинал</string>
+    <string name="quick_share">Поделиться…</string>
+    <string name="quick_save">Сохранить картинку с переводом</string>
+    <string name="quick_show_original">Показать оригинал</string>
+    <string name="quick_show_translation">Показать перевод</string>
+    <string name="share_title">Поделиться</string>
+    <string name="share_image">Картинка с переводом</string>
+    <string name="share_image_desc">Картинка, на которой нарисован перевод</string>
+    <string name="share_text">Текст</string>
+    <string name="share_text_desc">Оригинал и перевод, абзац за абзацем</string>
+    <string name="share_both">Картинка и текст</string>
+    <string name="share_both_desc">Переведённая картинка с текстом в подписи</string>
+
+    <!-- The gallery's grid -->
+    <plurals name="gallery_images">
+        <item quantity="one">%1$d картинка</item>
+        <item quantity="few">%1$d картинки</item>
+        <item quantity="many">%1$d картинок</item>
+        <item quantity="other">%1$d картинки</item>
+    </plurals>
+    <string name="gallery_translated">переведено: %1$d</string>
+
+    <!-- History -->
+    <string name="history_today">Сегодня</string>
+    <string name="history_yesterday">Вчера</string>
+    <string name="history_earlier">Раньше</string>
+    <plurals name="history_pages">
+        <item quantity="one">%1$d страница</item>
+        <item quantity="few">%1$d страницы</item>
+        <item quantity="many">%1$d страниц</item>
+        <item quantity="other">%1$d страницы</item>
+    </plurals>
+    <string name="history_deleted">Удалено из истории</string>
+    <plurals name="history_deleted_many">
+        <item quantity="one">Из истории удалена %1$d картинка</item>
+        <item quantity="few">Из истории удалены %1$d картинки</item>
+        <item quantity="many">Из истории удалено %1$d картинок</item>
+        <item quantity="other">Из истории удалено %1$d картинки</item>
+    </plurals>
+    <string name="undo">Вернуть</string>
+    <string name="history_empty_title">Здесь пока пусто</string>
+    <string name="history_search_clear">Очистить поиск</string>
+    <plurals name="history_found">
+        <item quantity="one">%1$d совпадение</item>
+        <item quantity="few">%1$d совпадения</item>
+        <item quantity="many">%1$d совпадений</item>
+        <item quantity="other">%1$d совпадения</item>
+    </plurals>
+
+    <!-- Home -->
+    <string name="home_recent">Недавние</string>
+    <string name="home_see_all">Все</string>
+    <string name="home_continue_reading">Продолжить чтение</string>
+    <string name="home_page_of">Страница %1$d из %2$d</string>
+    <string name="home_start_title">Три способа перевести</string>
+    <string name="home_start_share">Поделитесь картинкой с Seenly</string>
+    <string name="home_start_share_desc">Из галереи, браузера, чата: «Поделиться» → Seenly</string>
+    <string name="home_start_folder">Откройте папку и листайте</string>
+    <string name="home_start_folder_desc">Глава манги страница за страницей; следующие переводятся заранее</string>
+    <string name="home_start_camera">Наведите камеру</string>
+    <string name="home_start_camera_desc">Круглая кнопка внизу: вывеска, меню, этикетка</string>
+    <string name="home_folder_gone">Папку «%1$s» больше не открыть</string>
+    <string name="home_forget_folder">Убрать из списка</string>
+    <string name="home_paste">Вставить картинку</string>
+    <string name="home_paste_empty">В буфере обмена нет картинки</string>
+    <string name="home_drop">Перетащите картинки, чтобы перевести</string>
+</resources>
