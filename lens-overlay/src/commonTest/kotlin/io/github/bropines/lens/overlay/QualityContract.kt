@@ -41,7 +41,10 @@ internal object AppStyles {
 }
 
 internal object QualityCorpus {
-    /** Real Lens answers, saved by the CLI. The demo pictures are drawn by `scripts/demo_images.py`. */
+    /**
+     * Real Lens answers, saved by the CLI. The demo pictures are drawn by
+     * `scripts/demo_images.py`, the `page-` ones by `fixtures/draw_pages.py`.
+     */
     val pages: List<QualityPage> = listOf(
         QualityPage("manga1-ru", "manga1.png", "manga1.ru"),
         QualityPage("demo-manga-ru", "demo-manga.png", "demo-manga.ru"),
@@ -53,6 +56,12 @@ internal object QualityCorpus {
         QualityPage("menu-en", "demo-menu.jpg", "demo-menu.en"),
         QualityPage("notice-ru", "demo-notice.jpg", "demo-notice.ru"),
         QualityPage("notice-en", "demo-notice.jpg", "demo-notice.en"),
+        QualityPage("document-ru", "page-document.png", "page-document.ru"),
+        QualityPage("monitor-ru", "page-monitor.jpg", "page-monitor.ru"),
+        QualityPage("settings-ru", "page-settings.png", "page-settings.ru"),
+        QualityPage("manga2-ru", "page-manga2.png", "page-manga2.ru"),
+        QualityPage("manga2-en", "page-manga2.png", "page-manga2.en"),
+        QualityPage("novel-ru", "page-novel.png", "page-novel.ru"),
     )
 }
 
