@@ -709,30 +709,20 @@ fun ViewerScreen(
                             .padding(top = 20.dp)
                             .then(if (compact) Modifier.navigationBarsPadding() else Modifier),
                     ) {
-                        AnimatedVisibility(!compact && items.size > 1) {
-                            Filmstrip(
-                                items = items,
-                                current = front,
-                                failed = failed,
-                                onPick = { scope.launch { pager.animateScrollToPage(it) } },
-                                onScrub = { scope.launch { pager.scrollToPage(it) } },
-                                onScrubbing = { scrubbing = it },
-                            )
-                        }
-                        // Thumb row: language pair on the left, the eye on the right, right above the panel.
-                        Row(
-                            Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
+                        // The picture's own buttons stand in a column at the right edge, the eye lowest,
+                        // nearest the thumb: the language pair below gets the whole width.
+                        Column(
+                            Modifier.align(Alignment.End).padding(end = 12.dp, bottom = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            LanguageBar(
-                                settings.sourceLanguage, settings.targetLanguage, vm::setSource, vm::setTarget,
-                                modifier = Modifier.weight(1f),
-                                onDark = true,
-                                compact = true,
-                                // What this page really is: the language Lens found, and the one it went into.
-                                detected = shownLanguages.first,
-                                actualTarget = shownLanguages.second,
-                            )
+                            // Fold the panel away, or bring it back; the choice is remembered.
+                            FilledTonalIconButton(onClick = { vm.setCompact(!compact) }, modifier = Modifier.size(48.dp)) {
+                                Icon(
+                                    if (compact) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                                    contentDescription = stringResource(if (compact) Res.string.viewer_panel_expand else Res.string.viewer_panel_collapse),
+                                )
+                            }
                             // A sideways photo reads badly: turn it upright, a quarter per tap, and it is read again.
                             FilledTonalIconButton(
                                 onClick = {
@@ -741,7 +731,7 @@ fun ViewerScreen(
                                     lastRegion = null
                                     vm.rotate(pager.currentPage)
                                 },
-                                modifier = Modifier.padding(start = 6.dp).size(48.dp),
+                                modifier = Modifier.size(48.dp),
                             ) {
                                 Icon(
                                     Icons.AutoMirrored.Rounded.RotateRight,
@@ -753,18 +743,28 @@ fun ViewerScreen(
                                 hidden = overlayHidden,
                                 onToggle = { overlayHidden = !overlayHidden; selection.clear() },
                                 onPeek = { peeking = it },
-                                size = 48.dp,
-                                modifier = Modifier.padding(start = 6.dp),
+                                size = 56.dp,
                             )
-                            // Fold the panel away, or bring it back; the choice is remembered.
-                            IconButton(onClick = { vm.setCompact(!compact) }, modifier = Modifier.padding(start = 2.dp).size(40.dp)) {
-                                Icon(
-                                    if (compact) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
-                                    contentDescription = stringResource(if (compact) Res.string.viewer_panel_expand else Res.string.viewer_panel_collapse),
-                                    tint = Color.White,
-                                )
-                            }
                         }
+                        AnimatedVisibility(!compact && items.size > 1) {
+                            Filmstrip(
+                                items = items,
+                                current = front,
+                                failed = failed,
+                                onPick = { scope.launch { pager.animateScrollToPage(it) } },
+                                onScrub = { scope.launch { pager.scrollToPage(it) } },
+                                onScrubbing = { scrubbing = it },
+                            )
+                        }
+                        // Thumb row: the language pair, across the whole width, right above the panel.
+                        LanguageBar(
+                            settings.sourceLanguage, settings.targetLanguage, vm::setSource, vm::setTarget,
+                            modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 8.dp),
+                            onDark = true,
+                            // What this page really is: the language Lens found, and the one it went into.
+                            detected = shownLanguages.first,
+                            actualTarget = shownLanguages.second,
+                        )
                     }
                     AnimatedVisibility(!compact) {
                     ViewerBottomPanel(

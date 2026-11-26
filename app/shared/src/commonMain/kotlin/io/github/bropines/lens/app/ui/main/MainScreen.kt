@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.bropines.lens.app.Route
 import io.github.bropines.lens.app.data.AppSettings
+import io.github.bropines.lens.app.data.GalleryOrigin
 import io.github.bropines.lens.app.data.history.HistoryEntry
 import io.github.bropines.lens.app.di.AppGraph
 import io.github.bropines.lens.app.ui.history.HistoryScreen
@@ -86,7 +87,8 @@ fun MainScreen(
     val haptics = LocalHapticFeedback.current
     val pickImages = rememberFilePickerLauncher(type = FileKitType.Image, mode = FileKitMode.Multiple()) { files ->
         if (!files.isNullOrEmpty()) {
-            graph.gallery.openFiles(files)
+            // The camera button's shortcut: the camera's remembered mode applies.
+            graph.gallery.openFiles(files, mode = settings.cameraMode, origin = GalleryOrigin.Camera)
             onOpenViewer()
         }
     }

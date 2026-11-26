@@ -184,7 +184,8 @@ fun LensApp(graph: AppGraph, incoming: Flow<Incoming> = emptyFlow()) {
                 entry<Route.Camera> {
                     val pick = rememberFilePickerLauncher(type = FileKitType.Image, mode = FileKitMode.Multiple()) { files ->
                         if (!files.isNullOrEmpty()) {
-                            graph.gallery.openFiles(files)
+                            // Picked from the camera screen, they are the camera's: its remembered mode applies.
+                            graph.gallery.openFiles(files, mode = settings.cameraMode, origin = GalleryOrigin.Camera)
                             pop()
                         }
                     }

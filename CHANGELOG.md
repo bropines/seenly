@@ -9,6 +9,11 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 ### Fixed
 
 - When the second language took over, the language buttons still showed the target from the settings. They now show what the page or text really is: the detected language in place of “Auto”, and the language it went into, both with an “auto” mark.
+- Pictures picked from the camera screen or by holding the camera button now open in the camera's remembered mode too; before, only shots did, so the mode seemed to reset.
+
+### Changed
+
+- Viewer: rotate, the eye and folding the panel stand in a column at the right edge, so the language buttons get the whole width.
 
 ## [0.5.0] - 2026-11-26
 

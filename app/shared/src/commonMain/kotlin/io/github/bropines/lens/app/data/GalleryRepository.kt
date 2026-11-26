@@ -39,7 +39,14 @@ class GalleryItem(val file: PlatformFile, private val displayName: String? = nul
 fun historyItem(entry: HistoryEntry): GalleryItem = GalleryItem(PlatformFile(entry.imagePath), entry.title, historyId = entry.id)
 
 /** Where a gallery came from: what closing it goes back to, and whether it has a grid of its own. */
-enum class GalleryOrigin { Files, Folder, History, Camera }
+enum class GalleryOrigin {
+    Files,
+    Folder,
+    History,
+
+    /** A shot, or pictures picked from the camera screen or the camera button: they open in the mode last picked for one. */
+    Camera,
+}
 
 /** What the viewer pages through: some shared or picked files, a whole folder, or history. */
 data class Gallery(
@@ -83,9 +90,9 @@ class GalleryRepository(services: PlatformServices, private val history: History
     /** The gallery the viewer shows; null while the viewer is closed. */
     val current: StateFlow<Gallery?> = _current.asStateFlow()
 
-    fun openFiles(files: List<PlatformFile>, title: String? = null, mode: ViewMode? = null) {
+    fun openFiles(files: List<PlatformFile>, title: String? = null, mode: ViewMode? = null, origin: GalleryOrigin = GalleryOrigin.Files) {
         if (files.isEmpty()) return
-        openItems(files.map { GalleryItem(it) }, title ?: files.first().name, mode = mode)
+        openItems(files.map { GalleryItem(it) }, title ?: files.first().name, origin = origin, mode = mode)
     }
 
     fun openItems(
