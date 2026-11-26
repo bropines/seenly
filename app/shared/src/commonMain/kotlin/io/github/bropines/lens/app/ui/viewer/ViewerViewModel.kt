@@ -9,6 +9,7 @@ import io.github.bropines.lens.app.data.SettingsRepository
 import io.github.bropines.lens.app.data.ViewerLibrary
 import io.github.bropines.lens.app.data.ViewMode
 import io.github.bropines.lens.app.data.GalleryOrigin
+import io.github.bropines.lens.app.data.swapSpec
 import io.github.bropines.lens.app.data.history.PagePlace
 import io.github.bropines.lens.app.ondevice.OnDeviceException
 import io.github.bropines.lens.app.platform.quarterTurns
@@ -141,7 +142,7 @@ class ViewerViewModel(
         // this StateFlow has the new value - rescanning in the old language.
         viewModelScope.launch {
             settings
-                .map { Triple(it.targetLanguage, it.sourceLanguage, it.ocrLanguage) }
+                .map { listOf(it.targetLanguage, it.sourceLanguage, it.ocrLanguage, it.swapSpec()) }
                 .distinctUntilChanged()
                 .drop(1)
                 .collect {

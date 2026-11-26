@@ -39,7 +39,8 @@ actual suspend fun readCode(image: ByteArray): ScannedCode? = withContext(Dispat
 
 private fun decode(image: ByteArray, width: Int, height: Int, side: Int): Bitmap? {
     var sample = 1
-    while (maxOf(width, height) / (sample * 2) >= side) sample *= 2
+    // Rounded up: never decode bigger than needed (a 12 MP photo at full size is ~48 MB).
+    while (maxOf(width, height) / sample > side) sample *= 2
     val decoded = BitmapFactory.decodeByteArray(image, 0, image.size, BitmapFactory.Options().apply { inSampleSize = sample }) ?: return null
     val longest = maxOf(decoded.width, decoded.height)
     if (longest <= side) return decoded

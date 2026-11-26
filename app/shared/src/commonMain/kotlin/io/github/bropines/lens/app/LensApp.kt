@@ -114,6 +114,7 @@ fun LensApp(graph: AppGraph, incoming: Flow<Incoming> = emptyFlow()) {
     LaunchedEffect(Unit) { graph.updates.onAppStart() }
     // Back from the system page that allows installing apps: an update waiting for it installs.
     LifecycleResumeEffect(Unit) {
+        graph.network.onForeground()
         graph.updates.onResumed()
         onPauseOrDispose { }
     }

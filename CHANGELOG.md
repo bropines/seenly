@@ -12,8 +12,20 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ### Changed
 
+- Visual search: the first tap on a dot frames the area that would be searched, with a “Search this” button; a second tap on the dot or the button opens the search.
+- A failed search shows at the top and hides itself after a few seconds.
 - A picture shared from another app, opened with Seenly or sent by the assistant goes back to that app when you close it, instead of leaving you in Seenly's home screen.
 - Opened to search (the share sheet's Search, or the camera's remembered mode), the picture's search opens by itself instead of only showing the tappable dots.
+
+### Fixed
+
+- Back in front after a while away, Seenly's first requests could hang for minutes on connections dropped in the meantime (the search then never opened); stale connections are let go on return, dead ones are found within seconds, and a Lens request left unanswered for 25 seconds is sent once more before it fails.
+- Opening a picture in the Search mode could open the search sheet and then a separate browser, or nothing when Seenly was already running; it now waits until Seenly is in front, retries a dropped connection once, and one picture uploads once.
+- Taps on the picture behind an open search sheet opened a separate browser, and closing a shared picture there did not go back to the app it came from.
+- The second language: results are no longer reused after it is changed or turned off, screen translation forgets screens translated with the old one, and text engines that report “already in this language” now translate into it.
+- Reading codes no longer decodes big photos at full size and skips folders and history.
+- Reopening Seenly from Recents no longer opens an old shared picture again.
+- Share-sheet entries are labelled in the newly chosen language right away.
 
 ## [0.5.1] - 2026-11-27
 

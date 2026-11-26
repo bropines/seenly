@@ -217,8 +217,11 @@ fun ViewerScreen(
     val failed by vm.failed.collectAsState()
     // Codes found in the pictures, by page key; a page without one maps to null once looked at.
     val codes = remember { mutableStateMapOf<String, ScannedCode?>() }
-    var dismissedCodes by remember { mutableStateOf(emptySet<String>()) }
+    var dismissedCodes by rememberSaveable { mutableStateOf(emptyList<String>()) }
+    // Shots and shared or picked pictures, not every page of a chapter or of history.
+    val readsCodes = vm.gallery.origin != GalleryOrigin.Folder && vm.gallery.origin != GalleryOrigin.History
     LaunchedEffect(pager.settledPage) {
+        if (!readsCodes) return@LaunchedEffect
         val item = items.getOrNull(pager.settledPage) ?: return@LaunchedEffect
         if (item.key in codes) return@LaunchedEffect
         codes[item.key] = runCatching { readCode(item.file.readBytes()) }.getOrNull()
@@ -232,8 +235,8 @@ fun ViewerScreen(
         // that is still coming up opens as a tab of its own, or not at all.
         snapshotFlow { window.isWindowFocused }.first { it }
         delay(AUTO_SEARCH_SETTLE_MS)
-        autoSearched = true
-        vm.visualSearch(pager.currentPage, services::openUrl) { it.searchImageUrl() }
+        // Marked done once the link is opened: cut short by a rotation, it runs again.
+        vm.visualSearch(pager.currentPage, { url -> autoSearched = true; services.openUrl(url) }) { it.searchImageUrl() }
     }
     // Shared with "Ask AI": the question comes first.
     var askAi by rememberSaveable { mutableStateOf(startMode == ViewMode.AskAi) }

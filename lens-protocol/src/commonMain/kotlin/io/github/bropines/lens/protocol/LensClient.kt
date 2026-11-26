@@ -9,6 +9,7 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
@@ -91,20 +92,33 @@ public class LensClient(
         val path = url.substringBefore('?')
         log.d { "POST $path, ${body.size} bytes" }
         val account = credentials?.current()
-        var response = send(url, body, account)
+        var response = sendPatiently(url, body, account, path)
         if (account != null && (response.status.value == 401 || response.status.value == 403)) {
             // Google's error body says why (wrong credential type, origin not allowed, expired…):
             // the one clue there is to how a signed request should look.
             val detail = runCatching { response.bodyAsText() }.getOrDefault("").take(REFUSAL_DETAIL_CHARS)
             log.w { "HTTP ${response.status.value} from $path with the account; repeating without it: $detail" }
             credentials.rejected(response.status.value, detail)
-            response = send(url, body, null)
+            response = sendPatiently(url, body, null, path)
         }
         log.d { "HTTP ${response.status.value} from $path" }
         if (!response.status.isSuccess()) {
             throw LensException.Http(response.status.value, runCatching { response.bodyAsText() }.getOrDefault(""))
         }
         return response.bodyAsBytes()
+    }
+
+    /**
+     * [send], but a request Lens leaves unanswered (a stalled stream, a connection that
+     * died under it) is given up after [STALL_MS] and sent once more; a second silence
+     * is reported as HTTP 408 rather than waited out.
+     */
+    private suspend fun sendPatiently(url: String, body: ByteArray, account: GoogleCredentials?, path: String): HttpResponse {
+        // Timed on the IO dispatcher: real time, also under a test's virtual clock.
+        suspend fun attempt() = withContext(Dispatchers.IO) { withTimeoutOrNull(STALL_MS) { send(url, body, account) } }
+        attempt()?.let { return it }
+        log.w { "no answer from $path in ${STALL_MS / 1000} s; sending it again" }
+        return attempt() ?: throw LensException.Http(408, "Lens did not answer")
     }
 
     @OptIn(ExperimentalTime::class)
@@ -118,6 +132,8 @@ public class LensClient(
 
     public companion object {
         private const val REFUSAL_DETAIL_CHARS = 600
+        /** How long a request may go without an answer: an upload normally takes one to three seconds. */
+        private const val STALL_MS = 25_000L
 
         /** A client on the platform's default engine (OkHttp on Android and JVM). */
         public fun create(apiKey: String = LensDefaults.API_KEY): LensClient = LensClient(defaultHttpClient(), apiKey)

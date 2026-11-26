@@ -8,6 +8,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import io.github.bropines.lens.app.platform.PlatformServices
 import io.github.bropines.lens.translate.KeyValueStore
 import io.github.bropines.lens.translate.PipelineResult
+import io.github.bropines.lens.translate.ErrorCode
+import io.github.bropines.lens.translate.TranslationException
 import io.github.bropines.lens.translate.TranslationPipeline
 import io.github.bropines.lens.translate.TranslationProvider
 import io.github.bropines.lens.translate.TranslatorRegistry
@@ -41,9 +43,16 @@ class TextTranslator(
 
     /** [translate], saying which language the text went into. */
     suspend fun translateTo(text: String, target: String, source: String? = null, engine: String? = null, dictionary: Boolean = false): Translated {
-        val first = pipeline.translate(text, target, source, engine, dictionary)
-        val other = settings.current.value.copy(targetLanguage = target, sourceLanguage = source)
-            .swapTarget(first.translation.detectedSource) ?: return Translated(first, target)
+        val prefs = settings.settings.first().copy(targetLanguage = target, sourceLanguage = source)
+        val first = try {
+            pipeline.translate(text, target, source, engine, dictionary)
+        } catch (e: TranslationException) {
+            // An engine that found the text in the target language says so instead of translating:
+            // that is exactly when the second language takes over.
+            val other = prefs.swapTarget(target).takeIf { e.code == ErrorCode.SameLanguage } ?: throw e
+            return Translated(pipeline.translate(text, other, source, engine, dictionary), other)
+        }
+        val other = prefs.swapTarget(first.translation.detectedSource) ?: return Translated(first, target)
         return try {
             Translated(pipeline.translate(text, other, source, engine, dictionary), other)
         } catch (e: kotlinx.coroutines.CancellationException) {

@@ -51,10 +51,20 @@ class LensApplication : Application() {
         }
         // The share sheet's entries follow the setting, and their labels the UI language.
         scope.launch {
-            graph.settings.settings.map { it.shareTargets to it.uiLanguage }.distinctUntilChanged().collect { (targets, _) ->
-                withContext(Dispatchers.IO) { ShareShortcuts.publish(AppLocale.wrap(this@LensApplication), targets) }
+            graph.settings.settings.map { it.shareTargets to it.uiLanguage }.distinctUntilChanged().collect { (targets, tag) ->
+                withContext(Dispatchers.IO) { ShareShortcuts.publish(localized(tag), targets) }
             }
         }
+    }
+
+    /**
+     * A context in the UI language [tag] (null: the system's), built here rather than taken
+     * from the app: on 13+ the system applies a new per-app language a moment after the setting.
+     */
+    private fun localized(tag: String?): android.content.Context {
+        val locale = tag?.let(java.util.Locale::forLanguageTag) ?: android.content.res.Resources.getSystem().configuration.locales[0]
+        val config = android.content.res.Configuration(resources.configuration).apply { setLocale(locale) }
+        return createConfigurationContext(config)
     }
 
     /** 13+: the system's per-app language wins over the stored setting, so Settings shows what is in effect. */

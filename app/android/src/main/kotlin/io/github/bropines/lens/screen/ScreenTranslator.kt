@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import io.github.bropines.lens.app.data.AppSettings
+import io.github.bropines.lens.app.data.swapSpec
 import io.github.bropines.lens.app.data.OnDevicePrefs
 import io.github.bropines.lens.app.data.OverlayPrefs
 import io.github.bropines.lens.app.data.ReadingLayout
@@ -157,14 +158,25 @@ internal class ScreenTranslator(
         val layout: ReadingLayout,
         val overlay: OverlayPrefs,
         val onDevice: OnDevicePrefs,
+        /** The second language, when it may take over: a screen translated before it changed is out of date. */
+        val swap: String,
     ) {
-        constructor(s: AppSettings) : this(s.targetLanguage, s.sourceLanguage, s.ocrLanguage, s.readingLayout, s.overlay, s.onDevice)
+        constructor(s: AppSettings) : this(s.targetLanguage, s.sourceLanguage, s.ocrLanguage, s.readingLayout, s.overlay, s.onDevice, s.swapSpec())
     }
 
     init {
         scope.launch {
+            var first = true
             graph.settings.settings.collect {
                 settings = it
+                if (first) {
+                    first = false
+                    // The settings were not loaded when the bubble came up: honour "translate right away" now.
+                    if (!it.screen.translateOnStart && mode != ScreenMode.Screen && !paused) {
+                        paused = true
+                        updateBubble()
+                    }
+                }
                 poke()
             }
         }

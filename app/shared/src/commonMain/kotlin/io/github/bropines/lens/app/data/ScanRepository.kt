@@ -80,6 +80,8 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
     /** Scans run here, not in the viewer's scope: one caller leaving must not fail another's page. */
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val flights = SharedWork<String, Scanned>(scope)
+    /** Search uploads under way: the auto-search and the dots' preparation share one. */
+    private val searchFlights = SharedWork<String, SearchTarget>(scope)
     /** The last few pages uploaded for search; each session's upload stays searchable for ~30 minutes. */
     private val searchTargets = LinkedHashMap<String, SearchTarget>()
 
@@ -211,6 +213,11 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
         // its own session and upload, without translation.
         val key = cacheKey(item, settings, rotation) + "|search"
         lock.withLock { searchTargets[key] }?.let { return it }
+        return searchFlights.run(key) { uploadForSearch(key, item, settings, rotation) }
+    }
+
+    private suspend fun uploadForSearch(key: String, item: GalleryItem, settings: AppSettings, rotation: Int): SearchTarget {
+        lock.withLock { searchTargets[key] }?.let { return it }
         val session = lens.searchSession(PAGE)
         val options = settings.toScanOptions().copy(targetLanguage = null, sourceLanguage = null)
         // Turned like the shown page, so regions drawn on it and object boxes line up.
@@ -264,7 +271,7 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
 
     /** The rotation is part of the key: the 0° and 90° scans of a page have different boxes. */
     private fun cacheKey(item: GalleryItem, s: AppSettings, rotation: Int = 0) =
-        "${item.key}|${s.targetLanguage}|${s.sourceLanguage}|${s.ocrLanguage}|r${quarterTurns(rotation)}"
+        "${item.key}|${s.targetLanguage}|${s.sourceLanguage}|${s.ocrLanguage}|${s.swapSpec()}|r${quarterTurns(rotation)}"
 
     private companion object {
         const val CACHE_SIZE = 200
@@ -278,7 +285,13 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
 
 /** How a scan was asked for, as history stores it: the source language, the recognition hint and the scanner. */
 internal fun scanSpec(settings: AppSettings, device: Boolean): String =
-    "${settings.sourceLanguage ?: "auto"}|${settings.ocrLanguage}|${if (device) "device" else "lens"}"
+    "${settings.sourceLanguage ?: "auto"}|${settings.ocrLanguage}|${if (device) "device" else "lens"}" +
+        // A result that may have gone into the second language is that language's, not the target's.
+        settings.swapSpec().let { if (it == "-") "" else "|2:$it" }
+
+/** What the second-language swap would do with these settings: its language, or "-" when it cannot happen. */
+fun AppSettings.swapSpec(): String =
+    secondLanguage?.takeIf { sourceLanguage == null && !sameLanguage(it, targetLanguage) } ?: "-"
 
 /** A page uploaded for search: the session to search through and the objects Lens found on it. */
 class SearchTarget(val session: LensSearchSession, val objects: List<DetectedObject>)

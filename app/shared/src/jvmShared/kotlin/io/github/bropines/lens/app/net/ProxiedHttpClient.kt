@@ -41,6 +41,9 @@ internal actual fun proxiedHttpClient(route: StateFlow<ProxyRoute?>, configure: 
         engine {
             config {
                 connectionPool(pool)
+                // HTTP/2 pings find a connection that died under a request (a network switch,
+                // a frozen app) in seconds, so it fails and can be retried instead of hanging.
+                pingInterval(10, java.util.concurrent.TimeUnit.SECONDS)
                 addInterceptor(RefuseUnusableProxy(current))
                 proxySelector(RouteProxySelector(current))
                 proxyAuthenticator(HttpProxyAuthenticator(current))

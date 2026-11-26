@@ -84,6 +84,14 @@ class AppNetwork(services: PlatformServices, private val settings: SettingsRepos
         scope.launch { route.filterNotNull().drop(1).collect { proxied.forgetConnections() } }
     }
 
+    /**
+     * The app is in front again. While it was away the system may have frozen it and the
+     * servers dropped its kept-alive connections; reused, such a connection swallows the
+     * request and nothing comes back for minutes. Idle ones are let go, so the next
+     * request opens a fresh one.
+     */
+    fun onForeground() = proxied.forgetConnections()
+
     /** The password saved for the server in [prefs], or empty. */
     fun passwordFor(prefs: ProxyPrefs): String = stored.value.passwordFor(prefs)
 

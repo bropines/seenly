@@ -59,8 +59,9 @@ class TextTranslateViewModel(
     }
 
     fun setInput(text: String) = _state.update { it.copy(input = text) }
-    fun setSource(code: String?) = _state.update { it.copy(source = code) }
-    fun setTarget(code: String) = _state.update { it.copy(target = code) }
+    // What the last result was swapped to no longer holds for another pair.
+    fun setSource(code: String?) = _state.update { it.copy(source = code, swappedTo = null) }
+    fun setTarget(code: String) = _state.update { it.copy(target = code, swappedTo = null) }
     fun setEngine(id: String?) = _state.update { it.copy(engine = id) }
 
     private suspend fun translate() {

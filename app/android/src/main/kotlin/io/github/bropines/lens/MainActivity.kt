@@ -36,14 +36,16 @@ class MainActivity : ComponentActivity() {
         setContent { LensApp((application as LensApplication).graph, incoming) }
     }
 
-    override fun onResume() {
-        super.onResume()
+    // Started, not resumed: a browser sheet over the viewer only pauses it, and taps on the
+    // picture behind the sheet must still open their links over this activity.
+    override fun onStart() {
+        super.onStart()
         services.activity = java.lang.ref.WeakReference(this)
     }
 
-    override fun onPause() {
+    override fun onStop() {
         if (services.activity?.get() === this) services.activity = null
-        super.onPause()
+        super.onStop()
     }
 
     private val services get() = (application as LensApplication).services
@@ -54,6 +56,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handle(intent: Intent?) {
+        // Reopened from Recents, the activity gets the intent that first started it: that picture is done.
+        if (intent != null && intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) return
         val uris: List<Uri> = when (intent?.action) {
             Intent.ACTION_SEND -> listOfNotNull(IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java))
             Intent.ACTION_SEND_MULTIPLE ->

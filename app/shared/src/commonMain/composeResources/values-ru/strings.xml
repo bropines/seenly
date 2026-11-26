@@ -208,7 +208,7 @@
     <string name="viewer_translating_to">Перевожу на %1$s…</string>
     <string name="viewer_recognising">Распознаю текст…</string>
     <string name="viewer_mode_search">Поиск</string>
-    <string name="viewer_search_hint">Обведите что-нибудь пальцем или нажмите на точку — откроется поиск Google</string>
+    <string name="viewer_search_hint">Обведите что-нибудь пальцем, чтобы найти, или нажмите на точку: она покажет область, а повторное нажатие откроет поиск</string>
     <string name="viewer_whole_image">Вся картинка</string>
     <string name="viewer_ask_ai">Спросить ИИ</string>
     <string name="viewer_all_text">Весь текст</string>
@@ -504,4 +504,5 @@
     <string name="links_sheet_desc">Результаты поиска и ссылки открываются в вашем браузере панелью на полэкрана; её можно вытянуть или смахнуть.</string>
     <string name="links_tab_desc">Результаты поиска и ссылки открываются в вашем браузере вкладкой на весь экран поверх Seenly; «назад» возвращает.</string>
     <string name="links_browser_desc">Результаты поиска и ссылки открываются в самом браузере, отдельно от Seenly.</string>
+    <string name="viewer_search_this">Найти это</string>
 </resources>

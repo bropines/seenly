@@ -203,7 +203,7 @@
     <string name="viewer_translating_to">Translating into %1$s…</string>
     <string name="viewer_recognising">Recognising text…</string>
     <string name="viewer_mode_search">Search</string>
-    <string name="viewer_search_hint">Circle something with your finger or tap a dot to open a Google search</string>
+    <string name="viewer_search_hint">Circle something with your finger to search it, or tap a dot to frame what it found and tap again to search</string>
     <string name="viewer_whole_image">Whole image</string>
     <string name="viewer_ask_ai">Ask AI</string>
     <string name="viewer_all_text">All text</string>
@@ -499,4 +499,5 @@
     <string name="links_sheet_desc">Search results and links open in your browser as a sheet over half the screen; pull it up or swipe it away.</string>
     <string name="links_tab_desc">Search results and links open in your browser as a full-screen tab over Seenly; back returns.</string>
     <string name="links_browser_desc">Search results and links open in the browser app itself, apart from Seenly.</string>
+    <string name="viewer_search_this">Search this</string>
 </resources>

@@ -32,6 +32,23 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ImageSearch
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.platform.LocalDensity
+import io.github.bropines.lens.app.resources.Res
+import io.github.bropines.lens.app.resources.viewer_search_this
+import org.jetbrains.compose.resources.stringResource
+import kotlin.math.roundToInt
 import io.github.bropines.lens.protocol.Box as LensBox
 
 /** A detected object to tap: Lens's id and its normalised box. */
@@ -39,8 +56,10 @@ data class Tappable(val id: String, val box: LensBox)
 
 /**
  * "Circle to search" over the image: draw around something with a finger, or
- * tap one of the pulsing dots Lens put on the objects it found. Reports the
- * area as a rectangle normalised to the image.
+ * tap one of the pulsing dots Lens put on the objects it found. A first tap on
+ * a dot frames the area that would be searched; a second tap on it, or the
+ * "Search this" chip, searches it. Reports the area as a rectangle normalised
+ * to the image.
  */
 @Composable
 fun SearchLayer(
@@ -53,6 +72,9 @@ fun SearchLayer(
     var size by remember { mutableStateOf(IntSize.Zero) }
     val stroke = remember { mutableStateListOf<Offset>() }
     var drawing by remember { mutableStateOf(false) }
+    // The dot tapped once: its area is framed, a second tap searches it.
+    var picked by remember(objects) { mutableStateOf<Tappable?>(null) }
+    val density = LocalDensity.current
     val accent = MaterialTheme.colorScheme.primary
     val pulse by rememberInfiniteTransition(label = "gleam").animateFloat(
         initialValue = 0.6f,
@@ -72,14 +94,21 @@ fun SearchLayer(
             .pointerInput(objects, fit) {
                 detectTapGestures { tap ->
                     val p = toImage(tap)
-                    objects.minByOrNull { (it.box.centerX - p.x).let { dx -> dx * dx } + (it.box.centerY - p.y).let { dy -> dy * dy } }
+                    val hit = objects.minByOrNull { (it.box.centerX - p.x).let { dx -> dx * dx } + (it.box.centerY - p.y).let { dy -> dy * dy } }
                         ?.takeIf { p.x in it.box.left..it.box.right && p.y in it.box.top..it.box.bottom }
-                        ?.let(onObject)
+                    when {
+                        hit == null -> picked = null
+                        hit == picked -> {
+                            picked = null
+                            onObject(hit)
+                        }
+                        else -> picked = hit
+                    }
                 }
             }
             .pointerInput(fit) {
                 detectDragGestures(
-                    onDragStart = { stroke.clear(); stroke += it; drawing = true },
+                    onDragStart = { stroke.clear(); stroke += it; drawing = true; picked = null },
                     onDrag = { change, _ -> stroke += change.position },
                     onDragEnd = {
                         drawing = false
@@ -102,6 +131,18 @@ fun SearchLayer(
             )
             // Dim the picture slightly so the dots and the stroke read.
             drawRect(Color.Black.copy(alpha = 0.25f), topLeft = fit.topLeft, size = fit.size)
+            picked?.let { obj ->
+                // The area a search would look at: the rest darker, the area framed.
+                val area = areaOf(obj, fit)
+                val outside = Path().apply {
+                    fillType = PathFillType.EvenOdd
+                    addRect(fit)
+                    addRoundRect(RoundRect(area, CornerRadius(12.dp.toPx())))
+                }
+                drawPath(outside, Color.Black.copy(alpha = 0.35f))
+                drawRoundRect(Color.White, area.topLeft, area.size, CornerRadius(12.dp.toPx()), style = Stroke(width = 4.dp.toPx()))
+                drawRoundRect(accent, area.topLeft, area.size, CornerRadius(12.dp.toPx()), style = Stroke(width = 2.dp.toPx()))
+            }
             if (!drawing) {
                 objects.forEach { obj ->
                     val c = Offset(fit.left + obj.box.centerX * fit.width, fit.top + obj.box.centerY * fit.height)
@@ -119,7 +160,35 @@ fun SearchLayer(
                 drawPath(path, accent, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
             }
         }
+        // Under the framed area (above it when there is no room below): what the second tap does, spelled out.
+        picked?.let { obj ->
+            val area = areaOf(obj, fit)
+            val gap = with(density) { 8.dp.toPx() }
+            val chipHeight = with(density) { 48.dp.toPx() }
+            val y = if (area.bottom + gap + chipHeight <= size.height) area.bottom + gap else (area.top - gap - chipHeight).coerceAtLeast(0f)
+            Box(
+                Modifier.fillMaxWidth().offset { IntOffset(0, y.roundToInt()) },
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                Button(onClick = { picked = null; onObject(obj) }) {
+                    Icon(Icons.Rounded.ImageSearch, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                    Text(stringResource(Res.string.viewer_search_this))
+                }
+            }
+        }
     }
+}
+
+/** An object's box in layer pixels, a little larger than Lens's so the frame does not cut into it. */
+private fun areaOf(obj: Tappable, fit: Rect): Rect {
+    val r = Rect(
+        fit.left + obj.box.left * fit.width,
+        fit.top + obj.box.top * fit.height,
+        fit.left + obj.box.right * fit.width,
+        fit.top + obj.box.bottom * fit.height,
+    )
+    val pad = minOf(r.width, r.height) * 0.04f
+    return r.inflate(pad).intersect(fit)
 }
 
 /** The ContentScale.Fit rectangle of a w×h image inside [area]. */
