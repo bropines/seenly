@@ -6,6 +6,8 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-26
+
 ### Added
 
 - Quick entries in the system share sheet for pictures: Translate, Get text, Search and Ask AI, each opening the picture straight in that mode. Each can be turned off in Settings → Translation.
