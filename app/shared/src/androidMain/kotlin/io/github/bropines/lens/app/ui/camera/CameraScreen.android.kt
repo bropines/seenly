@@ -63,7 +63,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -121,7 +120,6 @@ actual fun CameraScreen(
     services: PlatformServices,
     onCaptured: (PlatformFile) -> Unit,
     onPickImages: () -> Unit,
-    onPickFiles: () -> Unit,
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -146,21 +144,10 @@ actual fun CameraScreen(
         Row(Modifier.statusBarsPadding().padding(8.dp)) {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.back), tint = Color.White) }
         }
-        // Tap: the photo picker. Hold: the system's file picker, for pictures kept outside the gallery.
-        val haptics = LocalHapticFeedback.current
-        Box(
+        IconButton(
+            onClick = onPickImages,
             modifier = Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(start = 32.dp, bottom = 44.dp)
-                .size(56.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.18f))
-                .combinedClickable(
-                    onClickLabel = stringResource(Res.string.camera_from_gallery),
-                    onLongClickLabel = stringResource(Res.string.camera_from_files),
-                    onLongClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onPickFiles()
-                    },
-                    onClick = onPickImages,
-                ),
-            contentAlignment = Alignment.Center,
+                .size(56.dp).background(Color.White.copy(alpha = 0.18f), CircleShape),
         ) { Icon(Icons.Rounded.PhotoLibrary, contentDescription = stringResource(Res.string.camera_from_gallery), tint = Color.White) }
     }
 }

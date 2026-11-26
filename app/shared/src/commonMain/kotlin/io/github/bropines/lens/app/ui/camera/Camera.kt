@@ -30,7 +30,5 @@ expect fun CameraScreen(
     services: PlatformServices,
     onCaptured: (PlatformFile) -> Unit,
     onPickImages: () -> Unit,
-    /** A long press on the gallery button: pictures from any app's files, not just the photo picker. */
-    onPickFiles: () -> Unit,
     onBack: () -> Unit,
 )

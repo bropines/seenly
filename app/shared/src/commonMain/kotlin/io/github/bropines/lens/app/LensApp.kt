@@ -65,8 +65,6 @@ import kotlinx.coroutines.flow.emptyFlow
 /** Pictures handed to the app from outside, and what to open them with (null: the translation). */
 data class Incoming(val files: List<PlatformFile>, val mode: ViewMode? = null)
 
-private val IMAGE_EXTENSIONS = setOf("jpg", "jpeg", "png", "webp", "gif", "bmp", "heic", "heif", "avif")
-
 sealed interface Route {
     /** The tabs with the dock. */
     data object Main : Route
@@ -190,12 +188,6 @@ fun LensApp(graph: AppGraph, incoming: Flow<Incoming> = emptyFlow()) {
                             pop()
                         }
                     }
-                    val pickFiles = rememberFilePickerLauncher(type = FileKitType.File(IMAGE_EXTENSIONS), mode = FileKitMode.Multiple()) { files ->
-                        if (!files.isNullOrEmpty()) {
-                            graph.gallery.openFiles(files)
-                            pop()
-                        }
-                    }
                     val snapshot = stringResource(Res.string.camera_snapshot)
                     CameraScreen(
                         services = graph.services,
@@ -205,7 +197,6 @@ fun LensApp(graph: AppGraph, incoming: Flow<Incoming> = emptyFlow()) {
                             pop()
                         },
                         onPickImages = { pick.launch() },
-                        onPickFiles = { pickFiles.launch() },
                         onBack = ::pop,
                     )
                 }

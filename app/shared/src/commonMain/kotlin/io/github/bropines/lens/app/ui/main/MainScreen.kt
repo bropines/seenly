@@ -19,9 +19,15 @@ import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Translate
-import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeFloatingActionButton
+import androidx.compose.material3.Surface
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ShortNavigationBar
@@ -77,6 +83,13 @@ fun MainScreen(
     /** Opens a page from Settings: one of its own, or the translators, the account, About. */
     onOpen: (Route) -> Unit = {},
 ) {
+    val haptics = LocalHapticFeedback.current
+    val pickImages = rememberFilePickerLauncher(type = FileKitType.Image, mode = FileKitMode.Multiple()) { files ->
+        if (!files.isNullOrEmpty()) {
+            graph.gallery.openFiles(files)
+            onOpenViewer()
+        }
+    }
     val textVm = viewModel { TextTranslateViewModel(graph.translator, graph.settings, "") }
     // An update found on start is offered in passing: a snackbar that waits, with the notes one tap away.
     val snackbar = remember { SnackbarHostState() }
@@ -97,12 +110,27 @@ fun MainScreen(
                 DockItem(Tab.Images, tab, onTab)
                 DockItem(Tab.History, tab, onTab)
                 Box(contentAlignment = Alignment.Center) {
-                    LargeFloatingActionButton(
-                        onClick = onOpenCamera,
-                        shape = MaterialTheme.shapes.extraLarge,
-                        elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
-                        modifier = Modifier.size(64.dp),
-                    ) { Icon(Icons.Rounded.PhotoCamera, contentDescription = stringResource(Res.string.camera), modifier = Modifier.size(30.dp)) }
+                    // Tap: the camera. Hold: straight to the gallery's photo picker, past the camera.
+                    val shape = MaterialTheme.shapes.extraLarge
+                    Surface(
+                        shape = shape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        shadowElevation = 3.dp,
+                        modifier = Modifier.size(64.dp).clip(shape).combinedClickable(
+                            onClickLabel = stringResource(Res.string.camera),
+                            onLongClickLabel = stringResource(Res.string.camera_from_gallery),
+                            onLongClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                pickImages.launch()
+                            },
+                            onClick = onOpenCamera,
+                        ),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Rounded.PhotoCamera, contentDescription = stringResource(Res.string.camera), modifier = Modifier.size(30.dp))
+                        }
+                    }
                 }
                 DockItem(Tab.Text, tab, onTab)
                 DockItem(Tab.Settings, tab, onTab)

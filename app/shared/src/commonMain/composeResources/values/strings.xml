@@ -474,7 +474,6 @@
     <string name="settings_export_proxy_warning">The password is written to the file as plain text.</string>
 
     <!-- 0.5 -->
-    <string name="camera_from_files">From files</string>
     <string name="bubble_open_app">Seenly</string>
     <string name="settings_second_language">Second language</string>
     <string name="settings_second_language_on">Text already in %1$s goes into %2$s</string>

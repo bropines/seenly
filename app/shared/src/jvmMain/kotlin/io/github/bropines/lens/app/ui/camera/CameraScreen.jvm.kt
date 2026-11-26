@@ -21,7 +21,6 @@ actual fun CameraScreen(
     services: PlatformServices,
     onCaptured: (PlatformFile) -> Unit,
     onPickImages: () -> Unit,
-    onPickFiles: () -> Unit,
     onBack: () -> Unit,
 ) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {

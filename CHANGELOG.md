@@ -11,7 +11,7 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 - Quick entries in the system share sheet for pictures: Translate, Get text, Search and Ask AI, each opening the picture straight in that mode. Each can be turned off in Settings → Translation.
 - QR codes and barcodes are read in pictures from the gallery and shared ones too, with the same card as the camera's (open, copy, Wi-Fi password).
 - Second language (English by default): with the source on auto, text that is already in your target language is translated into the second one instead. Works for pictures, screen translation and typed text; can be turned off in Settings → Translation.
-- Camera: hold the gallery button to pick pictures from files instead of the photo picker.
+- Hold the camera button in the dock to pick pictures from the gallery without opening the camera.
 - Camera: a shot opens in the mode you last picked for one (translation, text or search).
 - Screen translation: an “Open Seenly” button in the bubble’s menu.
 - Screen translation: “Translate right away” can be turned off, so turning it on, picking a mode or “Done” waits for a tap on the bubble.
