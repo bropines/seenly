@@ -497,4 +497,11 @@
     <string name="share_target_search">Найти</string>
     <string name="share_target_ask_ai">Спросить ИИ</string>
     <string name="share_targets_hint">Быстрые пункты, которые Seenly добавляет в системное меню «Поделиться» для картинок: каждый сразу открывает картинку в своём режиме. Обычный пункт «Перевести в Seenly» есть всегда.</string>
+    <string name="links_open_in">Открывать ссылки</string>
+    <string name="links_sheet">Панель</string>
+    <string name="links_tab">Вкладка</string>
+    <string name="links_browser">Браузер</string>
+    <string name="links_sheet_desc">Результаты поиска и ссылки открываются в вашем браузере панелью на полэкрана; её можно вытянуть или смахнуть.</string>
+    <string name="links_tab_desc">Результаты поиска и ссылки открываются в вашем браузере вкладкой на весь экран поверх Seenly; «назад» возвращает.</string>
+    <string name="links_browser_desc">Результаты поиска и ссылки открываются в самом браузере, отдельно от Seenly.</string>
 </resources>

@@ -107,7 +107,7 @@ fun LensApp(graph: AppGraph, incoming: Flow<Incoming> = emptyFlow()) {
     fun pop() { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) }
 
     LaunchedEffect(incoming) {
-        incoming.collect { graph.gallery.openFiles(it.files, mode = it.mode) }
+        incoming.collect { graph.gallery.openFiles(it.files, mode = it.mode, fromOutside = true) }
     }
 
     // The update check and "What's new" belong to the app coming up, not to any one screen.
@@ -203,7 +203,13 @@ fun LensApp(graph: AppGraph, incoming: Flow<Incoming> = emptyFlow()) {
                 }
             },
         )
-        gallery?.let { open -> ViewerHost(graph, open, onClose = graph.gallery::close) }
+        gallery?.let { open ->
+            ViewerHost(graph, open, onClose = {
+                graph.gallery.close()
+                // A picture another app handed over: done with it, back to that app, not to Seenly's home.
+                if (open.fromOutside) graph.services.returnToCaller()
+            })
+        }
         }
         }
     }

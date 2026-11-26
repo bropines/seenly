@@ -221,6 +221,14 @@ fun ViewerScreen(
         if (item.key in codes) return@LaunchedEffect
         codes[item.key] = runCatching { readCode(item.file.readBytes()) }.getOrNull()
     }
+    // Opened to search (shared to "Search", or the camera's mode): the search itself opens, not just the dots.
+    var autoSearched by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (startMode == ViewMode.Search && !autoSearched) {
+            autoSearched = true
+            vm.visualSearch(pager.currentPage, services::openUrl) { it.searchImageUrl() }
+        }
+    }
     // Shared with "Ask AI": the question comes first.
     var askAi by rememberSaveable { mutableStateOf(startMode == ViewMode.AskAi) }
     var lastRegion by remember { mutableStateOf<Region?>(null) }

@@ -6,6 +6,15 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ## [Unreleased]
 
+### Added
+
+- Settings → Translation: open links (search results, Ask AI, codes) in a sheet over Seenly, a full tab, or the browser app.
+
+### Changed
+
+- A picture shared from another app, opened with Seenly or sent by the assistant goes back to that app when you close it, instead of leaving you in Seenly's home screen.
+- Opened to search (the share sheet's Search, or the camera's remembered mode), the picture's search opens by itself instead of only showing the tappable dots.
+
 ## [0.5.1] - 2026-11-27
 
 ### Fixed

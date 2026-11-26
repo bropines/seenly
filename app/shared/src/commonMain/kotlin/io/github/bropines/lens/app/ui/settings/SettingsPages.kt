@@ -66,6 +66,8 @@ import io.github.bropines.lens.app.data.UpdatePrefs
 import io.github.bropines.lens.app.data.VerticalChoice
 import io.github.bropines.lens.app.data.ScreenSettings
 import io.github.bropines.lens.app.data.ViewMode
+import io.github.bropines.lens.app.data.LinkOpening
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import io.github.bropines.lens.app.di.AppGraph
 import io.github.bropines.lens.app.resources.*
 import io.github.bropines.lens.app.screen.ScreenTranslate
@@ -149,6 +151,27 @@ private fun TranslationPage(graph: AppGraph, settings: AppSettings, update: Upda
                         },
                     ),
                 ) { onOpen(Route.OnDevice) }
+            }
+        }
+        if (graph.services.canChooseLinkOpening) {
+            // Search results, "Ask AI" and links from codes: a sheet over the picture, a full tab, or the browser.
+            SettingsCard {
+                ChipChoice(
+                    Icons.AutoMirrored.Rounded.OpenInNew, stringResource(Res.string.links_open_in),
+                    listOf(
+                        LinkOpening.Sheet to stringResource(Res.string.links_sheet),
+                        LinkOpening.Tab to stringResource(Res.string.links_tab),
+                        LinkOpening.Browser to stringResource(Res.string.links_browser),
+                    ),
+                    settings.linkOpening,
+                    description = stringResource(
+                        when (settings.linkOpening) {
+                            LinkOpening.Sheet -> Res.string.links_sheet_desc
+                            LinkOpening.Tab -> Res.string.links_tab_desc
+                            LinkOpening.Browser -> Res.string.links_browser_desc
+                        },
+                    ),
+                ) { v -> update { it.copy(linkOpening = v) } }
             }
         }
         if (graph.services.hasShareTargets) {

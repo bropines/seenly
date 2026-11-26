@@ -57,6 +57,8 @@ data class Gallery(
     val origin: GalleryOrigin = if (folder != null) GalleryOrigin.Folder else GalleryOrigin.Files,
     /** What the viewer shows first; null is the translation. */
     val startMode: ViewMode? = null,
+    /** Handed over by another app (share, "open with", the assistant): closing it goes back to that app. */
+    val fromOutside: Boolean = false,
     /** Tells two openings of the same pictures apart. */
     val id: Long = nextGalleryId(),
 ) {
@@ -90,9 +92,15 @@ class GalleryRepository(services: PlatformServices, private val history: History
     /** The gallery the viewer shows; null while the viewer is closed. */
     val current: StateFlow<Gallery?> = _current.asStateFlow()
 
-    fun openFiles(files: List<PlatformFile>, title: String? = null, mode: ViewMode? = null, origin: GalleryOrigin = GalleryOrigin.Files) {
+    fun openFiles(
+        files: List<PlatformFile>,
+        title: String? = null,
+        mode: ViewMode? = null,
+        origin: GalleryOrigin = GalleryOrigin.Files,
+        fromOutside: Boolean = false,
+    ) {
         if (files.isEmpty()) return
-        openItems(files.map { GalleryItem(it) }, title ?: files.first().name, origin = origin, mode = mode)
+        openItems(files.map { GalleryItem(it) }, title ?: files.first().name, origin = origin, mode = mode, fromOutside = fromOutside)
     }
 
     fun openItems(
@@ -101,12 +109,13 @@ class GalleryRepository(services: PlatformServices, private val history: History
         startIndex: Int = 0,
         origin: GalleryOrigin = GalleryOrigin.Files,
         mode: ViewMode? = null,
+        fromOutside: Boolean = false,
     ) {
         if (items.isEmpty()) return
         // A picture given twice is one page: the pager tells its pages apart by their keys.
         val pages = items.distinctBy { it.key }
         val start = pages.indexOfFirst { it.key == items.getOrNull(startIndex)?.key }.coerceAtLeast(0)
-        _current.value = Gallery(title, pages, start, origin = origin, startMode = mode)
+        _current.value = Gallery(title, pages, start, origin = origin, startMode = mode, fromOutside = fromOutside)
     }
 
     /** History entries as a gallery of their stored copies, opened at [index]: swiping goes through history. */

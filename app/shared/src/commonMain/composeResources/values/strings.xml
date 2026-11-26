@@ -492,4 +492,11 @@
     <string name="share_target_search">Search</string>
     <string name="share_target_ask_ai">Ask AI</string>
     <string name="share_targets_hint">Quick entries Seenly adds to the system share sheet for pictures: each opens the picture straight in that mode. The plain “Translate in Seenly” entry is always there.</string>
+    <string name="links_open_in">Open links in</string>
+    <string name="links_sheet">Sheet</string>
+    <string name="links_tab">Tab</string>
+    <string name="links_browser">Browser</string>
+    <string name="links_sheet_desc">Search results and links open in your browser as a sheet over half the screen; pull it up or swipe it away.</string>
+    <string name="links_tab_desc">Search results and links open in your browser as a full-screen tab over Seenly; back returns.</string>
+    <string name="links_browser_desc">Search results and links open in the browser app itself, apart from Seenly.</string>
 </resources>

@@ -60,6 +60,8 @@ data class AppSettings(
     /** Seenly's own entries in the system share sheet, each opening the picture in that mode. */
     val shareTargets: Set<ViewMode> = ViewMode.entries.toSet(),
     val screen: ScreenSettings = ScreenSettings(),
+    /** Where search results and other links open. */
+    val linkOpening: LinkOpening = LinkOpening.Sheet,
     /** The UI language as a BCP 47 tag ("en", "ru"); null follows the system. */
     val uiLanguage: String? = null,
     /** The last folder opened, as FileKit's serialised PlatformFile, so it can be reopened. */
@@ -73,6 +75,9 @@ data class AppSettings(
 )
 
 const val DEFAULT_SECOND_LANGUAGE = "en"
+
+/** Where links open: a sheet over Seenly (half the screen, can be pulled up), a full tab, or the browser app. */
+enum class LinkOpening { Sheet, Tab, Browser }
 
 /**
  * What the viewer opens a picture with: the translation, its text to select,
@@ -251,6 +256,7 @@ class SettingsRepository(services: PlatformServices) {
             // Empty is "off", set on purpose; no key at all is the default.
             p[SECOND_LANGUAGE] = next.secondLanguage.orEmpty()
             p[SHARE_TARGETS] = ViewMode.entries.filter { it in next.shareTargets }.joinToString(",") { it.name }
+            p[LINK_OPENING] = next.linkOpening.name
             p[SCREEN_AUTO_START] = next.screen.translateOnStart
             p[SCREEN_MENU_DIM] = next.screen.menuDim
             p[SCREEN_RESULT_DIM] = next.screen.resultDim
@@ -342,6 +348,7 @@ class SettingsRepository(services: PlatformServices) {
         secondLanguage = (this[SECOND_LANGUAGE] ?: DEFAULT_SECOND_LANGUAGE).ifEmpty { null },
         shareTargets = this[SHARE_TARGETS]?.split(',')?.mapNotNull { name -> ViewMode.entries.firstOrNull { it.name == name } }?.toSet()
             ?: ViewMode.entries.toSet(),
+        linkOpening = this[LINK_OPENING].toEnum(LinkOpening.Sheet),
         screen = ScreenSettings(
             translateOnStart = this[SCREEN_AUTO_START] ?: true,
             menuDim = (this[SCREEN_MENU_DIM] ?: 40).coerceIn(0, 90),
@@ -396,6 +403,7 @@ class SettingsRepository(services: PlatformServices) {
         val SECOND_LANGUAGE = stringPreferencesKey("second_language")
         val SHARE_TARGETS = stringPreferencesKey("share_targets")
         val SCREEN_AUTO_START = booleanPreferencesKey("screen_translate_on_start")
+        val LINK_OPENING = stringPreferencesKey("link_opening")
         val SCREEN_MENU_DIM = intPreferencesKey("screen_menu_dim")
         val SCREEN_RESULT_DIM = intPreferencesKey("screen_result_dim")
         val UI_LANGUAGE = stringPreferencesKey("ui_language")

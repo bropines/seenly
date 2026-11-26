@@ -20,6 +20,7 @@ import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
 import io.github.bropines.lens.app.data.SecretStore
+import io.github.bropines.lens.app.data.LinkOpening
 import io.github.bropines.lens.app.ondevice.OnDeviceMl
 import io.github.bropines.lens.app.platform.PlatformServices
 import io.github.bropines.lens.app.update.UpdateInstaller
@@ -104,9 +105,13 @@ class AndroidPlatformServices(private val context: Context) : PlatformServices {
         val uri = Uri.parse(url)
         val front = activity?.get()
         val current = session
+        if (linkOpening == LinkOpening.Browser) {
+            val browser = Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (runCatching { (front ?: context).startActivity(browser) }.isSuccess) return
+        }
         // A sheet over the picture, the way Lens shows results: the user's browser
         // (their cookies and consent, so no captcha), resizable, swiped away to return.
-        if (front != null && current != null) {
+        if (linkOpening == LinkOpening.Sheet && front != null && current != null) {
             val launched = runCatching {
                 val height = (front.resources.displayMetrics.heightPixels * SHEET_FRACTION).toInt()
                 val tab = CustomTabsIntent.Builder(current)
@@ -136,6 +141,16 @@ class AndroidPlatformServices(private val context: Context) : PlatformServices {
 
     override val screenTranslate = io.github.bropines.lens.screen.AndroidScreenTranslate(context) { activity?.get() }
     override val hasShareTargets: Boolean get() = true
+
+    override val canChooseLinkOpening: Boolean get() = true
+
+    /** Where links open; kept in step with the setting by LensApplication. */
+    @Volatile
+    var linkOpening: LinkOpening = LinkOpening.Sheet
+
+    override fun returnToCaller() {
+        activity?.get()?.moveTaskToBack(true)
+    }
 
     override val updateInstaller: UpdateInstaller? = AndroidUpdateInstaller.forThisCopy(context)
 

@@ -46,6 +46,9 @@ class LensApplication : Application() {
                 if (AppLocale.apply(this@LensApplication, tag)) services.activity?.get()?.recreate()
             }
         }
+        scope.launch {
+            graph.settings.settings.map { it.linkOpening }.distinctUntilChanged().collect { services.linkOpening = it }
+        }
         // The share sheet's entries follow the setting, and their labels the UI language.
         scope.launch {
             graph.settings.settings.map { it.shareTargets to it.uiLanguage }.distinctUntilChanged().collect { (targets, _) ->

@@ -41,6 +41,12 @@ interface PlatformServices {
     /** Whether the system has a share sheet that can list Seenly's quick entries (Android). */
     val hasShareTargets: Boolean get() = false
 
+    /** Sends Seenly behind the app that handed it a picture, once that picture is closed. */
+    fun returnToCaller() {}
+
+    /** Whether links may open in a sheet over the app or a tab instead of the browser (Android). */
+    val canChooseLinkOpening: Boolean get() = false
+
     /**
      * How this copy installs an update, or null when it must not replace itself:
      * a debug build, a copy a store keeps up to date, the desktop. An update is
