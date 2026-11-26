@@ -6,6 +6,8 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-27
+
 ### Fixed
 
 - When the second language took over, the language buttons still showed the target from the settings. They now show what the page or text really is: the detected language in place of “Auto”, and the language it went into, both with an “auto” mark.
