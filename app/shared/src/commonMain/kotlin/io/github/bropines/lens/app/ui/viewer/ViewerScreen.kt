@@ -128,6 +128,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import io.github.bropines.lens.app.data.GalleryOrigin
 import io.github.bropines.lens.app.data.ViewMode
+import io.github.bropines.lens.app.data.sameLanguage
 import io.github.bropines.lens.app.data.ReadingLayout
 import io.github.bropines.lens.app.platform.PlatformServices
 import io.github.bropines.lens.app.platform.encodePng
@@ -329,6 +330,13 @@ fun ViewerScreen(
 
     val front = pager.currentPage
     val current = pages[front]
+    val shownLanguages = remember(current, settings.targetLanguage, settings.sourceLanguage) {
+        val result = (current as? PageState.Ready)?.result
+        val translated = result?.paragraphs?.firstNotNullOfOrNull { it.translation }
+        val detected = result?.language ?: translated?.sourceLanguage
+        val into = translated?.targetLanguage?.takeIf { !sameLanguage(it, settings.targetLanguage) }
+        detected to into
+    }
     val result = (current as? PageState.Ready)?.result
     val style = styleFor(result)
     // Holding the eye shows the other of the two for as long as it is held.
@@ -721,6 +729,9 @@ fun ViewerScreen(
                                 modifier = Modifier.weight(1f),
                                 onDark = true,
                                 compact = true,
+                                // What this page really is: the language Lens found, and the one it went into.
+                                detected = shownLanguages.first,
+                                actualTarget = shownLanguages.second,
                             )
                             // A sideways photo reads badly: turn it upright, a quarter per tap, and it is read again.
                             FilledTonalIconButton(

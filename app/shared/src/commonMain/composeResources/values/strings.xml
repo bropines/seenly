@@ -485,6 +485,7 @@
     <string name="screen_menu_dim">Behind the menu</string>
     <string name="screen_result_dim">Behind “This screen”</string>
     <string name="screen_dim_hint">How dark the screen goes behind the bubble’s menu, and behind a translation of the whole screen so it stands out from what it covers.</string>
+    <string name="language_second_used">Text was already in your language, so it went into the second one</string>
     <string name="share_targets_title">Share sheet</string>
     <string name="share_target_translate">Translate</string>
     <string name="share_target_text">Get text</string>

@@ -61,7 +61,14 @@ fun TextTranslateScreen(vm: TextTranslateViewModel, services: PlatformServices, 
             Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            LanguageBar(source = state.source, target = state.target, onSource = vm::setSource, onTarget = vm::setTarget)
+            LanguageBar(
+                source = state.source,
+                target = state.target,
+                onSource = vm::setSource,
+                onTarget = vm::setTarget,
+                detected = state.result?.translation?.detectedSource,
+                actualTarget = state.swappedTo,
+            )
             OutlinedTextField(
                 value = state.input,
                 onValueChange = vm::setInput,
@@ -91,7 +98,7 @@ fun TextTranslateScreen(vm: TextTranslateViewModel, services: PlatformServices, 
                 ) {
                     Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SelectionContainer { Text(result.text, style = MaterialTheme.typography.headlineSmall) }
-                        result.usefulTargetRomanisation(state.target)?.let {
+                        result.usefulTargetRomanisation(state.swappedTo ?: state.target)?.let {
                             Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
                         }
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {

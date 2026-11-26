@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.rounded.AutoMode
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Translate
@@ -53,6 +54,10 @@ fun LanguageBar(
     onDark: Boolean = false,
     /** Shares its row with other buttons: no icons, tighter padding, so the names fit. */
     compact: Boolean = false,
+    /** With the source on auto: the language the text turned out to be in, shown in place of "Auto". */
+    detected: String? = null,
+    /** The language the translation is really in, when the second language took over from [target]. */
+    actualTarget: String? = null,
 ) {
     val padding = PaddingValues(horizontal = if (compact) 8.dp else 12.dp)
     var picking by remember { mutableStateOf<Side?>(null) }
@@ -70,12 +75,17 @@ fun LanguageBar(
             contentPadding = padding,
             modifier = Modifier.weight(1f).heightIn(min = 52.dp),
         ) {
-            if (!compact) Icon(Icons.Rounded.Language, contentDescription = null, modifier = Modifier.size(20.dp))
-            Text(languageName(source), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = if (compact) 0.dp else 8.dp))
+            // A detected language wears the "auto" mark: picking still starts from the setting.
+            val shownSource = source ?: detected
+            when {
+                source == null && detected != null -> Icon(Icons.Rounded.AutoMode, contentDescription = stringResource(Res.string.language_detect), modifier = Modifier.size(18.dp))
+                !compact -> Icon(Icons.Rounded.Language, contentDescription = null, modifier = Modifier.size(20.dp))
+            }
+            Text(languageName(shownSource), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = if (compact && shownSource == source) 0.dp else 8.dp))
         }
         // With a fixed source the arrow swaps the pair; with "auto" there is nothing to swap.
         IconButton(
-            onClick = { if (source != null) { onSource(target); onTarget(source) } },
+            onClick = { if (source != null) { onSource(actualTarget ?: target); onTarget(source) } },
             enabled = source != null,
         ) {
             Icon(
@@ -90,8 +100,13 @@ fun LanguageBar(
             contentPadding = padding,
             modifier = Modifier.weight(1f).heightIn(min = 52.dp),
         ) {
-            if (!compact) Icon(Icons.Rounded.Translate, contentDescription = null, modifier = Modifier.size(20.dp))
-            Text(languageName(target), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = if (compact) 0.dp else 8.dp))
+            // The second language took over: say so, with the "auto" mark, instead of claiming the setting's.
+            val shownTarget = actualTarget ?: target
+            when {
+                actualTarget != null -> Icon(Icons.Rounded.AutoMode, contentDescription = stringResource(Res.string.language_second_used), modifier = Modifier.size(18.dp))
+                !compact -> Icon(Icons.Rounded.Translate, contentDescription = null, modifier = Modifier.size(20.dp))
+            }
+            Text(languageName(shownTarget), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = if (compact && actualTarget == null) 0.dp else 8.dp))
         }
     }
     when (picking) {

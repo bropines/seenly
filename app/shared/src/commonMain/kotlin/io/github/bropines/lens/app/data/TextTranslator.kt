@@ -33,16 +33,23 @@ class TextTranslator(
      * next. With the source on auto, text found to be in [target] already goes
      * into the second language instead (see swapTarget).
      */
-    suspend fun translate(text: String, target: String, source: String? = null, engine: String? = null, dictionary: Boolean = false): PipelineResult {
+    suspend fun translate(text: String, target: String, source: String? = null, engine: String? = null, dictionary: Boolean = false): PipelineResult =
+        translateTo(text, target, source, engine, dictionary).result
+
+    /** A translation and the language it is really in: [target], or the second language when that took over. */
+    data class Translated(val result: PipelineResult, val target: String)
+
+    /** [translate], saying which language the text went into. */
+    suspend fun translateTo(text: String, target: String, source: String? = null, engine: String? = null, dictionary: Boolean = false): Translated {
         val first = pipeline.translate(text, target, source, engine, dictionary)
         val other = settings.current.value.copy(targetLanguage = target, sourceLanguage = source)
-            .swapTarget(first.translation.detectedSource) ?: return first
+            .swapTarget(first.translation.detectedSource) ?: return Translated(first, target)
         return try {
-            pipeline.translate(text, other, source, engine, dictionary)
+            Translated(pipeline.translate(text, other, source, engine, dictionary), other)
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
-            first
+            Translated(first, target)
         }
     }
 

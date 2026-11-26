@@ -31,6 +31,8 @@ data class TextTranslateState(
     val engine: String? = null,
     val loading: Boolean = false,
     val result: PipelineResult? = null,
+    /** The language [result] is in, when the second language took over from [target]. */
+    val swappedTo: String? = null,
     val error: UiText? = null,
 )
 
@@ -64,14 +66,14 @@ class TextTranslateViewModel(
     private suspend fun translate() {
         val s = _state.value
         if (s.input.isBlank()) {
-            _state.update { it.copy(result = null, error = null, loading = false) }
+            _state.update { it.copy(result = null, swappedTo = null, error = null, loading = false) }
             return
         }
         _state.update { it.copy(loading = true, error = null) }
         try {
             // A dictionary only for short input: engines return one just for words and short phrases.
-            val result = translator.translate(s.input, s.target, s.source, s.engine, dictionary = s.input.length <= 40)
-            _state.update { it.copy(result = result, loading = false) }
+            val done = translator.translateTo(s.input, s.target, s.source, s.engine, dictionary = s.input.length <= 40)
+            _state.update { it.copy(result = done.result, swappedTo = done.target.takeIf { t -> t != s.target }, loading = false) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: TranslationException) {
