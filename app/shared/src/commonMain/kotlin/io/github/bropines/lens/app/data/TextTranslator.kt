@@ -28,9 +28,23 @@ class TextTranslator(
     private val settings: SettingsRepository,
     private val http: HttpClient,
 ) {
-    /** [engine] null means the user's first enabled engine, falling over to the next. */
-    suspend fun translate(text: String, target: String, source: String? = null, engine: String? = null, dictionary: Boolean = false): PipelineResult =
-        pipeline.translate(text, target, source, engine, dictionary)
+    /**
+     * [engine] null means the user's first enabled engine, falling over to the
+     * next. With the source on auto, text found to be in [target] already goes
+     * into the second language instead (see swapTarget).
+     */
+    suspend fun translate(text: String, target: String, source: String? = null, engine: String? = null, dictionary: Boolean = false): PipelineResult {
+        val first = pipeline.translate(text, target, source, engine, dictionary)
+        val other = settings.current.value.copy(targetLanguage = target, sourceLanguage = source)
+            .swapTarget(first.translation.detectedSource) ?: return first
+        return try {
+            pipeline.translate(text, other, source, engine, dictionary)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            first
+        }
+    }
 
     fun nameOf(id: String): String = registry[id]?.name ?: id
 

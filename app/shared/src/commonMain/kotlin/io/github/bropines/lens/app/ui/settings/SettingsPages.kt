@@ -9,6 +9,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.FormatAlignLeft
 import androidx.compose.material.icons.rounded.AutoFixHigh
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.ImageSearch
+import androidx.compose.material.icons.rounded.Menu
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material.icons.rounded.BorderStyle
 import androidx.compose.material.icons.rounded.BrightnessMedium
 import androidx.compose.material.icons.rounded.CloudOff
@@ -59,6 +64,8 @@ import io.github.bropines.lens.app.data.RefineChoice
 import io.github.bropines.lens.app.data.ThemeMode
 import io.github.bropines.lens.app.data.UpdatePrefs
 import io.github.bropines.lens.app.data.VerticalChoice
+import io.github.bropines.lens.app.data.ScreenSettings
+import io.github.bropines.lens.app.data.ViewMode
 import io.github.bropines.lens.app.di.AppGraph
 import io.github.bropines.lens.app.resources.*
 import io.github.bropines.lens.app.screen.ScreenTranslate
@@ -89,7 +96,7 @@ fun SettingsPageScreen(page: SettingsPage, graph: AppGraph, settings: AppSetting
         SettingsPage.Translation -> TranslationPage(graph, settings, update, onOpen, onBack)
         SettingsPage.Overlay -> OverlayPage(settings, update, onBack)
         // Where the platform has no screen translator there is no tile to come here from.
-        SettingsPage.Screen -> graph.services.screenTranslate?.let { ScreenPage(it, onBack) }
+        SettingsPage.Screen -> graph.services.screenTranslate?.let { ScreenPage(it, settings, update, onBack) }
         SettingsPage.Appearance -> AppearancePage(settings, update, onBack)
         SettingsPage.Network -> NetworkScreen(graph.network, settings, onBack)
         SettingsPage.Updates -> UpdatesPage(graph.updates, settings, update, onBack)
@@ -110,6 +117,12 @@ private fun TranslationPage(graph: AppGraph, settings: AppSettings, update: Upda
         SettingsCard(stringResource(Res.string.settings_languages)) {
             Setting(Icons.Rounded.Translate, stringResource(Res.string.settings_target), languageName(settings.targetLanguage)) { picker = "target" }
             Setting(Icons.Rounded.Language, stringResource(Res.string.source_language), languageName(settings.sourceLanguage)) { picker = "source" }
+            Setting(
+                Icons.Rounded.SwapHoriz,
+                stringResource(Res.string.settings_second_language),
+                settings.secondLanguage?.let { stringResource(Res.string.settings_second_language_on, languageName(settings.targetLanguage), languageName(it)) }
+                    ?: stringResource(Res.string.choice_off),
+            ) { picker = "second" }
             Setting(
                 Icons.Rounded.DocumentScanner,
                 stringResource(Res.string.settings_ocr_hint),
@@ -138,6 +151,23 @@ private fun TranslationPage(graph: AppGraph, settings: AppSettings, update: Upda
                 ) { onOpen(Route.OnDevice) }
             }
         }
+        if (graph.services.hasShareTargets) {
+            // Seenly's quick entries in the system share sheet; a picture shared to one opens in that mode.
+            SettingsCard(stringResource(Res.string.share_targets_title)) {
+                val targets = listOf(
+                    Triple(ViewMode.Translate, Icons.Rounded.Translate, Res.string.share_target_translate),
+                    Triple(ViewMode.Text, Icons.Rounded.TextFields, Res.string.share_target_text),
+                    Triple(ViewMode.Search, Icons.Rounded.ImageSearch, Res.string.share_target_search),
+                    Triple(ViewMode.AskAi, Icons.Rounded.AutoAwesome, Res.string.share_target_ask_ai),
+                )
+                for ((mode, icon, label) in targets) {
+                    Toggle(icon, stringResource(label), null, mode in settings.shareTargets) { on ->
+                        update { it.copy(shareTargets = if (on) it.shareTargets + mode else it.shareTargets - mode) }
+                    }
+                }
+            }
+            Footnote(stringResource(Res.string.share_targets_hint))
+        }
     }
 
     when (picker) {
@@ -147,6 +177,15 @@ private fun TranslationPage(graph: AppGraph, settings: AppSettings, update: Upda
         }
         "source" -> LanguagePickerSheet(settings.sourceLanguage, allowAuto = true, onDismiss = { picker = null }) { code ->
             update { it.copy(sourceLanguage = code) }
+            picker = null
+        }
+        "second" -> LanguagePickerSheet(
+            settings.secondLanguage,
+            allowAuto = true,
+            onDismiss = { picker = null },
+            noneLabel = stringResource(Res.string.choice_off),
+        ) { code ->
+            update { it.copy(secondLanguage = code) }
             picker = null
         }
         "ocr" -> LanguagePickerSheet(settings.ocrLanguage.ifEmpty { null }, allowAuto = true, onDismiss = { picker = null }) { code ->
@@ -247,7 +286,9 @@ private fun OverlayPage(settings: AppSettings, update: Update, onBack: () -> Uni
 
 /** The floating screen translator: the bubble itself, and whether its translation may cover the original. */
 @Composable
-private fun ScreenPage(screen: ScreenTranslate, onBack: () -> Unit) {
+private fun ScreenPage(screen: ScreenTranslate, settings: AppSettings, update: Update, onBack: () -> Unit) {
+    val s = settings.screen
+    fun prefs(transform: (ScreenSettings) -> ScreenSettings) = update { it.copy(screen = transform(it.screen)) }
     val opaque by screen.opaque.collectAsState()
     val running by screen.running.collectAsState()
     SettingsScaffold(
@@ -268,6 +309,25 @@ private fun ScreenPage(screen: ScreenTranslate, onBack: () -> Unit) {
                 stringResource(if (opaque) Res.string.settings_opaque_on else Res.string.settings_opaque_off),
             ) { screen.openOpaqueSettings() }
         }
+        SettingsCard(stringResource(Res.string.screen_section_behaviour)) {
+            Toggle(
+                Icons.Rounded.PlayArrow,
+                stringResource(Res.string.screen_start_at_once),
+                stringResource(if (s.translateOnStart) Res.string.screen_start_at_once_on else Res.string.screen_start_at_once_off),
+                s.translateOnStart,
+            ) { on -> prefs { it.copy(translateOnStart = on) } }
+        }
+        SettingsCard(stringResource(Res.string.screen_section_dim)) {
+            SliderSetting(
+                Icons.Rounded.Menu, stringResource(Res.string.screen_menu_dim), "${s.menuDim}%",
+                value = s.menuDim.toFloat(), range = 0f..80f, steps = 7,
+            ) { v -> prefs { it.copy(menuDim = (v / 10).roundToInt() * 10) } }
+            SliderSetting(
+                Icons.Rounded.Contrast, stringResource(Res.string.screen_result_dim), if (s.resultDim == 0) stringResource(Res.string.choice_off) else "${s.resultDim}%",
+                value = s.resultDim.toFloat(), range = 0f..80f, steps = 7,
+            ) { v -> prefs { it.copy(resultDim = (v / 10).roundToInt() * 10) } }
+        }
+        Footnote(stringResource(Res.string.screen_dim_hint))
     }
 }
 

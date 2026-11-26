@@ -12,6 +12,7 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.os.Build
 import android.os.SystemClock
+import android.content.Intent
 import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
@@ -171,6 +172,8 @@ internal class ScreenTranslator(
         // Bottom to top: the translation, the area's grips, the bubble (the menu comes and goes above them).
         layer.attach(screen)
         bubble.attach(screen, bars)
+        // Turned on, it may wait for a tap instead of translating at once.
+        paused = !startsAtOnce() && mode != ScreenMode.Screen
         applyMode()
         if (!prefs.menuShown) {
             prefs.menuShown = true
@@ -323,7 +326,7 @@ internal class ScreenTranslator(
             busy = false
         }
         updateBubble()
-        menu.show(mode, bars.bottom, canCopy = texts != null)
+        menu.show(mode, bars.bottom, canCopy = texts != null, startsAtOnce = startsAtOnce())
         poke()
     }
 
@@ -331,13 +334,19 @@ internal class ScreenTranslator(
         if (mode == this.mode) return
         this.mode = mode
         prefs.mode = mode
-        paused = false
+        paused = !startsAtOnce()
         applyMode()
         // The area grips come in their own window, which would cover the menu.
         if (menu.isShown) menu.raise()
     }
 
     override fun onPrimary() {
+        // Set not to translate on its own, "Done" only closes the menu: a tap on the bubble starts.
+        if (!startsAtOnce()) {
+            updateBubble()
+            poke()
+            return
+        }
         paused = false
         if (mode == ScreenMode.Screen) {
             translateOnce()
@@ -345,6 +354,16 @@ internal class ScreenTranslator(
             updateBubble()
             poke()
         }
+    }
+
+    /** Whether turning it on, picking a mode or the menu's main button translates right away. */
+    private fun startsAtOnce(): Boolean = graph.settings.current.value.screen.translateOnStart
+
+    override fun onOpenApp() {
+        val open = service.packageManager.getLaunchIntentForPackage(service.packageName) ?: return
+        runCatching {
+            service.startActivity(open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED))
+        }.onFailure { Log.w(TAG, "could not open the app", it) }
     }
 
     override fun onLanguage(source: Boolean, code: String?) {
@@ -465,6 +484,7 @@ internal class ScreenTranslator(
                     toast(R.string.screen_no_text)
                     shown = false
                 } else {
+                    layer.scrim = graph.settings.current.value.screen.resultDim
                     layer.show(stored.pieces, modal = true)
                     texts = stored.texts
                     shown = true

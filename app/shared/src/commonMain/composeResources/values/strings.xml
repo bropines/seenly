@@ -320,7 +320,7 @@
     <string name="update_beta_desc">Also offer builds of the next version that come out before the release. Something in them may not work</string>
     <string name="update_no_notes">This release has no notes.</string>
     <string name="update_downloading">Downloading…</string>
-    <string name="update_needs_permission">The update is downloaded and verified. Android installs it only if you allow Seenly to install apps: tap “Allow”, turn the switch on, come back and tap “Install”.</string>
+    <string name="update_needs_permission">The update is downloaded and verified. Android installs it only if you allow Seenly to install apps: turn the switch on and come back, and the install goes on by itself. “Allow” opens that page again.</string>
     <string name="update_confirm_in_system">Downloaded and verified. Confirm the installation in the system dialog.</string>
     <string name="update_manual_only">This copy doesn’t update itself (a debug build, or one a store keeps up to date). The files are on the release page.</string>
     <string name="update_open_page">Release page</string>
@@ -472,4 +472,24 @@
     <string name="network_footnote">Goes through the proxy: Lens scans and search, the text translators, the update check and the update download. Does not: Google’s sign-in page inside the app (it is the system’s WebView), downloads of on-device models (Google Play services and the system downloader do those), and links opened in your browser. If a proxy is set and can’t be reached, requests fail rather than go out directly.</string>
     <string name="settings_export_proxy">Include the proxy password</string>
     <string name="settings_export_proxy_warning">The password is written to the file as plain text.</string>
+
+    <!-- 0.5 -->
+    <string name="camera_from_files">From files</string>
+    <string name="bubble_open_app">Seenly</string>
+    <string name="settings_second_language">Second language</string>
+    <string name="settings_second_language_on">Text already in %1$s goes into %2$s</string>
+    <string name="screen_section_behaviour">Behaviour</string>
+    <string name="screen_start_at_once">Translate right away</string>
+    <string name="screen_start_at_once_on">Turning it on, picking a mode or “Done” translates at once</string>
+    <string name="screen_start_at_once_off">It waits: tap the bubble to translate</string>
+    <string name="screen_section_dim">Dimming</string>
+    <string name="screen_menu_dim">Behind the menu</string>
+    <string name="screen_result_dim">Behind “This screen”</string>
+    <string name="screen_dim_hint">How dark the screen goes behind the bubble’s menu, and behind a translation of the whole screen so it stands out from what it covers.</string>
+    <string name="share_targets_title">Share sheet</string>
+    <string name="share_target_translate">Translate</string>
+    <string name="share_target_text">Get text</string>
+    <string name="share_target_search">Search</string>
+    <string name="share_target_ask_ai">Ask AI</string>
+    <string name="share_targets_hint">Quick entries Seenly adds to the system share sheet for pictures: each opens the picture straight in that mode. The plain “Translate in Seenly” entry is always there.</string>
 </resources>

@@ -127,6 +127,11 @@ internal class LayerView(
             refresh()
         }
 
+    /** How dark, in percent, the screen goes under a modal ("this screen") translation. */
+    var scrim: Int = 0
+
+    private val scrimPaint = Paint()
+
     /** Dims the area's frame while the area is paused. */
     var areaDimmed: Boolean = false
         set(value) {
@@ -243,6 +248,10 @@ internal class LayerView(
         // Whatever the system did with the window, draw in true screen coordinates.
         getLocationOnScreen(location)
         canvas.translate(-location[0].toFloat(), -location[1].toFloat())
+        if (!passThrough && pieces.isNotEmpty() && scrim > 0) {
+            scrimPaint.color = ((scrim.coerceIn(0, 90) * 255 / 100) shl 24)
+            canvas.drawRect(screen, scrimPaint)
+        }
         for (piece in pieces) {
             if (!piece.bitmap.isRecycled) canvas.drawBitmap(piece.bitmap, piece.left.toFloat(), piece.top.toFloat(), bitmapPaint)
         }

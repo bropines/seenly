@@ -25,6 +25,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SegmentedButton
@@ -83,6 +86,8 @@ internal class BubbleMenu(
         fun onCopy(translation: Boolean)
         fun onStop()
         fun onMenuClosed()
+        /** Brings Seenly itself to the front. */
+        fun onOpenApp()
     }
 
     private var root: Root? = null
@@ -92,7 +97,8 @@ internal class BubbleMenu(
     val isShown: Boolean get() = root != null
 
     /** [canCopy]: there is a translation whose text can be copied. */
-    fun show(current: ScreenMode, bottomInset: Int, canCopy: Boolean = false) {
+    /** [startsAtOnce]: the main button translates or resumes; otherwise it is "Done" and only closes. */
+    fun show(current: ScreenMode, bottomInset: Int, canCopy: Boolean = false, startsAtOnce: Boolean = true) {
         // A window the system took away without hide() must not block the menu for good.
         root?.let { if (!it.isAttachedToWindow) forget() else return }
         mode = current
@@ -123,6 +129,11 @@ internal class BubbleMenu(
                             },
                             onDismiss = ::hide,
                             canCopy = canCopy,
+                            startsAtOnce = startsAtOnce,
+                            onOpenApp = {
+                                hide()
+                                listener.onOpenApp()
+                            },
                             onCopy = {
                                 listener.onCopy(it)
                                 hide()
@@ -132,11 +143,12 @@ internal class BubbleMenu(
                 },
             )
         }
+        val dim = settings.current.value.screen.menuDim.coerceIn(0, 90)
         val params = overlayParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.FLAG_DIM_BEHIND,
-        ).apply { dimAmount = 0.4f }
+            if (dim > 0) WindowManager.LayoutParams.FLAG_DIM_BEHIND else 0,
+        ).apply { dimAmount = dim / 100f }
         owner.resume()
         wm.addView(view, params)
         root = view
@@ -230,6 +242,8 @@ internal fun MenuSheet(
     /** There is a translation on screen (or there just was) whose text can be copied. */
     canCopy: Boolean = false,
     onCopy: (translation: Boolean) -> Unit = {},
+    startsAtOnce: Boolean = true,
+    onOpenApp: () -> Unit = {},
 ) {
     val current by settings.settings.collectAsState(AppSettings())
     var picking by remember { mutableStateOf<Picking?>(null) }
@@ -251,7 +265,14 @@ internal fun MenuSheet(
             ) {
                 when (val pick = picking) {
                     null -> Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        Text(stringResource(Res.string.screen_translation), style = MaterialTheme.typography.titleLarge)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(stringResource(Res.string.screen_translation), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                            // Back to Seenly itself, from over whatever app is open.
+                            TextButton(onClick = onOpenApp) {
+                                Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null, modifier = Modifier.padding(end = 6.dp))
+                                Text(stringResource(Res.string.bubble_open_app), maxLines = 1)
+                            }
+                        }
                         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                             val modes = ScreenMode.entries
                             modes.forEachIndexed { index, item ->
@@ -323,7 +344,7 @@ internal fun MenuSheet(
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             OutlinedButton(onClick = onStop, modifier = Modifier.weight(1f)) { Text(stringResource(Res.string.bubble_turn_off)) }
                             Button(onClick = onPrimary, modifier = Modifier.weight(1f)) {
-                                Text(stringResource(if (mode == ScreenMode.Screen) Res.string.translate_action else Res.string.bubble_done))
+                                Text(stringResource(if (mode == ScreenMode.Screen && startsAtOnce) Res.string.translate_action else Res.string.bubble_done))
                             }
                         }
                         Text(

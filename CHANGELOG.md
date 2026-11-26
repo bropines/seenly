@@ -6,6 +6,21 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ## [Unreleased]
 
+### Added
+
+- Quick entries in the system share sheet for pictures: Translate, Get text, Search and Ask AI, each opening the picture straight in that mode. Each can be turned off in Settings → Translation.
+- QR codes and barcodes are read in pictures from the gallery and shared ones too, with the same card as the camera's (open, copy, Wi-Fi password).
+- Second language (English by default): with the source on auto, text that is already in your target language is translated into the second one instead. Works for pictures, screen translation and typed text; can be turned off in Settings → Translation.
+- Camera: hold the gallery button to pick pictures from files instead of the photo picker.
+- Camera: a shot opens in the mode you last picked for one (translation, text or search).
+- Screen translation: an “Open Seenly” button in the bubble’s menu.
+- Screen translation: “Translate right away” can be turned off, so turning it on, picking a mode or “Done” waits for a tap on the bubble.
+- Screen translation: how dark the screen goes behind the menu and behind a “This screen” translation, in Settings → Screen translation.
+
+### Changed
+
+- Updates: when Seenly may not install apps yet, the system page to allow it opens by itself, and the install goes on when you come back with it allowed.
+
 ## [0.4.0] - 2026-11-25
 
 ### Added

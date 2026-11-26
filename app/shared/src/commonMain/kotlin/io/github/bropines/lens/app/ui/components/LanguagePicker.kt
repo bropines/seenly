@@ -104,7 +104,14 @@ fun LanguageBar(
 private enum class Side { Source, Target }
 
 @Composable
-fun LanguagePickerSheet(selected: String?, allowAuto: Boolean, onDismiss: () -> Unit, onPick: (String?) -> Unit) {
+fun LanguagePickerSheet(
+    selected: String?,
+    allowAuto: Boolean,
+    onDismiss: () -> Unit,
+    /** What the null choice is called, when it is not "detect" ("off" for the second language). */
+    noneLabel: String? = null,
+    onPick: (String?) -> Unit,
+) {
     var query by remember { mutableStateOf("") }
     val localized = Languages.all.associate { it.code to localizedLanguageName(it.code) }
     val filtered = remember(query, localized) {
@@ -124,7 +131,7 @@ fun LanguagePickerSheet(selected: String?, allowAuto: Boolean, onDismiss: () -> 
         )
         LazyColumn {
             if (allowAuto && query.isBlank()) {
-                item { LanguageRow(stringResource(Res.string.language_detect), null, selected == null) { onPick(null) } }
+                item { LanguageRow(noneLabel ?: stringResource(Res.string.language_detect), null, selected == null) { onPick(null) } }
             }
             items(filtered, key = { it.code }) { language ->
                 LanguageRow(language.nativeName, localized.getValue(language.code), language.code == selected) { onPick(language.code) }

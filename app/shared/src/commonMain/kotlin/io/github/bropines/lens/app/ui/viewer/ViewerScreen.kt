@@ -127,6 +127,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import io.github.bropines.lens.app.data.GalleryOrigin
+import io.github.bropines.lens.app.data.ViewMode
 import io.github.bropines.lens.app.data.ReadingLayout
 import io.github.bropines.lens.app.platform.PlatformServices
 import io.github.bropines.lens.app.platform.encodePng
@@ -148,6 +149,10 @@ import io.github.bropines.lens.protocol.ScanResult
 import io.github.bropines.lens.protocol.WritingDirection
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.saveImageToGallery
+import io.github.vinceglb.filekit.readBytes
+import io.github.bropines.lens.app.ui.camera.CodeCard
+import io.github.bropines.lens.app.ui.camera.ScannedCode
+import io.github.bropines.lens.app.ui.camera.readCode
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -196,17 +201,27 @@ fun ViewerScreen(
     val pager = rememberPagerState(initialPage = vm.gallery.startIndex) { items.size }
     val pages by vm.pages.collectAsState()
     val settings by vm.settings.collectAsState()
-    var mode by rememberSaveable { mutableStateOf(OverlayMode.Translated) }
+    val startMode = vm.gallery.startMode
+    var mode by rememberSaveable { mutableStateOf(if (startMode == ViewMode.Text) OverlayMode.TextBoxes else OverlayMode.Translated) }
     var chrome by rememberSaveable { mutableStateOf(true) }
     var showText by rememberSaveable { mutableStateOf(false) }
     var tappedParagraph by remember { mutableStateOf<Int?>(null) }
     var quickTranslate by remember { mutableStateOf<String?>(null) }
     var zoomed by remember { mutableStateOf(false) }
-    var searchMode by rememberSaveable { mutableStateOf(false) }
+    var searchMode by rememberSaveable { mutableStateOf(startMode == ViewMode.Search || startMode == ViewMode.AskAi) }
     var overlayHidden by rememberSaveable { mutableStateOf(false) }
     val stale by vm.stale.collectAsState()
     val failed by vm.failed.collectAsState()
-    var askAi by remember { mutableStateOf(false) }
+    // Codes found in the pictures, by page key; a page without one maps to null once looked at.
+    val codes = remember { mutableStateMapOf<String, ScannedCode?>() }
+    var dismissedCodes by remember { mutableStateOf(emptySet<String>()) }
+    LaunchedEffect(pager.settledPage) {
+        val item = items.getOrNull(pager.settledPage) ?: return@LaunchedEffect
+        if (item.key in codes) return@LaunchedEffect
+        codes[item.key] = runCatching { readCode(item.file.readBytes()) }.getOrNull()
+    }
+    // Shared with "Ask AI": the question comes first.
+    var askAi by rememberSaveable { mutableStateOf(startMode == ViewMode.AskAi) }
     var lastRegion by remember { mutableStateOf<Region?>(null) }
     val searching by vm.searching.collectAsState()
     val searchError by vm.searchError.collectAsState()
@@ -664,6 +679,13 @@ fun ViewerScreen(
                 )
                 BusyStatus(exporting, stringResource(Res.string.viewer_preparing_image))
                 SearchStatus(searching, searchError, onDismiss = vm::dismissSearchError)
+                // A QR code or barcode in the picture, read on the device: the same card as the camera's.
+                val code = codes[items[front].key]?.takeIf { items[front].key !in dismissedCodes }
+                AnimatedVisibility(chrome && code != null, enter = FastIn, exit = FastOut) {
+                    code?.let { found ->
+                        CodeCard(found, services, onDismiss = { dismissedCodes = dismissedCodes + items[front].key })
+                    }
+                }
             }
             // Folded, the controls are one row over the picture: languages, rotate, the eye.
             val compact = settings.viewerCompact
@@ -736,9 +758,17 @@ fun ViewerScreen(
                     AnimatedVisibility(!compact) {
                     ViewerBottomPanel(
                         mode = mode,
-                        onMode = { mode = it; searchMode = false },
+                        onMode = {
+                            mode = it
+                            searchMode = false
+                            vm.rememberCameraMode(if (it == OverlayMode.TextBoxes) ViewMode.Text else ViewMode.Translate)
+                        },
                         searchMode = searchMode,
-                        onSearchMode = { searchMode = true; selection.clear() },
+                        onSearchMode = {
+                            searchMode = true
+                            selection.clear()
+                            vm.rememberCameraMode(ViewMode.Search)
+                        },
                         onSearchWhole = { vm.visualSearch(pager.currentPage, services::openUrl) { it.searchImageUrl() } },
                         onAskAi = { askAi = true },
                         result = result,

@@ -50,6 +50,16 @@ data class AppSettings(
     val amoled: Boolean = false,
     /** The viewer's controls folded to one row (languages, rotate, the eye); remembered between pictures. */
     val viewerCompact: Boolean = false,
+    /** What the viewer shows over a new camera shot: the mode last chosen for one. */
+    val cameraMode: ViewMode = ViewMode.Translate,
+    /**
+     * With the source on auto, text found to be in [targetLanguage] already is
+     * translated into this language instead; null turns that off.
+     */
+    val secondLanguage: String? = DEFAULT_SECOND_LANGUAGE,
+    /** Seenly's own entries in the system share sheet, each opening the picture in that mode. */
+    val shareTargets: Set<ViewMode> = ViewMode.entries.toSet(),
+    val screen: ScreenSettings = ScreenSettings(),
     /** The UI language as a BCP 47 tag ("en", "ru"); null follows the system. */
     val uiLanguage: String? = null,
     /** The last folder opened, as FileKit's serialised PlatformFile, so it can be reopened. */
@@ -61,6 +71,45 @@ data class AppSettings(
     val account: AccountPrefs = AccountPrefs(),
     val proxy: ProxyPrefs = ProxyPrefs(),
 )
+
+const val DEFAULT_SECOND_LANGUAGE = "en"
+
+/**
+ * What the viewer opens a picture with: the translation, its text to select,
+ * visual search, or visual search with the question for the AI already asked for.
+ */
+enum class ViewMode { Translate, Text, Search, AskAi }
+
+/** The floating screen translator's preferences that are not about where its windows sit. */
+@Serializable
+data class ScreenSettings(
+    /** Translate as soon as it is turned on, a mode is picked or the menu's main button is pressed; else wait for a tap. */
+    val translateOnStart: Boolean = true,
+    /** How dark the screen goes behind the bubble's menu, in percent. */
+    val menuDim: Int = 40,
+    /** How dark the screen goes behind a "this screen" translation, in percent. */
+    val resultDim: Int = 0,
+)
+
+/**
+ * The language to translate into instead of [AppSettings.targetLanguage] when
+ * Lens or a text engine found the text to be in that language already
+ * ([detected]), or null to keep it.
+ */
+fun AppSettings.swapTarget(detected: String?): String? {
+    val second = secondLanguage ?: return null
+    if (sourceLanguage != null || detected == null) return null
+    if (!sameLanguage(detected, targetLanguage) || sameLanguage(second, targetLanguage)) return null
+    return second
+}
+
+/** "en" and "en-US" are one language; "zh-CN" and "zh-TW" are two. */
+internal fun sameLanguage(a: String, b: String): Boolean {
+    if (a.equals(b, ignoreCase = true)) return true
+    val (baseA, regionA) = a.lowercase().replace('_', '-').let { it.substringBefore('-') to it.substringAfter('-', "") }
+    val (baseB, regionB) = b.lowercase().replace('_', '-').let { it.substringBefore('-') to it.substringAfter('-', "") }
+    return baseA == baseB && (regionA.isEmpty() || regionB.isEmpty() || regionA == regionB)
+}
 
 /** Where the app's own requests go out through. */
 enum class ProxyMode {
@@ -198,6 +247,13 @@ class SettingsRepository(services: PlatformServices) {
             p[THEME_COLOR] = next.themeColor.name
             p[AMOLED] = next.amoled
             p[VIEWER_COMPACT] = next.viewerCompact
+            p[CAMERA_MODE] = next.cameraMode.name
+            // Empty is "off", set on purpose; no key at all is the default.
+            p[SECOND_LANGUAGE] = next.secondLanguage.orEmpty()
+            p[SHARE_TARGETS] = ViewMode.entries.filter { it in next.shareTargets }.joinToString(",") { it.name }
+            p[SCREEN_AUTO_START] = next.screen.translateOnStart
+            p[SCREEN_MENU_DIM] = next.screen.menuDim
+            p[SCREEN_RESULT_DIM] = next.screen.resultDim
             if (next.uiLanguage != null) p[UI_LANGUAGE] = next.uiLanguage else p.remove(UI_LANGUAGE)
             if (next.lastFolder != null) p[LAST_FOLDER] = next.lastFolder else p.remove(LAST_FOLDER)
             p[ERASE] = next.overlay.erase.name
@@ -282,6 +338,15 @@ class SettingsRepository(services: PlatformServices) {
         themeColor = this[THEME_COLOR].toEnum(ThemeColor.Wallpaper),
         amoled = this[AMOLED] ?: false,
         viewerCompact = this[VIEWER_COMPACT] ?: false,
+        cameraMode = this[CAMERA_MODE].toEnum(ViewMode.Translate),
+        secondLanguage = (this[SECOND_LANGUAGE] ?: DEFAULT_SECOND_LANGUAGE).ifEmpty { null },
+        shareTargets = this[SHARE_TARGETS]?.split(',')?.mapNotNull { name -> ViewMode.entries.firstOrNull { it.name == name } }?.toSet()
+            ?: ViewMode.entries.toSet(),
+        screen = ScreenSettings(
+            translateOnStart = this[SCREEN_AUTO_START] ?: true,
+            menuDim = (this[SCREEN_MENU_DIM] ?: 40).coerceIn(0, 90),
+            resultDim = (this[SCREEN_RESULT_DIM] ?: 0).coerceIn(0, 90),
+        ),
         uiLanguage = this[UI_LANGUAGE]?.ifEmpty { null },
         lastFolder = this[LAST_FOLDER],
         overlay = OverlayPrefs(
@@ -327,6 +392,12 @@ class SettingsRepository(services: PlatformServices) {
         val THEME_COLOR = stringPreferencesKey("theme_color")
         val AMOLED = booleanPreferencesKey("theme_amoled")
         val VIEWER_COMPACT = booleanPreferencesKey("viewer_compact")
+        val CAMERA_MODE = stringPreferencesKey("camera_view_mode")
+        val SECOND_LANGUAGE = stringPreferencesKey("second_language")
+        val SHARE_TARGETS = stringPreferencesKey("share_targets")
+        val SCREEN_AUTO_START = booleanPreferencesKey("screen_translate_on_start")
+        val SCREEN_MENU_DIM = intPreferencesKey("screen_menu_dim")
+        val SCREEN_RESULT_DIM = intPreferencesKey("screen_result_dim")
         val UI_LANGUAGE = stringPreferencesKey("ui_language")
         val LAST_FOLDER = stringPreferencesKey("last_folder")
         val ERASE = stringPreferencesKey("overlay_erase")

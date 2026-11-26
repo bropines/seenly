@@ -325,7 +325,7 @@
     <string name="update_beta_desc">Предлагать и сборки следующей версии, которые выходят до релиза. В них что-то может не работать</string>
     <string name="update_no_notes">У этого выпуска нет описания.</string>
     <string name="update_downloading">Скачиваю…</string>
-    <string name="update_needs_permission">Обновление скачано и проверено. Android установит его, только если вы разрешите Seenly устанавливать приложения: нажмите «Разрешить», включите переключатель, вернитесь и нажмите «Установить».</string>
+    <string name="update_needs_permission">Обновление скачано и проверено. Android установит его, только если вы разрешите Seenly устанавливать приложения: включите переключатель и вернитесь, установка продолжится сама. «Разрешить» откроет эту страницу снова.</string>
     <string name="update_confirm_in_system">Скачано и проверено. Подтвердите установку в системном окне.</string>
     <string name="update_manual_only">Эта копия не обновляет сама себя (отладочная сборка или установка из магазина). Файлы — на странице выпуска.</string>
     <string name="update_open_page">Страница выпуска</string>
@@ -477,4 +477,24 @@
     <string name="network_footnote">Через прокси идут: сканирование и поиск в Lens, переводчики текста, проверка и загрузка обновлений. Не идут: страница входа Google внутри приложения (это системный WebView), загрузка моделей для работы на устройстве (её делают сервисы Google Play и системный загрузчик) и ссылки, которые открываются в браузере. Если прокси задан, но недоступен, запросы не уходят напрямую, а завершаются ошибкой.</string>
     <string name="settings_export_proxy">Добавить пароль прокси</string>
     <string name="settings_export_proxy_warning">Пароль будет записан в файл открытым текстом.</string>
+
+    <!-- 0.5 -->
+    <string name="camera_from_files">Из файлов</string>
+    <string name="bubble_open_app">Seenly</string>
+    <string name="settings_second_language">Второй язык</string>
+    <string name="settings_second_language_on">Текст на языке «%1$s» переводится на «%2$s»</string>
+    <string name="screen_section_behaviour">Поведение</string>
+    <string name="screen_start_at_once">Переводить сразу</string>
+    <string name="screen_start_at_once_on">Включение, выбор режима и «Готово» сразу переводят</string>
+    <string name="screen_start_at_once_off">Ждёт: нажмите на пузырь, чтобы перевести</string>
+    <string name="screen_section_dim">Затемнение</string>
+    <string name="screen_menu_dim">Под меню</string>
+    <string name="screen_result_dim">Под «Этот экран»</string>
+    <string name="screen_dim_hint">Насколько темнеет экран под меню пузыря и под переводом всего экрана, чтобы перевод выделялся на фоне того, что он закрывает.</string>
+    <string name="share_targets_title">Меню «Поделиться»</string>
+    <string name="share_target_translate">Перевести</string>
+    <string name="share_target_text">Распознать текст</string>
+    <string name="share_target_search">Найти</string>
+    <string name="share_target_ask_ai">Спросить ИИ</string>
+    <string name="share_targets_hint">Быстрые пункты, которые Seenly добавляет в системное меню «Поделиться» для картинок: каждый сразу открывает картинку в своём режиме. Обычный пункт «Перевести в Seenly» есть всегда.</string>
 </resources>

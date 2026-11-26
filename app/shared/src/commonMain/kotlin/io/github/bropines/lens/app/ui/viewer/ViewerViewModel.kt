@@ -7,6 +7,8 @@ import io.github.bropines.lens.app.data.Gallery
 import io.github.bropines.lens.app.data.PageScanner
 import io.github.bropines.lens.app.data.SettingsRepository
 import io.github.bropines.lens.app.data.ViewerLibrary
+import io.github.bropines.lens.app.data.ViewMode
+import io.github.bropines.lens.app.data.GalleryOrigin
 import io.github.bropines.lens.app.data.history.PagePlace
 import io.github.bropines.lens.app.ondevice.OnDeviceException
 import io.github.bropines.lens.app.platform.quarterTurns
@@ -293,6 +295,12 @@ class ViewerViewModel(
     fun setSource(code: String?) = viewModelScope.launch { settingsRepository.update { it.copy(sourceLanguage = code) } }
 
     fun setCompact(compact: Boolean) = viewModelScope.launch { settingsRepository.update { it.copy(viewerCompact = compact) } }
+
+    /** A camera shot's mode, picked by hand, is what the next shot opens in. */
+    fun rememberCameraMode(mode: ViewMode) {
+        if (gallery.origin != GalleryOrigin.Camera) return
+        viewModelScope.launch { settingsRepository.update { it.copy(cameraMode = mode) } }
+    }
 
     private fun placeOf(index: Int): PagePlace? = gallery.folderKey?.let { PagePlace(it, gallery.title, index) }
 

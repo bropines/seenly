@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -38,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import io.github.bropines.lens.app.data.GalleryItem
 import io.github.bropines.lens.app.data.GalleryOrigin
+import io.github.bropines.lens.app.data.ViewMode
 import io.github.bropines.lens.app.ui.camera.CameraScreen
 import io.github.bropines.lens.app.ui.about.AboutScreen
 import io.github.bropines.lens.app.ui.settings.SettingsPage
@@ -59,6 +61,11 @@ import io.github.bropines.lens.app.resources.camera_snapshot
 import org.jetbrains.compose.resources.stringResource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+
+/** Pictures handed to the app from outside, and what to open them with (null: the translation). */
+data class Incoming(val files: List<PlatformFile>, val mode: ViewMode? = null)
+
+private val IMAGE_EXTENSIONS = setOf("jpg", "jpeg", "png", "webp", "gif", "bmp", "heic", "heif", "avif")
 
 sealed interface Route {
     /** The tabs with the dock. */
@@ -83,7 +90,7 @@ sealed interface Route {
  * opened it, shown while a gallery is open (see ViewerHost).
  */
 @Composable
-fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
+fun LensApp(graph: AppGraph, incoming: Flow<Incoming> = emptyFlow()) {
     setSingletonImageLoaderFactory { context ->
         ImageLoader.Builder(context)
             .components { addPlatformFileSupport() }
@@ -102,11 +109,16 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
     fun pop() { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) }
 
     LaunchedEffect(incoming) {
-        incoming.collect { files -> graph.gallery.openFiles(files) }
+        incoming.collect { graph.gallery.openFiles(it.files, mode = it.mode) }
     }
 
     // The update check and "What's new" belong to the app coming up, not to any one screen.
     LaunchedEffect(Unit) { graph.updates.onAppStart() }
+    // Back from the system page that allows installing apps: an update waiting for it installs.
+    LifecycleResumeEffect(Unit) {
+        graph.updates.onResumed()
+        onPauseOrDispose { }
+    }
 
     LensTheme(settings.theme, settings.themeColor, settings.amoled) {
         UpdateDialog(graph.updates)
@@ -178,15 +190,22 @@ fun LensApp(graph: AppGraph, incoming: Flow<List<PlatformFile>> = emptyFlow()) {
                             pop()
                         }
                     }
+                    val pickFiles = rememberFilePickerLauncher(type = FileKitType.File(IMAGE_EXTENSIONS), mode = FileKitMode.Multiple()) { files ->
+                        if (!files.isNullOrEmpty()) {
+                            graph.gallery.openFiles(files)
+                            pop()
+                        }
+                    }
                     val snapshot = stringResource(Res.string.camera_snapshot)
                     CameraScreen(
                         services = graph.services,
                         onCaptured = { file ->
-                            graph.gallery.openItems(listOf(GalleryItem(file, snapshot)), snapshot, origin = GalleryOrigin.Camera)
+                            graph.gallery.openItems(listOf(GalleryItem(file, snapshot)), snapshot, origin = GalleryOrigin.Camera, mode = settings.cameraMode)
                             // The camera goes as the photo opens: back from the photo goes home, like Lens.
                             pop()
                         },
                         onPickImages = { pick.launch() },
+                        onPickFiles = { pickFiles.launch() },
                         onBack = ::pop,
                     )
                 }

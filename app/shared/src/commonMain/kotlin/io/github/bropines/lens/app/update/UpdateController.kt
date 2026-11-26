@@ -192,7 +192,7 @@ class UpdateController(
             _download.value = DownloadState.Running(null)
             try {
                 val path = downloader.fetch(release, installer.flavor, installer.downloadDir) { _download.value = DownloadState.Running(it) }
-                install(path)
+                install(path, askPermission = true)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -208,11 +208,17 @@ class UpdateController(
         }
     }
 
-    /** Hands a verified download to the installer, or says the permission is missing. Also the "Install" button after granting it. */
-    fun install(path: String) {
+    /**
+     * Hands a verified download to the installer. Without the permission to
+     * install apps, [askPermission] opens the system page for it at once, and
+     * [onResumed] finishes the install when the person comes back with it
+     * granted. Also the "Install" button.
+     */
+    fun install(path: String, askPermission: Boolean = false) {
         val installer = installer ?: return
         if (!installer.canInstall()) {
             _download.value = DownloadState.NeedsPermission(path)
+            if (askPermission) runCatching { installer.openInstallPermission() }.onFailure { log.w(it) { "permission page did not open" } }
             return
         }
         _download.value = DownloadState.Ready(path)
@@ -224,6 +230,12 @@ class UpdateController(
 
     fun openInstallPermission() {
         installer?.openInstallPermission()
+    }
+
+    /** The app is in front again: an install that waited for the permission goes on once it is granted. */
+    fun onResumed() {
+        val waiting = _download.value as? DownloadState.NeedsPermission ?: return
+        if (installer?.canInstall() == true) install(waiting.path)
     }
 
     fun openReleasePage(release: Release) = services.openUrl(UpdateCheck.page(release.tag))

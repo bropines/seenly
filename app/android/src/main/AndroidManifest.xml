@@ -57,6 +57,8 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="image/*" />
             </intent-filter>
+            <!-- The quick entries in the share sheet (ShareShortcuts). -->
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/share_targets" />
         </activity>
 
         <!-- Digital assistant: the system hands Lens a screenshot of the current screen. -->

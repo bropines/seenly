@@ -21,4 +21,9 @@
     <string name="screen_capture_unavailable">Система не дала запросить запись экрана</string>
 
     <string name="copied">Скопировано</string>
+
+    <string name="share_translate">Перевести</string>
+    <string name="share_text">Распознать текст</string>
+    <string name="share_search">Найти</string>
+    <string name="share_ask_ai">Спросить ИИ</string>
 </resources>

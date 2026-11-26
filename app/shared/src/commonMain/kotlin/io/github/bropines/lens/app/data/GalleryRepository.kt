@@ -48,6 +48,8 @@ data class Gallery(
     val startIndex: Int = 0,
     val folder: PlatformFile? = null,
     val origin: GalleryOrigin = if (folder != null) GalleryOrigin.Folder else GalleryOrigin.Files,
+    /** What the viewer shows first; null is the translation. */
+    val startMode: ViewMode? = null,
     /** Tells two openings of the same pictures apart. */
     val id: Long = nextGalleryId(),
 ) {
@@ -81,17 +83,23 @@ class GalleryRepository(services: PlatformServices, private val history: History
     /** The gallery the viewer shows; null while the viewer is closed. */
     val current: StateFlow<Gallery?> = _current.asStateFlow()
 
-    fun openFiles(files: List<PlatformFile>, title: String? = null) {
+    fun openFiles(files: List<PlatformFile>, title: String? = null, mode: ViewMode? = null) {
         if (files.isEmpty()) return
-        openItems(files.map { GalleryItem(it) }, title ?: files.first().name)
+        openItems(files.map { GalleryItem(it) }, title ?: files.first().name, mode = mode)
     }
 
-    fun openItems(items: List<GalleryItem>, title: String, startIndex: Int = 0, origin: GalleryOrigin = GalleryOrigin.Files) {
+    fun openItems(
+        items: List<GalleryItem>,
+        title: String,
+        startIndex: Int = 0,
+        origin: GalleryOrigin = GalleryOrigin.Files,
+        mode: ViewMode? = null,
+    ) {
         if (items.isEmpty()) return
         // A picture given twice is one page: the pager tells its pages apart by their keys.
         val pages = items.distinctBy { it.key }
         val start = pages.indexOfFirst { it.key == items.getOrNull(startIndex)?.key }.coerceAtLeast(0)
-        _current.value = Gallery(title, pages, start, origin = origin)
+        _current.value = Gallery(title, pages, start, origin = origin, startMode = mode)
     }
 
     /** History entries as a gallery of their stored copies, opened at [index]: swiping goes through history. */

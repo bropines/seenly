@@ -110,6 +110,7 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
+    implementation(libs.compose.icons.extended)
     // The menu shows app/shared's localized strings (its public Res).
     implementation(libs.compose.resources)
 

@@ -60,6 +60,10 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -117,6 +121,7 @@ actual fun CameraScreen(
     services: PlatformServices,
     onCaptured: (PlatformFile) -> Unit,
     onPickImages: () -> Unit,
+    onPickFiles: () -> Unit,
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -141,10 +146,21 @@ actual fun CameraScreen(
         Row(Modifier.statusBarsPadding().padding(8.dp)) {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.back), tint = Color.White) }
         }
-        IconButton(
-            onClick = onPickImages,
+        // Tap: the photo picker. Hold: the system's file picker, for pictures kept outside the gallery.
+        val haptics = LocalHapticFeedback.current
+        Box(
             modifier = Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(start = 32.dp, bottom = 44.dp)
-                .size(56.dp).background(Color.White.copy(alpha = 0.18f), CircleShape),
+                .size(56.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.18f))
+                .combinedClickable(
+                    onClickLabel = stringResource(Res.string.camera_from_gallery),
+                    onLongClickLabel = stringResource(Res.string.camera_from_files),
+                    onLongClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onPickFiles()
+                    },
+                    onClick = onPickImages,
+                ),
+            contentAlignment = Alignment.Center,
         ) { Icon(Icons.Rounded.PhotoLibrary, contentDescription = stringResource(Res.string.camera_from_gallery), tint = Color.White) }
     }
 }
@@ -527,50 +543,6 @@ private fun ExposureSlider(index: Int, min: Int, max: Int, onChange: (Int) -> Un
             )
             IconButton(onClick = onReset) {
                 Icon(Icons.Rounded.RestartAlt, contentDescription = stringResource(Res.string.camera_exposure_reset))
-            }
-        }
-    }
-}
-
-/** What the camera read: open a link, copy text, join Wi-Fi by copying the password. */
-@Composable
-private fun CodeCard(code: ScannedCode, services: PlatformServices, onDismiss: () -> Unit) {
-    Surface(
-        shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
-    ) {
-        Column(Modifier.padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // Closing is a corner ×, not a third button: three labelled buttons do not fit a phone's width.
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Rounded.QrCode2, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                val wifi = code.wifi
-                Text(
-                    when {
-                        wifi != null -> "Wi-Fi: ${wifi.first}"
-                        else -> code.text
-                    },
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(start = 12.dp).weight(1f),
-                )
-                IconButton(onClick = onDismiss) {
-                    Icon(Icons.Rounded.Close, contentDescription = stringResource(Res.string.hide))
-                }
-            }
-            Row(Modifier.padding(end = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (code.isUrl) {
-                    Button(onClick = { services.openUrl(code.text) }, modifier = Modifier.weight(1f)) {
-                        Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, Modifier.padding(end = 6.dp))
-                        Text(stringResource(Res.string.open), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                }
-                val wifiPassword = code.wifi?.second
-                FilledTonalButton(onClick = { services.copyText(wifiPassword ?: code.text) }, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Rounded.ContentCopy, null, Modifier.padding(end = 6.dp))
-                    Text(stringResource(if (wifiPassword != null) Res.string.camera_password else Res.string.copy), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
             }
         }
     }

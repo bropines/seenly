@@ -6,7 +6,9 @@ import android.content.res.Configuration
 import android.os.Build
 import io.github.bropines.lens.app.di.AppGraph
 import io.github.bropines.lens.app.di.createAppGraph
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -42,6 +44,12 @@ class LensApplication : Application() {
             adoptSystemUiLanguage()
             graph.settings.settings.map { it.uiLanguage }.distinctUntilChanged().collect { tag ->
                 if (AppLocale.apply(this@LensApplication, tag)) services.activity?.get()?.recreate()
+            }
+        }
+        // The share sheet's entries follow the setting, and their labels the UI language.
+        scope.launch {
+            graph.settings.settings.map { it.shareTargets to it.uiLanguage }.distinctUntilChanged().collect { (targets, _) ->
+                withContext(Dispatchers.IO) { ShareShortcuts.publish(AppLocale.wrap(this@LensApplication), targets) }
             }
         }
     }

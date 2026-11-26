@@ -135,6 +135,7 @@ class AndroidPlatformServices(private val context: Context) : PlatformServices {
     }
 
     override val screenTranslate = io.github.bropines.lens.screen.AndroidScreenTranslate(context) { activity?.get() }
+    override val hasShareTargets: Boolean get() = true
 
     override val updateInstaller: UpdateInstaller? = AndroidUpdateInstaller.forThisCopy(context)
 

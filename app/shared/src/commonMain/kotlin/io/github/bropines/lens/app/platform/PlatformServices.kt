@@ -38,6 +38,9 @@ interface PlatformServices {
     /** The floating screen translator, where the platform has one (Android). */
     val screenTranslate: io.github.bropines.lens.app.screen.ScreenTranslate? get() = null
 
+    /** Whether the system has a share sheet that can list Seenly's quick entries (Android). */
+    val hasShareTargets: Boolean get() = false
+
     /**
      * How this copy installs an update, or null when it must not replace itself:
      * a debug build, a copy a store keeps up to date, the desktop. An update is

@@ -24,4 +24,10 @@
     <string name="screen_capture_unavailable">The system wouldn’t let the app ask to record the screen</string>
 
     <string name="copied">Copied</string>
+
+    <!-- Quick entries in the share sheet; the sheet shows the app name beside them. -->
+    <string name="share_translate">Translate</string>
+    <string name="share_text">Get text</string>
+    <string name="share_search">Search</string>
+    <string name="share_ask_ai">Ask AI</string>
 </resources>

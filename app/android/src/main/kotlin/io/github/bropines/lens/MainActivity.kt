@@ -9,7 +9,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.content.IntentCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import io.github.bropines.lens.app.Incoming
 import io.github.bropines.lens.app.LensApp
+import androidx.core.content.pm.ShortcutManagerCompat
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.init
@@ -18,7 +20,7 @@ import java.io.File
 
 class MainActivity : ComponentActivity() {
     /** Images shared or opened into the app. Replays one, so a share that starts the app is not lost before composition. */
-    private val incoming = MutableSharedFlow<List<PlatformFile>>(replay = 1, extraBufferCapacity = 4)
+    private val incoming = MutableSharedFlow<Incoming>(replay = 1, extraBufferCapacity = 4)
 
     // Before Android 13 the UI language reaches the activity through its context (see AppLocale).
     override fun attachBaseContext(newBase: Context) = super.attachBaseContext(AppLocale.wrap(newBase))
@@ -59,12 +61,14 @@ class MainActivity : ComponentActivity() {
             Intent.ACTION_VIEW -> listOfNotNull(intent.data)
             ACTION_ASSIST_CAPTURE -> {
                 // A screenshot from the assistant session, already in our cache dir.
-                intent.getStringExtra(EXTRA_CAPTURE_PATH)?.let { incoming.tryEmit(listOf(PlatformFile(File(it)))) }
+                intent.getStringExtra(EXTRA_CAPTURE_PATH)?.let { incoming.tryEmit(Incoming(listOf(PlatformFile(File(it))))) }
                 return
             }
             else -> emptyList()
         }
-        if (uris.isNotEmpty()) incoming.tryEmit(uris.map { PlatformFile(it) })
+        // Shared through one of Seenly's own entries in the share sheet: open in that one's mode.
+        val mode = ShareShortcuts.modeOf(intent?.getStringExtra(ShortcutManagerCompat.EXTRA_SHORTCUT_ID))
+        if (uris.isNotEmpty()) incoming.tryEmit(Incoming(uris.map { PlatformFile(it) }, mode))
     }
 
     companion object {

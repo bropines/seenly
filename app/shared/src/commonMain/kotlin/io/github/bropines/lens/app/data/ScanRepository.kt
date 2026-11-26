@@ -137,7 +137,7 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
         val scanned = when {
             local != null -> Scanned(local.scan(bytes, settings, download = true), offline = true)
             else -> try {
-                Scanned(lens.scanTiled(bytes, settings.toScanOptions()))
+                Scanned(scanSwapping(settings) { lens.scanTiled(bytes, it.toScanOptions()) })
             } catch (e: Exception) {
                 fallback(bytes, settings, e)
             }
@@ -177,13 +177,24 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
     }
 
     /**
+     * Runs [scan] with [settings], and once more into the second language when
+     * the text turned out to be in the target language already (see swapTarget).
+     */
+    private suspend fun scanSwapping(settings: AppSettings, scan: suspend (AppSettings) -> ScanResult): ScanResult {
+        val first = scan(settings)
+        val other = settings.swapTarget(first.language) ?: return first
+        log.d { "the text is in ${first.language} already; translating into $other" }
+        return scan(settings.copy(targetLanguage = other))
+    }
+
+    /**
      * Scans one prepared frame for the screen translator: Lens, with the same
      * on-device stand-in as [scan], and nothing remembered.
      */
     suspend fun scanFrame(frame: PreparedImage, settings: AppSettings): ScanResult {
         onDevice?.takeIf { settings.onDevice.always }?.let { return it.scan(frame.jpeg, settings, download = true) }
         return try {
-            lens.scan(frame, settings.toScanOptions())
+            scanSwapping(settings) { lens.scan(frame, it.toScanOptions()) }
         } catch (e: Exception) {
             fallback(frame.jpeg, settings, e).result
         }
