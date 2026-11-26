@@ -6,6 +6,8 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-11-27
+
 ### Added
 
 - Settings → Translation: open links (search results, Ask AI, codes) in a sheet over Seenly, a full tab, or the browser app.
