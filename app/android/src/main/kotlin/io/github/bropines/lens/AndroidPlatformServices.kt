@@ -101,7 +101,13 @@ class AndroidPlatformServices(private val context: Context) : PlatformServices {
         }
     }
 
+    /** The last link opened and when, so one asked for twice in a row does not open twice. */
+    private var lastOpened: Pair<String, Long>? = null
+
     override fun openUrl(url: String) {
+        val now = android.os.SystemClock.uptimeMillis()
+        lastOpened?.let { (last, at) -> if (last == url && now - at < REPEAT_WINDOW_MS) return }
+        lastOpened = url to now
         val uri = Uri.parse(url)
         val front = activity?.get()
         val current = session
@@ -136,6 +142,7 @@ class AndroidPlatformServices(private val context: Context) : PlatformServices {
 
     private companion object {
         const val SHEET_FRACTION = 0.68
+        const val REPEAT_WINDOW_MS = 3_000L
         const val PARTIAL_TAB_REQUEST = 7101
     }
 

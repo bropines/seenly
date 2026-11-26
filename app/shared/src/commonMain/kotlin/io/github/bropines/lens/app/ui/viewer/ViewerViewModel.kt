@@ -22,6 +22,7 @@ import io.github.bropines.lens.protocol.ScanResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -273,7 +274,17 @@ class ViewerViewModel(
             _searchError.value = null
             try {
                 val rotation = rotationOf(index)
-                val target = scans.searchSession(gallery.items[index], settings.value, rotation)
+                val target = try {
+                    scans.searchSession(gallery.items[index], settings.value, rotation)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    // Just back in front, the first request can fail on a connection the system
+                    // cut while the app was away: one more try before saying so.
+                    if (e is LensException) throw e
+                    delay(SEARCH_RETRY_MS)
+                    scans.searchSession(gallery.items[index], settings.value, rotation)
+                }
                 if (rotationOf(index) == rotation) _objects.update { it + (index to target.objects) }
                 open(build(target.session))
             } catch (e: CancellationException) {
@@ -355,3 +366,5 @@ class ViewerViewModel(
         const val BEHIND = 2
     }
 }
+
+private const val SEARCH_RETRY_MS = 700L

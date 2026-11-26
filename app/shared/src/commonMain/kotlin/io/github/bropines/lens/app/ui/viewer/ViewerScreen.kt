@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -90,6 +91,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -223,11 +225,15 @@ fun ViewerScreen(
     }
     // Opened to search (shared to "Search", or the camera's mode): the search itself opens, not just the dots.
     var autoSearched by rememberSaveable { mutableStateOf(false) }
+    val window = LocalWindowInfo.current
     LaunchedEffect(Unit) {
-        if (startMode == ViewMode.Search && !autoSearched) {
-            autoSearched = true
-            vm.visualSearch(pager.currentPage, services::openUrl) { it.searchImageUrl() }
-        }
+        if (startMode != ViewMode.Search || autoSearched) return@LaunchedEffect
+        // Not before the app is really in front: a browser sheet asked for by a window
+        // that is still coming up opens as a tab of its own, or not at all.
+        snapshotFlow { window.isWindowFocused }.first { it }
+        delay(AUTO_SEARCH_SETTLE_MS)
+        autoSearched = true
+        vm.visualSearch(pager.currentPage, services::openUrl) { it.searchImageUrl() }
     }
     // Shared with "Ask AI": the question comes first.
     var askAi by rememberSaveable { mutableStateOf(startMode == ViewMode.AskAi) }
@@ -679,6 +685,13 @@ fun ViewerScreen(
             )
         }
 
+        // A failed search says so at the top, under the title bar when it is shown, and goes by itself.
+        ErrorBanner(
+            searchError,
+            onDismiss = vm::dismissSearchError,
+            modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = if (chrome && quiet) 64.dp else 8.dp),
+        )
+
         Column(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -694,7 +707,7 @@ fun ViewerScreen(
                     retryOnline = !settings.onDevice.always,
                 )
                 BusyStatus(exporting, stringResource(Res.string.viewer_preparing_image))
-                SearchStatus(searching, searchError, onDismiss = vm::dismissSearchError)
+                SearchStatus(searching)
                 // A QR code or barcode in the picture, read on the device: the same card as the camera's.
                 val code = codes[items[front].key]?.takeIf { items[front].key !in dismissedCodes }
                 AnimatedVisibility(chrome && code != null, enter = FastIn, exit = FastOut) {
@@ -1204,26 +1217,60 @@ private fun ModeButton(
 
 /** A visual search on its way to the browser, or why it did not get there. */
 @Composable
-private fun SearchStatus(searching: Boolean, error: UiText?, onDismiss: () -> Unit) {
-    AnimatedVisibility(searching || error != null, enter = FastIn, exit = FastOut) {
+private fun SearchStatus(searching: Boolean) {
+    AnimatedVisibility(searching, enter = FastIn, exit = FastOut) {
         Surface(
             shape = MaterialTheme.shapes.extraLarge,
-            color = if (error != null) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
             modifier = Modifier.padding(12.dp),
         ) {
             Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (error != null) {
-                    Icon(Icons.Rounded.ErrorOutline, contentDescription = null)
-                    Text(error.asString(), Modifier.padding(start = 8.dp).weight(1f, fill = false), maxLines = 2)
-                    IconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, contentDescription = stringResource(Res.string.hide)) }
-                } else {
-                    LoadingIndicator(Modifier.size(28.dp))
-                    Text(stringResource(Res.string.viewer_searching), Modifier.padding(start = 8.dp))
-                }
+                LoadingIndicator(Modifier.size(28.dp))
+                Text(stringResource(Res.string.viewer_searching), Modifier.padding(start = 8.dp))
             }
         }
     }
 }
+
+/**
+ * An error that needs nothing done about it: at the top, out of the thumb's way,
+ * gone after a few seconds or at a tap on it or its ×.
+ */
+@Composable
+private fun ErrorBanner(error: UiText?, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+    LaunchedEffect(error) {
+        if (error != null) {
+            delay(ERROR_BANNER_MS)
+            onDismiss()
+        }
+    }
+    // The last error stays drawn while the banner slides away.
+    var shown by remember { mutableStateOf(error) }
+    if (error != null) shown = error
+    AnimatedVisibility(
+        error != null,
+        enter = FastIn + slideInVertically(tween(180)) { -it },
+        exit = FastOut + slideOutVertically(tween(160)) { -it },
+        modifier = modifier,
+    ) {
+        Surface(
+            onClick = onDismiss,
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.errorContainer,
+            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            shadowElevation = 4.dp,
+            modifier = Modifier.padding(horizontal = 12.dp).widthIn(max = 560.dp),
+        ) {
+            Row(Modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Rounded.ErrorOutline, contentDescription = null)
+                Text(shown?.asString().orEmpty(), Modifier.padding(start = 8.dp).weight(1f, fill = false), maxLines = 3)
+                IconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, contentDescription = stringResource(Res.string.hide)) }
+            }
+        }
+    }
+}
+
+private const val ERROR_BANNER_MS = 4_500L
 
 /** A question for Google's AI Mode about the picture, or about the area drawn last. */
 @Composable
@@ -1296,3 +1343,6 @@ fun shareableText(result: ScanResult): String =
     result.inReadingOrder().joinToString("\n\n") { p ->
         listOfNotNull(p.readableText(), p.translation?.text).joinToString("\n")
     }
+
+/** How long after the viewer has focus a search it was opened for starts. */
+private const val AUTO_SEARCH_SETTLE_MS = 400L
