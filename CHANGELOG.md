@@ -6,6 +6,8 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-27
+
 ### Changed
 
 - Google account (experimental): Lens requests are now signed the way Chrome's “identity delegation” signs them: the account's cookies, its address in the hash, and Google's own host for signed requests. Signing in inside the app finds the account's address by itself; with pasted cookies Seenly asks Google for it and, if Google does not say, asks you. The account page says whether requests can be signed. If Google refuses the session in the middle of a search, the search starts over anonymously instead of failing.
