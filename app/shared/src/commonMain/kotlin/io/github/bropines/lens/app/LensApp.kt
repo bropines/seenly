@@ -2,6 +2,10 @@ package io.github.bropines.lens.app
 
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -80,6 +84,21 @@ sealed interface Route {
     /** One of the pages behind the Settings tab's tiles. */
     data class Settings(val page: SettingsPage) : Route
 }
+
+private fun cameraIn(): ContentTransform =
+    (fadeIn(tween(200)) + scaleIn(tween(260, easing = FastOutSlowInEasing), initialScale = 0.92f)) togetherWith
+        // The screen beneath stays as it is until the camera covers it (a fade that barely fades).
+        fadeOut(tween(260), targetAlpha = 0.99f)
+
+private fun cameraOut(): ContentTransform =
+    (EnterTransition.None togetherWith (fadeOut(tween(200)) + scaleOut(tween(240, easing = FastOutSlowInEasing), targetScale = 0.92f)))
+        // The leaving camera stays on top while it fades, over the screen beneath.
+        .apply { targetContentZIndex = -1f }
+
+private val CameraTransitions: Map<String, Any> =
+    NavDisplay.transitionSpec { cameraIn() } +
+        NavDisplay.popTransitionSpec { cameraOut() } +
+        NavDisplay.predictivePopTransitionSpec { _ -> cameraOut() }
 
 /** The back stack as names ("Camera", "Settings:Network"), which a saved instance state can hold. */
 private val BackStackSaver = listSaver<SnapshotStateList<Route>, String>(
@@ -213,7 +232,9 @@ fun LensApp(graph: AppGraph, incoming: Flow<Incoming> = emptyFlow()) {
                         onBack = ::pop,
                     )
                 }
-                entry<Route.Camera> {
+                // The camera rises over the screen that opened it and sinks back into it: that screen
+                // stays fully drawn underneath, so no black-to-light cross-fade passes through grey.
+                entry<Route.Camera>(metadata = CameraTransitions) {
                     val pick = rememberFilePickerLauncher(type = FileKitType.Image, mode = FileKitMode.Multiple()) { files ->
                         if (!files.isNullOrEmpty()) {
                             // Picked from the camera screen, they are the camera's: its remembered mode applies.

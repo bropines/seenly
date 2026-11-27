@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
 import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
+import androidx.camera.viewfinder.core.ImplementationMode
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -345,6 +346,9 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
             Box(Modifier.align(Alignment.Center).aspectRatio(frame, matchHeightConstraintsFirst = !portrait)) {
             CameraXViewfinder(
                 surfaceRequest = request,
+                // A texture, not a surface of its own: it fades and scales with the screen when the
+                // camera opens and closes, where a SurfaceView stayed a black block to the end.
+                implementationMode = ImplementationMode.EMBEDDED,
                 coordinateTransformer = transformer,
                 modifier = Modifier.fillMaxSize().pointerInput(camera) {
                     detectTransformGestures { _, _, zoom, _ ->
