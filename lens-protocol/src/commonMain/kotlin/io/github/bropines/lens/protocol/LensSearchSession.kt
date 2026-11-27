@@ -73,6 +73,8 @@ public class LensSearchSession internal constructor(
         /** Opaque here; copied into every request id, as Chromium does. */
         val routingInfo: LensOverlayRoutingInfo?,
         val openedAtMillis: Long,
+        /** Opened signed, on the identity delegation host: its ids are good only there. */
+        val signed: Boolean,
     )
 
     private class Upload(val image: PreparedImage, val options: ScanOptions, var raster: Raster?)
@@ -98,11 +100,14 @@ public class LensSearchSession internal constructor(
             ImagePreparer.encode(raster) to raster
         }
         // Regions are cut from these pixels rather than from the JPEG made of them.
-        return mutex.withLock { start(Upload(prepared, options, raster)) }
+        val upload = Upload(prepared, options, raster)
+        return mutex.withLock { anonymousOnRefusal { start(upload) } }
     }
 
-    public suspend fun scan(image: PreparedImage, options: ScanOptions = ScanOptions()): ScanResult =
-        mutex.withLock { start(Upload(image, options, raster = null)) }
+    public suspend fun scan(image: PreparedImage, options: ScanOptions = ScanOptions()): ScanResult {
+        val upload = Upload(image, options, raster = null)
+        return mutex.withLock { anonymousOnRefusal { start(upload) } }
+    }
 
     /** Visual matches for the whole image. */
     public suspend fun searchImageUrl(): String = searchRegion(Region.Whole).url
@@ -125,10 +130,12 @@ public class LensSearchSession internal constructor(
 
     /** Results for an object from [ScanResult.objects] of this session's scan. */
     public suspend fun searchObjectUrl(objectId: String, text: String? = null): String = mutex.withLock {
-        val (cluster, upload) = ready()
-        interaction(cluster, { id -> LensRequests.objectRequest(id, upload.options, objectId, text).encode() }) { urlId ->
-            LensSearchUrls.visual(cluster.searchSessionId, urlId, text, page)
-        }.first
+        anonymousOnRefusal {
+            val (cluster, upload) = ready()
+            interaction(cluster, { id -> LensRequests.objectRequest(id, upload.options, objectId, text).encode() }) { urlId ->
+                LensSearchUrls.visual(cluster.searchSessionId, urlId, text, page)
+            }.first
+        }
     }
 
     /** AI Mode with the image, or just [region] of it, attached and [question] asked about it. */
@@ -156,6 +163,7 @@ public class LensSearchSession internal constructor(
         val inside = region.clamped()
         require(inside.width > 0f && inside.height > 0f) { "$region is outside the image" }
         return mutex.withLock {
+          anonymousOnRefusal {
             val (cluster, upload) = ready()
             val whole = inside == Region.Whole
             val crop = if (whole) upload.image else withContext(Dispatchers.Default) { crop(upload, inside) }
@@ -168,6 +176,23 @@ public class LensSearchSession internal constructor(
             ) { urlId -> url(cluster.searchSessionId, urlId) }
             // The whole image read again is the scan the caller already has.
             RegionSearch(address, if (whole) null else LensResponses.parseInteraction(reply, upload.image.width, upload.image.height))
+          }
+        }
+    }
+
+    /**
+     * Runs [block]; when Google refuses the account in the middle of a session
+     * opened signed, forgets that session and runs [block] once more, which
+     * opens and uploads into an anonymous one. A second refusal is an error.
+     */
+    private suspend fun <T> anonymousOnRefusal(block: suspend () -> T): T = try {
+        block()
+    } catch (e: SignedSessionRefused) {
+        cluster = null
+        try {
+            block()
+        } catch (again: SignedSessionRefused) {
+            throw LensException.Http(again.status, again.message.orEmpty())
         }
     }
 
@@ -181,7 +206,9 @@ public class LensSearchSession internal constructor(
         val upload = checkNotNull(upload) { "nothing uploaded yet: call scan() first" }
         val lifetime = (LensDefaults.SESSION_LIFETIME_SECONDS - LensDefaults.SESSION_MARGIN_SECONDS) * 1000
         val current = cluster
-        if (current == null || nowMillis() - current.openedAtMillis >= lifetime) start(upload)
+        // A session opened signed is no use once requests go anonymous (the account was refused or removed).
+        val stale = current != null && current.signed && !transport.signedIn()
+        if (current == null || stale || nowMillis() - current.openedAtMillis >= lifetime) start(upload)
         return checkNotNull(cluster) to upload
     }
 
@@ -221,7 +248,8 @@ public class LensSearchSession internal constructor(
         if (info.server_session_id.isEmpty() || info.search_session_id.isEmpty()) {
             throw LensException.MalformedResponse("Lens did not open a search session")
         }
-        return Cluster(info.server_session_id, info.search_session_id, info.routing_info, nowMillis())
+        // Asked after the request: had the account been refused, it was repeated anonymously.
+        return Cluster(info.server_session_id, info.search_session_id, info.routing_info, nowMillis(), signed = transport.signedIn())
     }
 
     /**

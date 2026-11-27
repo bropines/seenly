@@ -71,10 +71,16 @@ public class GoogleCredentials(
             add("Origin" to origin)
             // Chromium passes the first account of the session, index 0.
             add("X-Goog-AuthUser" to authUser)
+            // The clients6 host refuses a request without it ("Request unsafe for trusted domain",
+            // HTTP 400) and with it answers in base64; LensClient decodes that.
+            if (delegates) add(ENCODE_RESPONSE_HEADER to "base64")
         }
     }
 
     public companion object {
+        /** Asks the identity delegation host to wrap its answer in base64, as Chrome does; it insists. */
+        public const val ENCODE_RESPONSE_HEADER: String = "X-Goog-Encode-Response-If-Executable"
+
         /** The origin Chromium signs Lens requests for: Google's home page. */
         public const val ORIGIN: String = "https://www.google.com"
 

@@ -8,6 +8,8 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.test.runTest
 import lens.LensOverlayObjectsResponse
+import lens.LensOverlayServerClusterInfoResponse
+import okio.ByteString.Companion.toByteString
 import lens.LensOverlayServerResponse
 import kotlin.test.Test
 
@@ -30,6 +32,9 @@ class GoogleCredentialsTest {
         // sha1("<email> <time> <SAPISID> <origin>"), one part, "_e" at the end; computed apart, in Python.
         val delegated = GoogleCredentials(mapOf("SID" to "s", "SAPISID" to "AbCdEf/123", "__Secure-1PAPISID" to "x"), email = " user@example.com ")
         delegated.delegates shouldBe true
+        // clients6 refuses requests without it (HTTP 400) and answers base64 with it.
+        delegated.headers(1) shouldContain (GoogleCredentials.ENCODE_RESPONSE_HEADER to "base64")
+        session.headers(1).none { it.first == GoogleCredentials.ENCODE_RESPONSE_HEADER } shouldBe true
         delegated.authorization("https://www.google.com", 1_700_000_000) shouldBe
             "SAPISIDHASH 1700000000_63f76c6071122477af7276366dbbfc60e05b8200_e"
         // Without the address, or without a SAPISID, it cannot.
@@ -47,6 +52,49 @@ class GoogleCredentialsTest {
         val delegated = GoogleCredentials(mapOf("SID" to "s", "SAPISID" to "p"), email = "user@example.com")
         LensClient(HttpClient(engine), credentials = Source(delegated)).scan(image)
         hosts shouldBe listOf(LensDefaults.IDENTITY_DELEGATION_HOST, LensDefaults.API_HOST)
+    }
+
+    @Test
+    fun aSearchSessionRefusedMidwayStartsOverAnonymously() = runTest {
+        // The ids of a session opened on clients6 mean nothing to the anonymous host: a refused
+        // upload into it does not repeat there, the whole session is opened again anonymously.
+        val calls = mutableListOf<String>()
+        val clusterInfo = LensOverlayServerClusterInfoResponse(server_session_id = "srv", search_session_id = "srch").encode()
+        val engine = MockEngine { request ->
+            val signed = request.headers["Cookie"] != null
+            val path = request.url.encodedPath
+            calls += "${request.url.host}$path${if (signed) " signed" else ""}"
+            when {
+                // The signed host wraps its answers in base64.
+                path.endsWith("gsessionid") && signed -> respond(clusterInfo.toByteString().base64(), HttpStatusCode.OK)
+                path.endsWith("gsessionid") -> respond(clusterInfo, HttpStatusCode.OK)
+                signed -> respond("", HttpStatusCode.Unauthorized)
+                else -> respond(emptyReply, HttpStatusCode.OK)
+            }
+        }
+        val source = Source(GoogleCredentials(mapOf("SID" to "s", "SAPISID" to "p"), email = "user@example.com"))
+        val session = LensClient(HttpClient(engine), credentials = source).searchSession(SearchPageOptions(), kotlin.random.Random(1), { 0L })
+        session.scan(image)
+        source.rejectedWith shouldBe 401
+        val api = LensDefaults.API_HOST
+        val signedHost = LensDefaults.IDENTITY_DELEGATION_HOST
+        calls shouldBe listOf(
+            "$signedHost/v1/gsessionid signed",
+            "$signedHost/v1/crupload signed",
+            "$api/v1/gsessionid",
+            "$api/v1/crupload",
+        )
+    }
+
+    @Test
+    fun anAcceptedDelegatedRequestHasItsBase64AnswerDecoded() = runTest {
+        val engine = MockEngine { request ->
+            request.url.host shouldBe LensDefaults.IDENTITY_DELEGATION_HOST
+            request.headers[GoogleCredentials.ENCODE_RESPONSE_HEADER] shouldBe "base64"
+            respond(emptyReply.toByteString().base64(), HttpStatusCode.OK)
+        }
+        val delegated = GoogleCredentials(mapOf("SID" to "s", "SAPISID" to "p"), email = "user@example.com")
+        LensClient(HttpClient(engine), credentials = Source(delegated)).scan(image).paragraphs shouldBe emptyList()
     }
 
     @Test

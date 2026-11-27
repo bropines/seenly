@@ -8,8 +8,10 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.request
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.withTimeoutOrNull
+import okio.ByteString.Companion.decodeBase64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
@@ -85,7 +87,10 @@ public class LensClient(
         nowMillis: () -> Long,
         codec: ImageCodec = ImageCodec.Platform,
     ): LensSearchSession =
-        LensSearchSession(LensTransport(::post, endpoint, clusterInfoEndpoint), page, random, nowMillis, codec)
+        LensSearchSession(
+            LensTransport(::post, endpoint, clusterInfoEndpoint, signedIn = { credentials?.current()?.delegates == true }),
+            page, random, nowMillis, codec,
+        )
 
     private suspend fun post(url: String, body: ByteArray): ByteArray {
         // The query string is the session id: the path is enough to tell requests apart.
@@ -102,14 +107,25 @@ public class LensClient(
             val detail = runCatching { response.bodyAsText() }.getOrDefault("").take(REFUSAL_DETAIL_CHARS)
             log.w { "HTTP ${response.status.value} from $path with the account; repeating without it: $detail" }
             credentials.rejected(response.status.value, detail)
+            // A search session opened signed lives on the clients6 host: its id means nothing to the
+            // anonymous one. The session starts over anonymously instead (LensSearchSession).
+            if (url.contains("gsessionid=")) throw SignedSessionRefused(response.status.value, detail)
             response = sendPatiently(url, body, null, path)
         }
         log.d { "HTTP ${response.status.value} from $path" }
+        // The identity delegation host answers in base64, because the request asked it to.
+        val wrapped = response.request.url.host == LensDefaults.IDENTITY_DELEGATION_HOST
         if (!response.status.isSuccess()) {
-            throw LensException.Http(response.status.value, runCatching { response.bodyAsText() }.getOrDefault(""))
+            val text = runCatching { response.bodyAsText() }.getOrDefault("")
+            throw LensException.Http(response.status.value, if (wrapped) unwrap(text.encodeToByteArray()).decodeToString() else text)
         }
-        return response.bodyAsBytes()
+        val bytes = response.bodyAsBytes()
+        return if (wrapped) unwrap(bytes) else bytes
     }
+
+    /** A base64 body decoded; anything that is not base64 (an empty reply, plain text) as it came. */
+    private fun unwrap(body: ByteArray): ByteArray =
+        body.decodeToString().trim().takeIf { it.isNotEmpty() }?.decodeBase64()?.toByteArray() ?: body
 
     /**
      * [send], but a request Lens leaves unanswered (a stalled stream, a connection that
@@ -143,11 +159,20 @@ public class LensClient(
     }
 }
 
-/** What a session needs from a [LensClient]: a way to POST a protobuf, and where to. */
+/** What a session needs from a [LensClient]: a way to POST a protobuf, where to, and whether it goes signed. */
 internal class LensTransport(
     val post: suspend (url: String, body: ByteArray) -> ByteArray,
     val cruploadEndpoint: String,
     val clusterInfoEndpoint: String,
+    /** Whether the next request goes signed (to the identity delegation host). */
+    val signedIn: () -> Boolean = { false },
 )
+
+/**
+ * Google refused a signed request that belongs to a search session opened
+ * signed. The session cannot go on anonymously: its ids are the signed host's.
+ */
+internal class SignedSessionRefused(val status: Int, detail: String) :
+    Exception("HTTP $status for a signed search session: $detail")
 
 internal expect fun defaultHttpClient(): HttpClient
