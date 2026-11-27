@@ -15,6 +15,8 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -79,6 +81,28 @@ sealed interface Route {
     data class Settings(val page: SettingsPage) : Route
 }
 
+/** The back stack as names ("Camera", "Settings:Network"), which a saved instance state can hold. */
+private val BackStackSaver = listSaver<SnapshotStateList<Route>, String>(
+    save = { stack ->
+        stack.map { route ->
+            when (route) {
+                is Route.Settings -> "Settings:${route.page.name}"
+                else -> route::class.simpleName.orEmpty()
+            }
+        }
+    },
+    restore = { names ->
+        val routes = names.mapNotNull { name ->
+            when {
+                name.startsWith("Settings:") -> SettingsPage.entries.firstOrNull { it.name == name.removePrefix("Settings:") }?.let { Route.Settings(it) }
+                else -> listOf(Route.Main, Route.Camera, Route.About, Route.Translators, Route.OnDevice, Route.Account, Route.GoogleSignIn)
+                    .firstOrNull { it::class.simpleName == name }
+            }
+        }
+        mutableStateListOf<Route>().apply { addAll(routes.ifEmpty { listOf(Route.Main) }) }
+    },
+)
+
 /**
  * The whole app. [incoming] carries images handed to the app from outside
  * (Android's share sheet, a file opened with it, the assistant's screenshot)
@@ -99,7 +123,9 @@ fun LensApp(graph: AppGraph, incoming: Flow<Incoming> = emptyFlow()) {
             .build()
     }
     val settings by graph.settings.settings.collectAsState(AppSettings())
-    val backStack = remember { mutableStateListOf<Route>(Route.Main) }
+    // Saved with the activity: a recreated one (turned phone, dark mode, process death) opens on
+    // the same screen, the camera too, instead of falling back to the tabs.
+    val backStack = rememberSaveable(saver = BackStackSaver) { mutableStateListOf<Route>(Route.Main) }
     var tab by rememberSaveable { mutableStateOf(Tab.Images) }
     val gallery by graph.gallery.current.collectAsState()
     // Where the thumbnails on screen are, for pictures to fly between them and the viewer.

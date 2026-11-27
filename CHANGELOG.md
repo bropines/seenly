@@ -6,10 +6,15 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ## [Unreleased]
 
+### Added
+
+- A layout for a turned phone and for tablets: the dock becomes a rail at the left edge with the camera at its head; the home screen and text translation get two columns, history a grid; the viewer's controls move into a panel beside the picture, which keeps the whole height; the camera's shutter, torch and gallery stand at the right edge beside the frame.
+
 ### Fixed
 
 - QR codes in pictures, such as one photographed off a monitor, are found again and framed where they are: Seenly reads them with WeChat's open QR decoder, built from source with the part of OpenCV it needs (about 1 MB per APK), in both flavors.
 - The camera no longer goes dark when the phone is turned.
+- A QR code's frame stays on the picture after its card is closed; tapping the code brings the card back.
 
 ## [0.6.1] - 2026-11-27
 
