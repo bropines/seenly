@@ -26,7 +26,12 @@ class MainActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) = super.attachBaseContext(AppLocale.wrap(newBase))
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        // The splash screen sets the bars' icons from its own theme as it leaves, after the app has
+        // set them for its theme: set them again then.
+        installSplashScreen().setOnExitAnimationListener { splash ->
+            splash.remove()
+            io.github.bropines.lens.app.platform.SystemBarsOverride.refresh()
+        }
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         FileKit.init(this)
@@ -36,9 +41,10 @@ class MainActivity : ComponentActivity() {
         setContent { LensApp((application as LensApplication).graph, incoming) }
     }
 
-    // Turning the phone does not recreate the activity (android:configChanges): Compose lays the
-    // screens out again and the camera keeps running. Before 13 the change resets the default
-    // locale, which is the UI language there.
+    // Turning the phone, switching the language or the system's dark mode does not recreate the
+    // activity (android:configChanges): Compose lays the screens out again in the new configuration,
+    // with no blank frame between, and the camera keeps running. Before 13 the change resets the
+    // default locale, which is the UI language there.
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
         AppLocale.applyDefault(this)

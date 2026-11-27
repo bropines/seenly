@@ -22,6 +22,7 @@ actual fun CameraScreen(
     onCaptured: (PlatformFile) -> Unit,
     onPickImages: () -> Unit,
     onBack: () -> Unit,
+    light: Boolean,
 ) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(stringResource(Res.string.camera_desktop))

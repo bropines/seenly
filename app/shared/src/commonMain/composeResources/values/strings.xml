@@ -108,6 +108,10 @@
     <string name="color_mono">Monochrome</string>
     <string name="theme_amoled">AMOLED black</string>
     <string name="theme_amoled_desc">Pure black background in the dark theme</string>
+    <string name="camera_standby">Camera is asleep</string>
+    <string name="camera_standby_hint">Pick the phone up or tap the screen</string>
+    <string name="camera_light">Light camera</string>
+    <string name="camera_light_desc">A light screen around the camera frame, with dark buttons, instead of black</string>
     <string name="settings_ui_language">App language</string>
     <string name="ui_language_system">System</string>
     <string name="settings_section_app">App</string>

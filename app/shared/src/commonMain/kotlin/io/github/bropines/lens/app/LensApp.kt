@@ -1,6 +1,7 @@
 package io.github.bropines.lens.app
 
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
@@ -98,7 +99,16 @@ private fun cameraOut(): ContentTransform =
 private val CameraTransitions: Map<String, Any> =
     NavDisplay.transitionSpec { cameraIn() } +
         NavDisplay.popTransitionSpec { cameraOut() } +
-        NavDisplay.predictivePopTransitionSpec { _ -> cameraOut() }
+        NavDisplay.predictivePopTransitionSpec { _ -> cameraBackGesture() }
+
+/**
+ * Following a back swipe: the camera shrinks as far as the finger has gone and only fades near the
+ * end, so a light touch barely moves it instead of dissolving it at once.
+ */
+private fun cameraBackGesture(): ContentTransform =
+    (EnterTransition.None togetherWith
+        (scaleOut(tween(400, easing = LinearEasing), targetScale = 0.8f) + fadeOut(tween(400, easing = { t -> t * t * t }))))
+        .apply { targetContentZIndex = -1f }
 
 /** The back stack as names ("Camera", "Settings:Network"), which a saved instance state can hold. */
 private val BackStackSaver = listSaver<SnapshotStateList<Route>, String>(
@@ -141,7 +151,9 @@ fun LensApp(graph: AppGraph, incoming: Flow<Incoming> = emptyFlow()) {
             .memoryCache { MemoryCache.Builder().maxSizePercent(context, 0.1).build() }
             .build()
     }
-    val settings by graph.settings.settings.collectAsState(AppSettings())
+    // The settings already loaded (the app outlives its activity): a new activity starts in the
+    // chosen theme instead of the default one for its first frames.
+    val settings by graph.settings.current.collectAsState()
     // Saved with the activity: a recreated one (turned phone, dark mode, process death) opens on
     // the same screen, the camera too, instead of falling back to the tabs.
     val backStack = rememberSaveable(saver = BackStackSaver) { mutableStateListOf<Route>(Route.Main) }
@@ -252,6 +264,7 @@ fun LensApp(graph: AppGraph, incoming: Flow<Incoming> = emptyFlow()) {
                         },
                         onPickImages = { pick.launch() },
                         onBack = ::pop,
+                        light = settings.cameraLight,
                     )
                 }
             },

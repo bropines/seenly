@@ -18,6 +18,7 @@ import androidx.compose.material.icons.rounded.BorderStyle
 import androidx.compose.material.icons.rounded.BrightnessMedium
 import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.Contrast
+import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.rounded.DocumentScanner
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.FontDownload
@@ -380,6 +381,10 @@ private fun AppearancePage(settings: AppSettings, update: Update, onBack: () -> 
                 Icons.Rounded.Contrast, stringResource(Res.string.theme_amoled),
                 stringResource(Res.string.theme_amoled_desc), settings.amoled,
             ) { on -> update { it.copy(amoled = on) } }
+            Toggle(
+                Icons.Rounded.PhotoCamera, stringResource(Res.string.camera_light),
+                stringResource(Res.string.camera_light_desc), settings.cameraLight,
+            ) { on -> update { it.copy(cameraLight = on) } }
         }
         SettingsCard {
             // The app's own language. English and Russian are named natively, so each reads right whatever is chosen.

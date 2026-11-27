@@ -24,6 +24,18 @@ import kotlin.math.max
 import kotlin.math.min
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import android.content.res.Configuration
+import androidx.compose.material.icons.rounded.Bedtime
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.camera.core.ImageProxy
+import android.os.SystemClock
+import android.hardware.SensorManager
+import android.hardware.SensorEventListener
+import android.hardware.SensorEvent
+import android.hardware.Sensor
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.core.view.WindowCompat
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.runtime.DisposableEffect
 import android.hardware.display.DisplayManager
@@ -128,7 +140,27 @@ actual fun CameraScreen(
     onCaptured: (PlatformFile) -> Unit,
     onPickImages: () -> Unit,
     onBack: () -> Unit,
+    light: Boolean,
 ) {
+    val palette = if (light) lightCamera(MaterialTheme.colorScheme) else DarkCamera
+    // The bars' icons dark on a light camera, light on a black one, while it is open; the theme's after.
+    DisposableEffect(palette.light) {
+        io.github.bropines.lens.app.platform.SystemBarsOverride.lightIcons = palette.light
+        onDispose { io.github.bropines.lens.app.platform.SystemBarsOverride.lightIcons = null }
+    }
+    CompositionLocalProvider(LocalCameraPalette provides palette) {
+        CameraContent(services, onCaptured, onPickImages, onBack)
+    }
+}
+
+@Composable
+private fun CameraContent(
+    services: PlatformServices,
+    onCaptured: (PlatformFile) -> Unit,
+    onPickImages: () -> Unit,
+    onBack: () -> Unit,
+) {
+    val palette = LocalCameraPalette.current
     val context = LocalContext.current
     var granted by remember {
         mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
@@ -137,19 +169,19 @@ actual fun CameraScreen(
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted = it; asked = true }
     LaunchedEffect(Unit) { if (!granted) permission.launch(Manifest.permission.CAMERA) }
 
-    Box(Modifier.fillMaxSize().background(Color.Black)) {
+    Box(Modifier.fillMaxSize().background(palette.background)) {
         if (granted) {
             LiveCamera(services, onCaptured)
         } else if (asked) {
             Column(Modifier.align(Alignment.Center).padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(stringResource(Res.string.camera_permission), color = Color.White)
+                Text(stringResource(Res.string.camera_permission), color = palette.content)
                 Button(onClick = { permission.launch(Manifest.permission.CAMERA) }, modifier = Modifier.padding(top = 16.dp)) {
                     Text(stringResource(Res.string.camera_allow))
                 }
             }
         }
         Row(Modifier.statusBarsPadding().padding(8.dp)) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.back), tint = Color.White) }
+            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.back), tint = palette.content) }
         }
         val turned = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
         IconButton(
@@ -161,13 +193,14 @@ actual fun CameraScreen(
                 } else {
                     Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(start = 32.dp, bottom = 44.dp)
                 }
-            ).size(56.dp).background(Color.White.copy(alpha = 0.18f), CircleShape),
-        ) { Icon(Icons.Rounded.PhotoLibrary, contentDescription = stringResource(Res.string.camera_from_gallery), tint = Color.White) }
+            ).size(56.dp).background(palette.content.copy(alpha = palette.idle), CircleShape),
+        ) { Icon(Icons.Rounded.PhotoLibrary, contentDescription = stringResource(Res.string.camera_from_gallery), tint = palette.content) }
     }
 }
 
 @Composable
 private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) -> Unit) {
+    val palette = LocalCameraPalette.current
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val executor = remember { Executors.newSingleThreadExecutor() }
@@ -243,16 +276,84 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
         onDispose { displays.unregisterDisplayListener(listener) }
     }
 
-    LaunchedEffect(lifecycleOwner) {
-        analysis.apply {
-                setAnalyzer(executor, CodeAnalyzer { found, corners ->
-                    // Called on the analysis thread; state is read by the UI.
-                    ContextCompat.getMainExecutor(context).execute {
-                        if (found != code) code = found
-                        codeBox = CodeBox(corners, System.nanoTime())
-                    }
-                })
+    // Standby: a phone left lying still, or with nothing to see (face down, in a pocket), lets the
+    // camera go instead of running it for nothing; moving the phone or touching the screen wakes it.
+    // Stillness rather than lying flat: a phone held over a document on a table is flat too, but a
+    // hand is never perfectly still.
+    var standby by remember { mutableStateOf(false) }
+    var stillSince by remember { mutableLongStateOf(SystemClock.uptimeMillis()) }
+    var darkSince by remember { mutableLongStateOf(0L) }
+    var graceUntil by remember { mutableLongStateOf(0L) }
+    fun wake() {
+        val now = SystemClock.uptimeMillis()
+        standby = false
+        stillSince = now
+        darkSince = 0L
+        graceUntil = now + STANDBY_GRACE_MS
+    }
+    DisposableEffect(Unit) {
+        val sensors = context.getSystemService(SensorManager::class.java)
+        val gyro = sensors?.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+        val accel = sensors?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        val last = FloatArray(3)
+        var primed = false
+        val listener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent) {
+                val v = event.values
+                // How much the phone is moving: turning speed (rad/s), or without a gyroscope the change
+                // in acceleration (m/s²) since the last reading.
+                val motion = if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
+                    kotlin.math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2])
+                } else {
+                    val d = if (primed) kotlin.math.abs(v[0] - last[0]) + kotlin.math.abs(v[1] - last[1]) + kotlin.math.abs(v[2] - last[2]) else 0f
+                    v.copyInto(last, endIndex = 3)
+                    primed = true
+                    d / 4f
+                }
+                if (motion > STILL_MOTION) stillSince = SystemClock.uptimeMillis()
+                if (standby && motion > WAKE_MOTION) wake()
             }
+
+            override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
+        }
+        (gyro ?: accel)?.let { sensors?.registerListener(listener, it, SensorManager.SENSOR_DELAY_UI) }
+        onDispose {
+            sensors?.unregisterListener(listener)
+            executor.shutdown()
+        }
+    }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(500)
+            val now = SystemClock.uptimeMillis()
+            if (standby || now < graceUntil) continue
+            val still = now - stillSince > STILL_STANDBY_MS
+            val dark = darkSince != 0L && now - darkSince > DARK_STANDBY_MS
+            if (still || dark) standby = true
+        }
+    }
+
+    LaunchedEffect(lifecycleOwner, standby) {
+        if (standby) {
+            camera = null
+            code = null
+            codeBox = null
+            return@LaunchedEffect
+        }
+        analysis.setAnalyzer(executor, DarkProbe(
+            CodeAnalyzer { found, corners ->
+                // Called on the analysis thread; state is read by the UI.
+                ContextCompat.getMainExecutor(context).execute {
+                    if (found != code) code = found
+                    codeBox = CodeBox(corners, System.nanoTime())
+                }
+            },
+            onLuma = { luma ->
+                ContextCompat.getMainExecutor(context).execute {
+                    darkSince = if (luma < DARK_LUMA) darkSince.takeIf { it != 0L } ?: SystemClock.uptimeMillis() else 0L
+                }
+            },
+        ))
         val provider = ProcessCameraProvider.awaitInstance(context)
         provider.unbindAll()
         val bound = provider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, capture, analysis)
@@ -267,7 +368,6 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
             // this runs after the new screen has bound its camera, which unbindAll() would turn off.
             provider.unbind(preview, capture, analysis)
             analysis.clearAnalyzer()
-            executor.shutdown()
         }
     }
     LaunchedEffect(camera, torch) { camera?.cameraControl?.enableTorch(torch) }
@@ -308,6 +408,8 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
     }
 
     fun shoot() {
+        // Asleep, the shutter wakes the camera first: there is no picture to take yet.
+        if (standby) { wake(); return }
         if (capturing) return
         capturing = true
         val dir = File(context.cacheDir, "camera").apply { mkdirs() }
@@ -369,6 +471,22 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
             }
         }
 
+        // Asleep: the frame covered, a word on why, and a touch anywhere (or a move) wakes it.
+        androidx.compose.animation.AnimatedVisibility(standby, enter = fadeIn(tween(200)), exit = fadeOut(tween(150)), modifier = Modifier.fillMaxSize()) {
+            val palette = LocalCameraPalette.current
+            Box(
+                Modifier.fillMaxSize().background(palette.background.copy(alpha = 0.92f))
+                    .clickable(interactionSource = null, indication = null, onClick = ::wake),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
+                    Icon(Icons.Rounded.Bedtime, contentDescription = null, tint = palette.content, modifier = Modifier.size(40.dp))
+                    Text(stringResource(Res.string.camera_standby), color = palette.content, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 12.dp))
+                    Text(stringResource(Res.string.camera_standby_hint), color = palette.content.copy(alpha = 0.7f), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
+                }
+            }
+        }
+
         if (focus?.locked == true) {
             Surface(
                 onClick = ::unlock,
@@ -393,12 +511,12 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
                 } else {
                     Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = 32.dp, bottom = 44.dp)
                 }
-            ).size(56.dp).background(Color.White.copy(alpha = if (torch) 0.9f else 0.18f), CircleShape),
+            ).size(56.dp).background(palette.content.copy(alpha = if (torch) 0.9f else palette.idle), CircleShape),
         ) {
             Icon(
                 if (torch) Icons.Rounded.FlashOn else Icons.Rounded.FlashOff,
                 contentDescription = stringResource(Res.string.camera_flash),
-                tint = if (torch) Color.Black else Color.White,
+                tint = if (torch) palette.background else palette.content,
             )
         }
 
@@ -457,7 +575,8 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
             Text(
                 error?.let { stringResource(Res.string.camera_capture_failed, it) }
                     ?: if (screenMode) stringResource(Res.string.camera_screen_mode_on) else stringResource(Res.string.camera_hint),
-                color = if (error != null) MaterialTheme.colorScheme.error else Color.White.copy(alpha = 0.8f),
+                // Turned, the hint lies over the picture; upright, on the screen below it.
+                color = if (error != null) MaterialTheme.colorScheme.error else (if (turned) Color.White else palette.content).copy(alpha = 0.8f),
                 style = MaterialTheme.typography.labelLarge,
             )
             if (!turned) Shutter(busy = capturing, onClick = ::shoot)
@@ -473,8 +592,8 @@ private val SIDE_BUTTON_OFFSET = 104.dp
 private fun Shutter(busy: Boolean, onClick: () -> Unit) {
     val label = stringResource(Res.string.camera_shoot)
     Box(
-        Modifier.size(84.dp).border(4.dp, Color.White, CircleShape).padding(8.dp)
-            .background(if (busy) Color.White.copy(alpha = 0.5f) else Color.White, CircleShape)
+        Modifier.size(84.dp).border(4.dp, LocalCameraPalette.current.content, CircleShape).padding(8.dp)
+            .background(LocalCameraPalette.current.content.copy(alpha = if (busy) 0.5f else 1f), CircleShape)
             .clickable(enabled = !busy, onClickLabel = label, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { if (busy) LoadingIndicator(Modifier.size(36.dp)) }
@@ -491,6 +610,72 @@ private fun formatEv(ev: Float): String =
     if (kotlin.math.abs(ev) < 0.05f) "0" else String.format(Locale.getDefault(), "%+.1f", ev)
 
 private val FocusYellow = Color(0xFFFFD60A)
+
+/** Standby: how long still or dark before the camera sleeps, and the motions that count. */
+private const val STILL_STANDBY_MS = 5_000L
+private const val DARK_STANDBY_MS = 3_000L
+/** After waking, a moment before it may sleep again: the phone may still be on the table. */
+private const val STANDBY_GRACE_MS = 4_000L
+/** Turning faster than this (rad/s) is a hand holding the phone; [WAKE_MOTION] is picking it up. */
+private const val STILL_MOTION = 0.05f
+private const val WAKE_MOTION = 0.3f
+/** Average brightness (0-255) below which the frame shows nothing: a lens on the table or in a pocket. */
+private const val DARK_LUMA = 14
+
+/**
+ * Passes frames on to [next] and, twice a second, tells [onLuma] how bright the frame is: the
+ * average of a sparse grid of the luma plane, read without moving the buffer [next] reads.
+ */
+private class DarkProbe(private val next: ImageAnalysis.Analyzer, private val onLuma: (Int) -> Unit) : ImageAnalysis.Analyzer {
+    private var last = 0L
+
+    override fun analyze(image: ImageProxy) {
+        val now = SystemClock.uptimeMillis()
+        if (now - last >= 500) {
+            last = now
+            runCatching {
+                val plane = image.planes[0]
+                val buffer = plane.buffer
+                var sum = 0L
+                var count = 0
+                for (y in 0 until image.height step 16) {
+                    for (x in 0 until image.width step 16) {
+                        sum += buffer.get(y * plane.rowStride + x * plane.pixelStride).toInt() and 0xFF
+                        count++
+                    }
+                }
+                if (count > 0) onLuma((sum / count).toInt())
+            }
+        }
+        next.analyze(image)
+    }
+}
+
+/**
+ * The camera screen's colours around the frame: black with white controls, or (the "Light camera"
+ * setting) the light theme's background with dark ones. What is drawn over the picture itself (the
+ * focus ring, the exposure slider, the code frame) keeps its own colours, as it sits on the photo.
+ */
+private data class CameraPalette(
+    val background: Color,
+    val content: Color,
+    /** How strongly an idle round button is filled with [content]. */
+    val idle: Float,
+    /** Light: the status bar's icons go dark. */
+    val light: Boolean,
+)
+
+private val DarkCamera = CameraPalette(Color.Black, Color.White, idle = 0.18f, light = false)
+
+/** The app's own light background when its theme is light; a neutral light one under a dark theme. */
+private fun lightCamera(scheme: androidx.compose.material3.ColorScheme): CameraPalette =
+    if (scheme.background.luminance() > 0.5f) {
+        CameraPalette(scheme.background, scheme.onBackground, idle = 0.1f, light = true)
+    } else {
+        CameraPalette(Color(0xFFF4F4F4), Color(0xFF1B1B1B), idle = 0.1f, light = true)
+    }
+
+private val LocalCameraPalette = staticCompositionLocalOf { DarkCamera }
 
 /** A code's corner points in the frame (fractions, upright) and when it was last seen there. */
 private class CodeBox(val corners: List<Offset>, val seenAt: Long)
@@ -568,8 +753,11 @@ private fun CameraChip(active: Boolean, onClick: () -> Unit, modifier: Modifier 
     Surface(
         onClick = onClick,
         shape = CircleShape,
-        color = Color.White.copy(alpha = if (active) 0.9f else 0.18f),
-        contentColor = if (active) Color.Black else Color.White,
+        // Over the picture: a veil in the camera's own tone, dark or light, so the chip reads on any photo.
+        color = LocalCameraPalette.current.let { p ->
+            if (active) p.content.copy(alpha = 0.9f) else p.background.copy(alpha = if (p.light) 0.85f else 0.45f)
+        },
+        contentColor = LocalCameraPalette.current.let { p -> if (active) p.background else p.content },
         modifier = modifier,
     ) {
         Row(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) { content() }

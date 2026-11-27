@@ -13,6 +13,9 @@ import com.materialkolor.rememberDynamicColorScheme
 import io.github.bropines.lens.app.data.ThemeColor
 import io.github.bropines.lens.app.data.ThemeMode
 import io.github.bropines.lens.app.platform.platformDynamicColorScheme
+import io.github.bropines.lens.app.platform.PlatformSystemBars
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 
 /** Lens blue-violet, used to seed the palette where there is no wallpaper colour. */
 private val Seed = Color(0xFF5B5BD6)
@@ -55,13 +58,51 @@ fun LensTheme(
     )
     val base = wallpaper ?: seeded
     val scheme = if (dark && amoled) remember(base) { base.pureBlack() } else base
+    PlatformSystemBars(dark)
     MaterialExpressiveTheme(
-        colorScheme = scheme,
+        // A new theme or colour flows in instead of snapping.
+        colorScheme = animated(scheme),
         // Standard, not expressive: the expressive springs overshoot and read as slow here.
         motionScheme = MotionScheme.standard(),
         content = content,
     )
 }
+
+/** [target] with its colours eased towards each new value: switching the theme or its colour fades across. */
+@Composable
+private fun animated(target: ColorScheme): ColorScheme {
+    @Composable
+    fun Color.eased(): Color = animateColorAsState(this, tween(THEME_FADE_MS), label = "theme").value
+    return target.copy(
+        primary = target.primary.eased(),
+        onPrimary = target.onPrimary.eased(),
+        primaryContainer = target.primaryContainer.eased(),
+        onPrimaryContainer = target.onPrimaryContainer.eased(),
+        secondary = target.secondary.eased(),
+        onSecondary = target.onSecondary.eased(),
+        secondaryContainer = target.secondaryContainer.eased(),
+        onSecondaryContainer = target.onSecondaryContainer.eased(),
+        tertiary = target.tertiary.eased(),
+        onTertiary = target.onTertiary.eased(),
+        tertiaryContainer = target.tertiaryContainer.eased(),
+        onTertiaryContainer = target.onTertiaryContainer.eased(),
+        background = target.background.eased(),
+        onBackground = target.onBackground.eased(),
+        surface = target.surface.eased(),
+        onSurface = target.onSurface.eased(),
+        surfaceVariant = target.surfaceVariant.eased(),
+        onSurfaceVariant = target.onSurfaceVariant.eased(),
+        surfaceContainerLowest = target.surfaceContainerLowest.eased(),
+        surfaceContainerLow = target.surfaceContainerLow.eased(),
+        surfaceContainer = target.surfaceContainer.eased(),
+        surfaceContainerHigh = target.surfaceContainerHigh.eased(),
+        surfaceContainerHighest = target.surfaceContainerHighest.eased(),
+        outline = target.outline.eased(),
+        outlineVariant = target.outlineVariant.eased(),
+    )
+}
+
+private const val THEME_FADE_MS = 300
 
 /**
  * The dark scheme on true black: the background and the lowest surfaces turn

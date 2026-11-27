@@ -107,6 +107,10 @@
     <string name="color_mono">Монохром</string>
     <string name="theme_amoled">AMOLED-чёрный</string>
     <string name="theme_amoled_desc">Чисто чёрный фон в тёмной теме</string>
+    <string name="camera_standby">Камера спит</string>
+    <string name="camera_standby_hint">Подними телефон или коснись экрана</string>
+    <string name="camera_light">Светлая камера</string>
+    <string name="camera_light_desc">Светлый экран вокруг кадра камеры и тёмные кнопки вместо чёрного</string>
     <string name="settings_ui_language">Язык приложения</string>
     <string name="ui_language_system">Системный</string>
     <string name="settings_section_app">Приложение</string>

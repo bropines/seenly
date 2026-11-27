@@ -89,3 +89,7 @@ expect fun androidx.compose.ui.graphics.ImageBitmap.encodePng(): ByteArray
 /** The wallpaper-based scheme where the platform has one (Android 12+), else null. */
 @Composable
 expect fun platformDynamicColorScheme(dark: Boolean): ColorScheme?
+
+/** The status and navigation bars' icons dark on a light theme and light on a dark one, the app's own theme, not the system's. */
+@androidx.compose.runtime.Composable
+expect fun PlatformSystemBars(dark: Boolean)

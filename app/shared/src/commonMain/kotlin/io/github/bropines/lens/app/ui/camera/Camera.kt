@@ -31,4 +31,6 @@ expect fun CameraScreen(
     onCaptured: (PlatformFile) -> Unit,
     onPickImages: () -> Unit,
     onBack: () -> Unit,
+    /** Light around the frame with dark controls (the "Light camera" setting), else black. */
+    light: Boolean = false,
 )

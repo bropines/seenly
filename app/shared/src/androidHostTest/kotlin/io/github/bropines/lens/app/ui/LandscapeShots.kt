@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import io.github.bropines.lens.app.readme.Demo
 import io.github.bropines.lens.app.ui.main.MainScreen
 import io.github.bropines.lens.app.ui.main.Tab
+import io.github.bropines.lens.app.ui.settings.SettingsPage
+import io.github.bropines.lens.app.ui.settings.SettingsPageScreen
 import io.github.bropines.lens.app.ui.settings.TranslatorsScreen
 import io.github.bropines.lens.app.ui.viewer.ViewerScreen
 import io.github.bropines.lens.app.ui.viewer.ViewerViewModel
@@ -66,6 +68,18 @@ abstract class TurnedShots(private val tag: String) : ScreenTest() {
     fun settings() {
         show { Main(Tab.Settings) }
         shot("settings")
+    }
+
+    @Test
+    fun overlayPage() {
+        show { SettingsPageScreen(SettingsPage.Overlay, graph, settings, onOpen = {}, onBack = {}) }
+        shot("settings-overlay")
+    }
+
+    @Test
+    fun appearancePage() {
+        show { SettingsPageScreen(SettingsPage.Appearance, graph, settings, onOpen = {}, onBack = {}) }
+        shot("settings-appearance")
     }
 
     @Test

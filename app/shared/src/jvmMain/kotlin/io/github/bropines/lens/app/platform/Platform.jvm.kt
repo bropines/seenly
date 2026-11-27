@@ -13,3 +13,6 @@ actual fun ImageBitmap.encodePng(): ByteArray =
 
 @Composable
 actual fun platformDynamicColorScheme(dark: Boolean): ColorScheme? = null
+
+@androidx.compose.runtime.Composable
+actual fun PlatformSystemBars(dark: Boolean) = Unit

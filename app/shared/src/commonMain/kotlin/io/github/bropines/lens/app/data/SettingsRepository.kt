@@ -48,6 +48,8 @@ data class AppSettings(
     val themeColor: ThemeColor = ThemeColor.Wallpaper,
     /** Pure black backgrounds in the dark theme, for OLED screens. */
     val amoled: Boolean = false,
+    /** The camera screen light around the frame, with dark controls, instead of black. */
+    val cameraLight: Boolean = false,
     /** The viewer's controls folded to one row (languages, rotate, the eye); remembered between pictures. */
     val viewerCompact: Boolean = false,
     /** What the viewer shows over a new camera shot: the mode last chosen for one. */
@@ -253,6 +255,7 @@ class SettingsRepository(services: PlatformServices) {
             p[THEME] = next.theme.name
             p[THEME_COLOR] = next.themeColor.name
             p[AMOLED] = next.amoled
+            p[CAMERA_LIGHT] = next.cameraLight
             p[VIEWER_COMPACT] = next.viewerCompact
             p[CAMERA_MODE] = next.cameraMode.name
             // Empty is "off", set on purpose; no key at all is the default.
@@ -346,6 +349,7 @@ class SettingsRepository(services: PlatformServices) {
         theme = this[THEME].toEnum(ThemeMode.System),
         themeColor = this[THEME_COLOR].toEnum(ThemeColor.Wallpaper),
         amoled = this[AMOLED] ?: false,
+        cameraLight = this[CAMERA_LIGHT] ?: false,
         viewerCompact = this[VIEWER_COMPACT] ?: false,
         cameraMode = this[CAMERA_MODE].toEnum(ViewMode.Translate),
         secondLanguage = (this[SECOND_LANGUAGE] ?: DEFAULT_SECOND_LANGUAGE).ifEmpty { null },
@@ -402,6 +406,7 @@ class SettingsRepository(services: PlatformServices) {
         val THEME = stringPreferencesKey("theme")
         val THEME_COLOR = stringPreferencesKey("theme_color")
         val AMOLED = booleanPreferencesKey("theme_amoled")
+        val CAMERA_LIGHT = booleanPreferencesKey("camera_light")
         val VIEWER_COMPACT = booleanPreferencesKey("viewer_compact")
         val CAMERA_MODE = stringPreferencesKey("camera_view_mode")
         val SECOND_LANGUAGE = stringPreferencesKey("second_language")

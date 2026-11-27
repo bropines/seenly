@@ -6,6 +6,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
+import io.github.bropines.lens.app.ui.components.isWide
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -61,15 +71,50 @@ internal fun SettingsScaffold(
         snackbarHost = { if (snackbar != null) SnackbarHost(snackbar) },
         topBar = { AppTopBar(title, subtitle, onBack) },
     ) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            content = content,
-        )
+        BoxWithConstraints(Modifier.fillMaxSize().padding(padding)) {
+            val wide = isWide()
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    // Turned, the far edge may hold the navigation buttons or a camera cutout.
+                    .then(if (wide) Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)) else Modifier)
+                    .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (wide) {
+                    // Turned on its side: the cards in two columns, each into the shorter one.
+                    val scope = this
+                    TwoColumns(gap = 12.dp) { scope.content() }
+                } else {
+                    content()
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Its children in two columns of equal width, each placed under the shorter column so far: cards
+ * of different heights fill the width without gaps, in reading order down each column.
+ */
+@Composable
+private fun TwoColumns(gap: Dp, content: @Composable () -> Unit) {
+    Layout(content) { measurables, constraints ->
+        val space = gap.roundToPx()
+        val column = ((constraints.maxWidth - space) / 2).coerceAtLeast(0)
+        val heights = IntArray(2)
+        val placed = measurables.map { measurable ->
+            val placeable = measurable.measure(Constraints(maxWidth = column))
+            val side = if (heights[0] <= heights[1]) 0 else 1
+            val y = heights[side]
+            heights[side] += placeable.height + space
+            Triple(placeable, side, y)
+        }
+        val height = (maxOf(heights[0], heights[1]) - space).coerceAtLeast(0)
+        layout(constraints.maxWidth, height) {
+            placed.forEach { (placeable, side, y) -> placeable.placeRelative(side * (column + space), y) }
+        }
     }
 }
 
