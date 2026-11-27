@@ -84,8 +84,11 @@ kotlin {
             implementation(libs.androidx.camera.lifecycle)
             implementation(libs.androidx.camera.compose)
             implementation(libs.androidx.browser)
-            // QR and barcodes: plain Java, no Play services, so one decoder serves both flavors.
+            // QR and barcodes, no Play services, so they serve both flavors: Java ZXing for the camera's
+            // live frames, WeChat's decoder (module :wechat-qr) for whole pictures: it reads the codes
+            // photographed off a screen that every other open decoder gives up on, and gives their corners.
             implementation(libs.zxing.core)
+            implementation(projects.wechatQr)
         }
         named("androidHostTest").dependencies {
             // The README screenshots: real screens rendered by Robolectric's
@@ -157,6 +160,10 @@ tasks.register("readmeShots") {
 // resource file. Regenerate after changing dependencies:
 //   ./gradlew :app:shared:exportLibraryDefinitions
 aboutLibraries {
+    // config/libraries: what the dependency graph cannot see, such as OpenCV built from source.
+    collect {
+        configPath = file("config")
+    }
     export {
         outputFile = file("src/commonMain/composeResources/files/aboutlibraries.json")
     }

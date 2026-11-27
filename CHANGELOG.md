@@ -6,6 +6,11 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ## [Unreleased]
 
+### Fixed
+
+- QR codes in pictures, such as one photographed off a monitor, are found again and framed where they are: Seenly reads them with WeChat's open QR decoder, built from source with the part of OpenCV it needs (about 1 MB per APK), in both flavors.
+- The camera no longer goes dark when the phone is turned.
+
 ## [0.6.1] - 2026-11-27
 
 ### Changed

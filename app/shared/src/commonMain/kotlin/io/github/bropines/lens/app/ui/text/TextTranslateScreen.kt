@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material3.FilterChip
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
+import io.github.bropines.lens.app.ui.components.isWide
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -57,10 +60,10 @@ fun TextTranslateScreen(vm: TextTranslateViewModel, services: PlatformServices, 
             )
         },
     ) { padding ->
-        Column(
-            Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+      BoxWithConstraints(Modifier.fillMaxSize().padding(padding).imePadding()) {
+        val wide = isWide()
+        // Upright: one column. Turned: the text and its controls on the left, the translation on the right.
+        val input: @Composable (Modifier) -> Unit = { fieldModifier ->
             LanguageBar(
                 source = state.source,
                 target = state.target,
@@ -76,7 +79,7 @@ fun TextTranslateScreen(vm: TextTranslateViewModel, services: PlatformServices, 
                 trailingIcon = if (state.input.isNotEmpty()) {
                     { IconButton(onClick = { vm.setInput("") }) { Icon(Icons.Rounded.Clear, stringResource(Res.string.clear)) } }
                 } else null,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 140.dp),
+                modifier = fieldModifier.fillMaxWidth().heightIn(min = 140.dp),
                 shape = MaterialTheme.shapes.large,
             )
             // Which engine: the user's order (with fail-over) or one picked for this text.
@@ -86,6 +89,8 @@ fun TextTranslateScreen(vm: TextTranslateViewModel, services: PlatformServices, 
                     FilterChip(selected = state.engine == engine.id, onClick = { vm.setEngine(engine.id) }, label = { Text(engine.name) })
                 }
             }
+        }
+        val output: @Composable () -> Unit = {
             if (state.loading) LinearWavyProgressIndicator(Modifier.fillMaxWidth())
             state.error?.let { Text(it.asString(), color = MaterialTheme.colorScheme.error) }
 
@@ -139,5 +144,25 @@ fun TextTranslateScreen(vm: TextTranslateViewModel, services: PlatformServices, 
                 }
             }
         }
+        if (wide) {
+            Row(Modifier.fillMaxSize().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    input(Modifier.weight(1f, fill = true))
+                }
+                Column(
+                    Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) { output() }
+            }
+        } else {
+            Column(
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                input(Modifier)
+                output()
+            }
+        }
+      }
     }
 }

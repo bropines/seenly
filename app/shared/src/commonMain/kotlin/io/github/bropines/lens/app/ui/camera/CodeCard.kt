@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.bropines.lens.app.platform.PlatformServices
@@ -31,10 +32,16 @@ import io.github.bropines.lens.app.resources.open
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * The first QR code or barcode in an image (a photo from the gallery, a shared
- * picture), read on the device; null when there is none or the platform cannot read codes.
+ * A code found in a picture: what it says, and its corners as fractions of the
+ * picture (upright, as it is shown), clockwise from the top left when the reader says.
  */
-expect suspend fun readCode(image: ByteArray): ScannedCode?
+data class CodeHit(val code: ScannedCode, val corners: List<Offset>)
+
+/**
+ * The first QR code or barcode in an image (a photo from the gallery, a shared
+ * picture), read on the device (WeChat's decoder on Android); null when there is none or the platform cannot read codes.
+ */
+expect suspend fun readCode(image: ByteArray): CodeHit?
 
 /** What a code says: open a link, copy text, join Wi-Fi by copying the password. The camera's and the viewer's. */
 @Composable

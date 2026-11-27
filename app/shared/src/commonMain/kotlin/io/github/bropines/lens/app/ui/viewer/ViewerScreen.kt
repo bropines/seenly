@@ -22,8 +22,27 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
+import io.github.bropines.lens.app.ui.components.isWide
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -98,6 +117,12 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
@@ -155,7 +180,7 @@ import io.github.vinceglb.filekit.saveImageToGallery
 import io.github.vinceglb.filekit.readBytes
 import io.github.bropines.lens.app.ui.camera.CodeCard
 import io.github.bropines.lens.app.ui.camera.ScannedCode
-import io.github.bropines.lens.app.ui.camera.readCode
+import io.github.bropines.lens.app.ui.camera.CodeHit
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -215,16 +240,19 @@ fun ViewerScreen(
     var overlayHidden by rememberSaveable { mutableStateOf(false) }
     val stale by vm.stale.collectAsState()
     val failed by vm.failed.collectAsState()
-    // Codes found in the pictures, by page key; a page without one maps to null once looked at.
-    val codes = remember { mutableStateMapOf<String, ScannedCode?>() }
+    // Codes found in the pictures, by page key and turn; a page without one maps to null once looked at.
+    val codes = remember { mutableStateMapOf<String, CodeHit?>() }
+    fun codeKey(index: Int) = items.getOrNull(index)?.let { "${it.key}|${vm.rotations.value[it.key] ?: 0}" }
     var dismissedCodes by rememberSaveable { mutableStateOf(emptyList<String>()) }
     // Shots and shared or picked pictures, not every page of a chapter or of history.
     val readsCodes = vm.gallery.origin != GalleryOrigin.Folder && vm.gallery.origin != GalleryOrigin.History
     LaunchedEffect(pager.settledPage) {
         if (!readsCodes) return@LaunchedEffect
-        val item = items.getOrNull(pager.settledPage) ?: return@LaunchedEffect
-        if (item.key in codes) return@LaunchedEffect
-        codes[item.key] = runCatching { readCode(item.file.readBytes()) }.getOrNull()
+        val page = pager.settledPage
+        val key = codeKey(page) ?: return@LaunchedEffect
+        if (key in codes) return@LaunchedEffect
+        // The picture as shown (turned like the view), so the frame lands on the code.
+        codes[key] = runCatching { services.findCode(vm.pageBytes(page)) }.getOrNull()
     }
     // Opened to search (shared to "Search", or the camera's mode): the search itself opens, not just the dots.
     var autoSearched by rememberSaveable { mutableStateOf(false) }
@@ -524,10 +552,77 @@ fun ViewerScreen(
     }
 
     val canExportImage = result != null && renders[front]?.overlay != null
+    val quiet = !showGrid && !flight.active && !leaving
 
+    fun rotateFront() {
+        selection.clear()
+        tappedParagraph = null
+        lastRegion = null
+        vm.rotate(pager.currentPage)
+    }
+
+    // The controls, laid out under the picture when the phone is upright and beside it when turned.
+    val languageBar: @Composable (Modifier, Boolean) -> Unit = { modifier, onDark ->
+        LanguageBar(
+            settings.sourceLanguage, settings.targetLanguage, vm::setSource, vm::setTarget,
+            modifier = modifier,
+            onDark = onDark,
+            // What this page really is: the language Lens found, and the one it went into.
+            detected = shownLanguages.first,
+            actualTarget = shownLanguages.second,
+        )
+    }
+    val filmstrip: @Composable () -> Unit = {
+        Filmstrip(
+            items = items,
+            current = front,
+            failed = failed,
+            onPick = { scope.launch { pager.animateScrollToPage(it) } },
+            onScrub = { scope.launch { pager.scrollToPage(it) } },
+            onScrubbing = { scrubbing = it },
+        )
+    }
+    val bottomPanel: @Composable (Boolean) -> Unit = { side ->
+        ViewerBottomPanel(
+            mode = mode,
+            onMode = {
+                mode = it
+                searchMode = false
+                vm.rememberCameraMode(if (it == OverlayMode.TextBoxes) ViewMode.Text else ViewMode.Translate)
+            },
+            searchMode = searchMode,
+            onSearchMode = {
+                searchMode = true
+                selection.clear()
+                vm.rememberCameraMode(ViewMode.Search)
+            },
+            onSearchWhole = {
+                val page = pager.currentPage
+                scope.launch { if (!handedToGoogle(page)) vm.visualSearch(page, services::openUrl) { it.searchImageUrl() } }
+            },
+            onAskAi = { askAi = true },
+            result = result,
+            canExportImage = canExportImage,
+            onCopyOriginal = { result?.let { services.copyText(it.readableText()) } },
+            onCopyTranslation = { result?.translatedText()?.let(services::copyText) },
+            onShowText = { showText = true },
+            onShareText = { result?.let { services.shareText(shareableText(it)) } },
+            onShare = { sharing = true },
+            onSaveImage = ::saveImage,
+            onSelectAll = { result?.let(selection::selectAll) },
+            side = side,
+        )
+    }
+
+    // Turned on its side (or a tablet held the long way), the controls stand in a panel beside
+    // the picture instead of over its lower half: the picture keeps the whole height.
+    BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
+    val wide = isWide()
+    Row(Modifier.fillMaxSize()) {
     Box(
         Modifier
-            .fillMaxSize()
+            .weight(1f)
+            .fillMaxHeight()
             .onGloballyPositioned {
                 origin = it.positionInRoot()
                 viewport = it.size
@@ -660,8 +755,6 @@ fun ViewerScreen(
             }
         }
 
-        val quiet = !showGrid && !flight.active && !leaving
-
         // Lens-style actions right above the selected text.
         val selectedText = selection.selectedText
         val bounds = selection.boundsInView
@@ -694,7 +787,23 @@ fun ViewerScreen(
             onToggleOriginal = { overlayHidden = !overlayHidden; selection.clear() },
         )
 
-        AnimatedVisibility(
+        // Where the code is, framed on the picture as the camera frames it; not while zoomed or searching.
+        val framedKey = codeKey(front)
+        // A closed card leaves a quiet frame behind; tapping the code brings the card back.
+        val framed = codes[framedKey]?.takeIf { it.corners.size >= 2 }
+        if (quiet && framed != null && !zoomed && !searchMode && !handle.strip && handle.owner == items[front].key && !handle.picture.isEmpty) {
+            val closed = framedKey in dismissedCodes
+            CodeFrame(framed, handle.picture, open = !closed) {
+                if (closed) {
+                    dismissedCodes = dismissedCodes - framedKey.orEmpty()
+                    chrome = true
+                } else {
+                    dismissedCodes = dismissedCodes + framedKey.orEmpty()
+                }
+            }
+        }
+
+        androidx.compose.animation.AnimatedVisibility(
             chrome && quiet,
             enter = FastIn + slideInVertically(tween(160)) { -it / 3 },
             exit = FastOut,
@@ -732,17 +841,18 @@ fun ViewerScreen(
                 BusyStatus(exporting, stringResource(Res.string.viewer_preparing_image))
                 SearchStatus(searching)
                 // A QR code or barcode in the picture, read on the device: the same card as the camera's.
-                val code = codes[items[front].key]?.takeIf { items[front].key !in dismissedCodes }
+                val shownKey = codeKey(front)
+                val code = codes[shownKey]?.takeIf { shownKey !in dismissedCodes }
                 AnimatedVisibility(chrome && code != null, enter = FastIn, exit = FastOut) {
                     code?.let { found ->
-                        CodeCard(found, services, onDismiss = { dismissedCodes = dismissedCodes + items[front].key })
+                        CodeCard(found.code, services, onDismiss = { dismissedCodes = dismissedCodes + shownKey.orEmpty() })
                     }
                 }
             }
             // Folded, the controls are one row over the picture: languages, rotate, the eye.
             val compact = settings.viewerCompact
             AnimatedVisibility(
-                chrome && quiet,
+                chrome && quiet && !wide,
                 enter = FastIn + slideInVertically(tween(160)) { it / 3 },
                 exit = FastOut + slideOutVertically(tween(120)) { it / 3 },
             ) {
@@ -768,15 +878,7 @@ fun ViewerScreen(
                                 )
                             }
                             // A sideways photo reads badly: turn it upright, a quarter per tap, and it is read again.
-                            FilledTonalIconButton(
-                                onClick = {
-                                    selection.clear()
-                                    tappedParagraph = null
-                                    lastRegion = null
-                                    vm.rotate(pager.currentPage)
-                                },
-                                modifier = Modifier.size(48.dp),
-                            ) {
+                            FilledTonalIconButton(onClick = ::rotateFront, modifier = Modifier.size(48.dp)) {
                                 Icon(
                                     Icons.AutoMirrored.Rounded.RotateRight,
                                     contentDescription = stringResource(Res.string.viewer_rotate),
@@ -790,63 +892,18 @@ fun ViewerScreen(
                                 size = 56.dp,
                             )
                         }
-                        AnimatedVisibility(!compact && items.size > 1) {
-                            Filmstrip(
-                                items = items,
-                                current = front,
-                                failed = failed,
-                                onPick = { scope.launch { pager.animateScrollToPage(it) } },
-                                onScrub = { scope.launch { pager.scrollToPage(it) } },
-                                onScrubbing = { scrubbing = it },
-                            )
-                        }
+                        AnimatedVisibility(!compact && items.size > 1) { filmstrip() }
                         // Thumb row: the language pair, across the whole width, right above the panel.
-                        LanguageBar(
-                            settings.sourceLanguage, settings.targetLanguage, vm::setSource, vm::setTarget,
-                            modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 8.dp),
-                            onDark = true,
-                            // What this page really is: the language Lens found, and the one it went into.
-                            detected = shownLanguages.first,
-                            actualTarget = shownLanguages.second,
-                        )
+                        languageBar(Modifier.padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 8.dp), true)
                     }
-                    AnimatedVisibility(!compact) {
-                    ViewerBottomPanel(
-                        mode = mode,
-                        onMode = {
-                            mode = it
-                            searchMode = false
-                            vm.rememberCameraMode(if (it == OverlayMode.TextBoxes) ViewMode.Text else ViewMode.Translate)
-                        },
-                        searchMode = searchMode,
-                        onSearchMode = {
-                            searchMode = true
-                            selection.clear()
-                            vm.rememberCameraMode(ViewMode.Search)
-                        },
-                        onSearchWhole = {
-                            val page = pager.currentPage
-                            scope.launch { if (!handedToGoogle(page)) vm.visualSearch(page, services::openUrl) { it.searchImageUrl() } }
-                        },
-                        onAskAi = { askAi = true },
-                        result = result,
-                        canExportImage = canExportImage,
-                        onCopyOriginal = { result?.let { services.copyText(it.readableText()) } },
-                        onCopyTranslation = { result?.translatedText()?.let(services::copyText) },
-                        onShowText = { showText = true },
-                        onShareText = { result?.let { services.shareText(shareableText(it)) } },
-                        onShare = { sharing = true },
-                        onSaveImage = ::saveImage,
-                        onSelectAll = { result?.let(selection::selectAll) },
-                    )
-                    }
+                    AnimatedVisibility(!compact) { bottomPanel(false) }
                 }
             }
         }
 
         // With every control away, the eye stays: small and see-through in the corner,
         // one tap from translation on or off, and held to peek, as in the panel.
-        AnimatedVisibility(
+        androidx.compose.animation.AnimatedVisibility(
             !chrome && quiet,
             enter = FastIn,
             exit = FastOut,
@@ -861,6 +918,28 @@ fun ViewerScreen(
                 modifier = Modifier.navigationBarsPadding().padding(16.dp),
             )
         }
+    }
+    AnimatedVisibility(
+        wide && chrome && quiet,
+        enter = FastIn + expandHorizontally(tween(180)),
+        exit = FastOut + shrinkHorizontally(tween(150)),
+    ) {
+        ViewerSidePanel(
+            onRotate = ::rotateFront,
+            peek = {
+                PeekButton(
+                    hidden = overlayHidden,
+                    onToggle = { overlayHidden = !overlayHidden; selection.clear() },
+                    onPeek = { peeking = it },
+                    size = 48.dp,
+                )
+            },
+            languageBar = { languageBar(Modifier, false) },
+            filmstrip = if (items.size > 1) filmstrip else null,
+            panel = { bottomPanel(true) },
+        )
+    }
+    }
     }
 
     if (sharing) {
@@ -1135,15 +1214,20 @@ private fun ViewerBottomPanel(
     onSearchMode: () -> Unit,
     onSearchWhole: () -> Unit,
     onAskAi: () -> Unit,
+    /** In the side panel of a turned screen: no sheet of its own, the panel is one. */
+    side: Boolean = false,
 ) {
     val hasText = result != null && result.paragraphs.isNotEmpty()
     val hasTranslation = result?.translation != null
     Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = MaterialTheme.shapes.extraLarge.copy(bottomStart = MaterialTheme.shapes.extraSmall.bottomStart, bottomEnd = MaterialTheme.shapes.extraSmall.bottomEnd),
+        color = if (side) Color.Transparent else MaterialTheme.colorScheme.surfaceContainer,
+        shape = if (side) RectangleShape else MaterialTheme.shapes.extraLarge.copy(bottomStart = MaterialTheme.shapes.extraSmall.bottomStart, bottomEnd = MaterialTheme.shapes.extraSmall.bottomEnd),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.navigationBarsPadding().padding(horizontal = 12.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(
+            if (side) Modifier else Modifier.navigationBarsPadding().padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             // What is shown over the image: three labelled, connected choices.
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
                 // The original is the eye in the top bar, not a mode: it works over any of these.
@@ -1211,6 +1295,49 @@ private fun ViewerBottomPanel(
         }
     }
 }
+
+/**
+ * The controls of a turned screen, in a panel at the right edge: the picture's buttons at the top,
+ * the pages, the language pair and what is shown and done lowest, where the thumb is.
+ */
+@Composable
+private fun ViewerSidePanel(
+    onRotate: () -> Unit,
+    peek: @Composable () -> Unit,
+    languageBar: @Composable () -> Unit,
+    filmstrip: (@Composable () -> Unit)?,
+    panel: @Composable () -> Unit,
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = MaterialTheme.shapes.extraLarge.copy(topEnd = CornerSize(0.dp), bottomEnd = CornerSize(0.dp)),
+        modifier = Modifier.fillMaxHeight().width(SIDE_PANEL_WIDTH),
+    ) {
+        BoxWithConstraints {
+            Column(
+                Modifier
+                    .verticalScroll(rememberScrollState(), overscrollEffect = null)
+                    .heightIn(min = maxHeight)
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom))
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Bottom),
+            ) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End), verticalAlignment = Alignment.CenterVertically) {
+                    FilledTonalIconButton(onClick = onRotate, modifier = Modifier.size(48.dp)) {
+                        Icon(Icons.AutoMirrored.Rounded.RotateRight, contentDescription = stringResource(Res.string.viewer_rotate))
+                    }
+                    peek()
+                }
+                filmstrip?.invoke()
+                languageBar()
+                panel()
+            }
+        }
+    }
+}
+
+/** The side panel's width: a third of a turned phone, the language pair and four actions still fit. */
+private val SIDE_PANEL_WIDTH = 340.dp
 
 @Composable
 private fun ModeButton(
@@ -1372,3 +1499,48 @@ fun shareableText(result: ScanResult): String =
 
 /** How long after the viewer has focus a search it was opened for starts. */
 private const val AUTO_SEARCH_SETTLE_MS = 400L
+
+/**
+ * A frame around a code found in the picture: its corners mapped onto [picture],
+ * the picture's place on screen, with a little room around them. Pulsing gently while its
+ * card is [open], thin and still once the card is closed; tapping the code calls [onTap].
+ */
+@Composable
+private fun CodeFrame(hit: CodeHit, picture: Rect, open: Boolean, onTap: () -> Unit) {
+    val accent = MaterialTheme.colorScheme.primary
+    val density = LocalDensity.current
+    val box = remember(hit, picture, density) {
+        val xs = hit.corners.map { picture.left + it.x * picture.width }
+        val ys = hit.corners.map { picture.top + it.y * picture.height }
+        // Four corners hug the code; fewer points (finder pattern centres) sit inside it.
+        val room = if (hit.corners.size >= 4) 0.06f else 0.22f
+        val pad = maxOf(xs.max() - xs.min(), ys.max() - ys.min()) * room + with(density) { 6.dp.toPx() }
+        Rect(xs.min() - pad, ys.min() - pad, xs.max() + pad, ys.max() + pad).intersect(picture)
+    }
+    val pulse by rememberInfiniteTransition(label = "code").animateFloat(
+        initialValue = 0.55f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse),
+        label = "code",
+    )
+    Box(Modifier.fillMaxSize()) {
+        Canvas(Modifier.fillMaxSize()) {
+            val radius = CornerRadius(14.dp.toPx())
+            if (open) {
+                drawRoundRect(Color.Black.copy(alpha = 0.25f), box.topLeft, box.size, radius, style = Stroke(width = 8.dp.toPx()))
+                drawRoundRect(Color.White.copy(alpha = 0.6f + 0.4f * pulse), box.topLeft, box.size, radius, style = Stroke(width = 4.dp.toPx()))
+                drawRoundRect(accent, box.topLeft, box.size, radius, style = Stroke(width = 2.dp.toPx()))
+            } else {
+                drawRoundRect(Color.Black.copy(alpha = 0.2f), box.topLeft, box.size, radius, style = Stroke(width = 4.dp.toPx()))
+                drawRoundRect(Color.White.copy(alpha = 0.7f), box.topLeft, box.size, radius, style = Stroke(width = 1.5.dp.toPx()))
+            }
+        }
+        // The code itself is the button: a tap on it opens (or closes) its card.
+        Box(
+            Modifier
+                .offset { IntOffset(box.left.roundToInt(), box.top.roundToInt()) }
+                .size(with(density) { box.width.toDp() }, with(density) { box.height.toDp() })
+                .clickable(interactionSource = null, indication = null, onClick = onTap),
+        )
+    }
+}

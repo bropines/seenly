@@ -6,6 +6,18 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import io.github.bropines.lens.app.ui.components.isWide
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -105,45 +117,18 @@ fun MainScreen(
             SnackbarResult.Dismissed -> graph.updates.dismissPrompt()
         }
     }
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbar) },
-        bottomBar = {
-            ShortNavigationBar {
-                DockItem(Tab.Images, tab, onTab)
-                DockItem(Tab.History, tab, onTab)
-                Box(contentAlignment = Alignment.Center) {
-                    // Tap: the camera. Hold: straight to the gallery's photo picker, past the camera.
-                    val shape = MaterialTheme.shapes.extraLarge
-                    Surface(
-                        shape = shape,
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        shadowElevation = 3.dp,
-                        modifier = Modifier.size(64.dp).clip(shape).combinedClickable(
-                            onClickLabel = stringResource(Res.string.camera),
-                            onLongClickLabel = stringResource(Res.string.camera_from_gallery),
-                            onLongClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                pickImages.launch()
-                            },
-                            onClick = onOpenCamera,
-                        ),
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Rounded.PhotoCamera, contentDescription = stringResource(Res.string.camera), modifier = Modifier.size(30.dp))
-                        }
-                    }
-                }
-                DockItem(Tab.Text, tab, onTab)
-                DockItem(Tab.Settings, tab, onTab)
-            }
-        },
-    ) { padding ->
+    val camera: @Composable () -> Unit = {
+        CameraButton(onClick = onOpenCamera, onLongClick = {
+            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            pickImages.launch()
+        })
+    }
+    val content: @Composable (Modifier) -> Unit = { modifier ->
         AnimatedContent(
             targetState = tab,
             // Quick and flat: tabs are siblings, not a hierarchy.
             transitionSpec = { fadeIn(tween(140)) togetherWith fadeOut(tween(90)) },
-            modifier = Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding()),
+            modifier = modifier,
             label = "tab",
         ) { current ->
             Box(Modifier.fillMaxSize()) {
@@ -156,6 +141,70 @@ fun MainScreen(
             }
         }
     }
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        if (isWide()) {
+            // Turned on its side: the dock becomes a rail at the left edge, the camera at its head,
+            // and the screens get the whole height.
+            Scaffold(snackbarHost = { SnackbarHost(snackbar) }, contentWindowInsets = WindowInsets(0)) { _ ->
+                Row(Modifier.fillMaxSize()) {
+                    NavigationRail(header = { Spacer(Modifier.height(4.dp)); camera() }) {
+                        Spacer(Modifier.weight(1f))
+                        Tab.entries.forEach { RailItem(it, tab, onTab) }
+                        Spacer(Modifier.weight(1f))
+                    }
+                    // The far edge may hold the navigation buttons or a camera cutout.
+                    content(Modifier.weight(1f).fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End)))
+                }
+            }
+        } else {
+            Scaffold(
+                snackbarHost = { SnackbarHost(snackbar) },
+                bottomBar = {
+                    ShortNavigationBar {
+                        DockItem(Tab.Images, tab, onTab)
+                        DockItem(Tab.History, tab, onTab)
+                        Box(contentAlignment = Alignment.Center) { camera() }
+                        DockItem(Tab.Text, tab, onTab)
+                        DockItem(Tab.Settings, tab, onTab)
+                    }
+                },
+            ) { padding ->
+                content(Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding()))
+            }
+        }
+    }
+}
+
+/** Tap: the camera. Hold: straight to the gallery's photo picker, past the camera. */
+@Composable
+private fun CameraButton(onClick: () -> Unit, onLongClick: () -> Unit) {
+    val shape = MaterialTheme.shapes.extraLarge
+    Surface(
+        shape = shape,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        shadowElevation = 3.dp,
+        modifier = Modifier.size(64.dp).clip(shape).combinedClickable(
+            onClickLabel = stringResource(Res.string.camera),
+            onLongClickLabel = stringResource(Res.string.camera_from_gallery),
+            onLongClick = onLongClick,
+            onClick = onClick,
+        ),
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(Icons.Rounded.PhotoCamera, contentDescription = stringResource(Res.string.camera), modifier = Modifier.size(30.dp))
+        }
+    }
+}
+
+@Composable
+private fun RailItem(item: Tab, current: Tab, onTab: (Tab) -> Unit) {
+    NavigationRailItem(
+        selected = item == current,
+        onClick = { onTab(item) },
+        icon = { Icon(if (item == current) item.selectedIcon else item.icon, contentDescription = null) },
+        label = { Text(stringResource(item.label), maxLines = 1) },
+    )
 }
 
 @Composable

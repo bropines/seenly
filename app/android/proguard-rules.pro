@@ -13,3 +13,13 @@
 -dontwarn org.conscrypt.**
 -dontwarn org.bouncycastle.**
 -dontwarn org.openjsse.**
+
+# ML Kit (google flavor) finds its components by name and builds them through their no-argument
+# constructors (MlKitInitProvider -> ComponentDiscovery). R8 removed those constructors, so no ML Kit
+# client could be made in a release build: on-device text recognition, translation and barcodes all failed.
+-keep class * implements com.google.firebase.components.ComponentRegistrar { public <init>(); }
+-keep class com.google.mlkit.**.*Registrar { public <init>(); }
+-keep class com.google.mlkit.common.sdkinternal.** { *; }
+-dontwarn com.google.mlkit.**
+
+# zxing-cpp builds its results from native code through JNI: keep them whole.

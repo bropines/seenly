@@ -66,6 +66,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -144,10 +147,17 @@ actual fun CameraScreen(
         Row(Modifier.statusBarsPadding().padding(8.dp)) {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(Res.string.back), tint = Color.White) }
         }
+        val turned = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
         IconButton(
             onClick = onPickImages,
-            modifier = Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(start = 32.dp, bottom = 44.dp)
-                .size(56.dp).background(Color.White.copy(alpha = 0.18f), CircleShape),
+            modifier = (
+                if (turned) {
+                    // Turned: in the column at the right edge, below the shutter.
+                    Modifier.align(Alignment.CenterEnd).windowInsetsPadding(WindowInsets.safeDrawing).padding(end = SIDE_BUTTON_END).offset(y = SIDE_BUTTON_OFFSET)
+                } else {
+                    Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(start = 32.dp, bottom = 44.dp)
+                }
+            ).size(56.dp).background(Color.White.copy(alpha = 0.18f), CircleShape),
         ) { Icon(Icons.Rounded.PhotoLibrary, contentDescription = stringResource(Res.string.camera_from_gallery), tint = Color.White) }
     }
 }
@@ -221,7 +231,9 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
             // Leave the camera as we found it: continuous AF/AE, no compensation.
             bound.cameraControl.cancelFocusAndMetering()
             bound.cameraControl.setExposureCompensationIndex(0)
-            provider.unbindAll()
+            // Only this screen's own use cases: when the phone turns, the activity is recreated and
+            // this runs after the new screen has bound its camera, which unbindAll() would turn off.
+            provider.unbind(preview, capture, analysis)
             executor.shutdown()
         }
     }
@@ -262,11 +274,37 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
         focus = null
     }
 
+    fun shoot() {
+        if (capturing) return
+        capturing = true
+        val dir = File(context.cacheDir, "camera").apply { mkdirs() }
+        dir.listFiles()?.sortedByDescending { it.lastModified() }?.drop(10)?.forEach { it.delete() }
+        val file = File(dir, "photo-${System.currentTimeMillis()}.jpg")
+        capture.takePicture(
+            ImageCapture.OutputFileOptions.Builder(file).build(),
+            ContextCompat.getMainExecutor(context),
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                    capturing = false
+                    onCaptured(PlatformFile(file))
+                }
+
+                override fun onError(exception: ImageCaptureException) {
+                    capturing = false
+                    error = exception.message ?: exception.imageCaptureError.toString()
+                }
+            },
+        )
+    }
+
+    // Turned on its side, the shutter, the torch and the gallery stand in a column at the right
+    // edge, beside the frame, as in a camera app; upright they are in a row under it.
+    val turned = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     Box(Modifier.fillMaxSize()) {
         surfaceRequest?.let { request ->
             // The frame's shape as it appears on screen: the buffer is in sensor
             // orientation (landscape), so a portrait screen sees it the other way round.
-            val portrait = LocalConfiguration.current.orientation != Configuration.ORIENTATION_LANDSCAPE
+            val portrait = !turned
             val long = maxOf(request.resolution.width, request.resolution.height).toFloat()
             val short = minOf(request.resolution.width, request.resolution.height).toFloat()
             val frame = if (portrait) short / long else long / short
@@ -313,8 +351,13 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
         // Bottom right, mirroring the gallery button: both within the thumb's reach beside the shutter.
         IconButton(
             onClick = { torch = !torch },
-            modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = 32.dp, bottom = 44.dp)
-                .size(56.dp).background(Color.White.copy(alpha = if (torch) 0.9f else 0.18f), CircleShape),
+            modifier = (
+                if (turned) {
+                    Modifier.align(Alignment.CenterEnd).windowInsetsPadding(WindowInsets.safeDrawing).padding(end = SIDE_BUTTON_END).offset(y = -SIDE_BUTTON_OFFSET)
+                } else {
+                    Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(end = 32.dp, bottom = 44.dp)
+                }
+            ).size(56.dp).background(Color.White.copy(alpha = if (torch) 0.9f else 0.18f), CircleShape),
         ) {
             Icon(
                 if (torch) Icons.Rounded.FlashOn else Icons.Rounded.FlashOff,
@@ -323,8 +366,14 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
             )
         }
 
+        if (turned) {
+            Box(Modifier.align(Alignment.CenterEnd).windowInsetsPadding(WindowInsets.safeDrawing).padding(end = 24.dp)) {
+                Shutter(busy = capturing, onClick = ::shoot)
+            }
+        }
+
         Column(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding().padding(bottom = 24.dp),
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding().padding(bottom = if (turned) 12.dp else 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
@@ -375,31 +424,14 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
                 color = if (error != null) MaterialTheme.colorScheme.error else Color.White.copy(alpha = 0.8f),
                 style = MaterialTheme.typography.labelLarge,
             )
-            Shutter(busy = capturing) {
-                if (capturing) return@Shutter
-                capturing = true
-                val dir = File(context.cacheDir, "camera").apply { mkdirs() }
-                dir.listFiles()?.sortedByDescending { it.lastModified() }?.drop(10)?.forEach { it.delete() }
-                val file = File(dir, "photo-${System.currentTimeMillis()}.jpg")
-                capture.takePicture(
-                    ImageCapture.OutputFileOptions.Builder(file).build(),
-                    ContextCompat.getMainExecutor(context),
-                    object : ImageCapture.OnImageSavedCallback {
-                        override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                            capturing = false
-                            onCaptured(PlatformFile(file))
-                        }
-
-                        override fun onError(exception: ImageCaptureException) {
-                            capturing = false
-                            error = exception.message ?: exception.imageCaptureError.toString()
-                        }
-                    },
-                )
-            }
+            if (!turned) Shutter(busy = capturing, onClick = ::shoot)
         }
     }
 }
+
+/** The side column of a turned screen: the small buttons centred on the shutter's axis, above and below it. */
+private val SIDE_BUTTON_END = 38.dp
+private val SIDE_BUTTON_OFFSET = 104.dp
 
 @Composable
 private fun Shutter(busy: Boolean, onClick: () -> Unit) {

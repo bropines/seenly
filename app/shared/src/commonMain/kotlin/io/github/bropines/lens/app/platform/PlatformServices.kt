@@ -41,6 +41,10 @@ interface PlatformServices {
     /** Whether the system has a share sheet that can list Seenly's quick entries (Android). */
     val hasShareTargets: Boolean get() = false
 
+    /** The first code in [image] and where it is, read on the device. */
+    suspend fun findCode(image: ByteArray): io.github.bropines.lens.app.ui.camera.CodeHit? =
+        io.github.bropines.lens.app.ui.camera.readCode(image)
+
     /** Whether visual search can go to Google's own Lens, in the Google app (Android with the app installed). */
     val googleLensAvailable: Boolean get() = false
 

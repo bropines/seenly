@@ -3,6 +3,12 @@ package io.github.bropines.lens.app.ui.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import io.github.bropines.lens.app.ui.components.isWide
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
@@ -94,84 +100,130 @@ fun HomeScreen(
         settings.lastFolder?.let { runCatching { Json.decodeFromString(PlatformFileSerializer, it) }.getOrNull() }
     }
 
-    Scaffold(
-        topBar = {
-            LargeFlexibleTopAppBar(
-                title = { Text("Seenly") },
-                subtitle = { Text(stringResource(Res.string.home_subtitle)) },
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbar) },
-        contentWindowInsets = WindowInsets(0),
-    ) { padding ->
-        // Everything sits at the bottom, nearest the thumb, the main action lowest;
-        // it still scrolls when a small screen cannot hold it all.
-        BoxWithConstraints(Modifier.fillMaxSize().padding(padding)) {
-        Column(
-            // No overscroll stretch: when everything fits there is nothing to pull.
-            Modifier.verticalScroll(rememberScrollState(), overscrollEffect = null).heightIn(min = maxHeight).padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Bottom),
-        ) {
-            Text(
-                stringResource(Res.string.home_share_hint),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            if (lastFolder != null) {
-                Card(
-                    onClick = { openFolder(lastFolder) },
-                    shape = MaterialTheme.shapes.large,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                ) {
-                    ListItem(
-                        headlineContent = { Text(stringResource(Res.string.home_continue, lastFolder.name)) },
-                        supportingContent = { Text(stringResource(Res.string.home_last_folder)) },
-                        leadingContent = { Icon(Icons.Rounded.History, contentDescription = null) },
-                        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                    )
-                }
-            }
-
+    val hint: @Composable () -> Unit = {
+        Text(
+            stringResource(Res.string.home_share_hint),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+    val continueCard: @Composable () -> Unit = {
+        if (lastFolder != null) {
             Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-                shape = MaterialTheme.shapes.extraLarge,
-                modifier = Modifier.fillMaxWidth(),
+                onClick = { openFolder(lastFolder) },
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
             ) {
-                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(stringResource(Res.string.home_translate), style = MaterialTheme.typography.titleMedium)
-                    LanguageBar(
-                        source = settings.sourceLanguage,
-                        target = settings.targetLanguage,
-                        onSource = { code -> scope.launch { graph.settings.update { it.copy(sourceLanguage = code) } } },
-                        onTarget = { code -> scope.launch { graph.settings.update { it.copy(targetLanguage = code) } } },
-                    )
-                }
-            }
-            graph.services.screenTranslate?.let { screen ->
-                val running by screen.running.collectAsState()
-                BigAction(
-                    icon = Icons.Rounded.Translate,
-                    title = stringResource(if (running) Res.string.home_screen_stop else Res.string.screen_translation),
-                    subtitle = stringResource(if (running) Res.string.home_screen_running else Res.string.home_screen_desc),
-                    primary = false,
-                    onClick = { if (running) screen.stop() else screen.start() },
+                ListItem(
+                    headlineContent = { Text(stringResource(Res.string.home_continue, lastFolder.name)) },
+                    supportingContent = { Text(stringResource(Res.string.home_last_folder)) },
+                    leadingContent = { Icon(Icons.Rounded.History, contentDescription = null) },
+                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                 )
             }
+        }
+    }
+    val languages: @Composable () -> Unit = {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+            shape = MaterialTheme.shapes.extraLarge,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(Res.string.home_translate), style = MaterialTheme.typography.titleMedium)
+                LanguageBar(
+                    source = settings.sourceLanguage,
+                    target = settings.targetLanguage,
+                    onSource = { code -> scope.launch { graph.settings.update { it.copy(sourceLanguage = code) } } },
+                    onTarget = { code -> scope.launch { graph.settings.update { it.copy(targetLanguage = code) } } },
+                )
+            }
+        }
+    }
+    val actions: @Composable () -> Unit = {
+        graph.services.screenTranslate?.let { screen ->
+            val running by screen.running.collectAsState()
             BigAction(
-                icon = Icons.Rounded.FolderOpen,
-                title = stringResource(Res.string.home_open_folder),
-                subtitle = stringResource(Res.string.home_open_folder_desc),
+                icon = Icons.Rounded.Translate,
+                title = stringResource(if (running) Res.string.home_screen_stop else Res.string.screen_translation),
+                subtitle = stringResource(if (running) Res.string.home_screen_running else Res.string.home_screen_desc),
                 primary = false,
-                onClick = { pickFolder.launch() },
-            )
-            BigAction(
-                icon = Icons.Rounded.Image,
-                title = stringResource(Res.string.open_images),
-                subtitle = stringResource(Res.string.home_open_images_desc),
-                primary = true,
-                onClick = { pickImages.launch() },
+                onClick = { if (running) screen.stop() else screen.start() },
             )
         }
+        BigAction(
+            icon = Icons.Rounded.FolderOpen,
+            title = stringResource(Res.string.home_open_folder),
+            subtitle = stringResource(Res.string.home_open_folder_desc),
+            primary = false,
+            onClick = { pickFolder.launch() },
+        )
+        BigAction(
+            icon = Icons.Rounded.Image,
+            title = stringResource(Res.string.open_images),
+            subtitle = stringResource(Res.string.home_open_images_desc),
+            primary = true,
+            onClick = { pickImages.launch() },
+        )
+    }
+
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        if (isWide()) {
+            // Turned on its side: no tall title bar; what Seenly is and translates into on the left,
+            // what to open on the right, both reaching down to the thumbs.
+            Scaffold(snackbarHost = { SnackbarHost(snackbar) }, contentWindowInsets = WindowInsets(0)) { _ ->
+                Row(
+                    Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top)).padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
+                        Column(
+                            Modifier.verticalScroll(rememberScrollState(), overscrollEffect = null).heightIn(min = maxHeight),
+                            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Bottom),
+                        ) {
+                            Column {
+                                Text("Seenly", style = MaterialTheme.typography.headlineLarge)
+                                Text(stringResource(Res.string.home_subtitle), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            hint()
+                            continueCard()
+                            languages()
+                        }
+                    }
+                    BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
+                        Column(
+                            Modifier.verticalScroll(rememberScrollState(), overscrollEffect = null).heightIn(min = maxHeight),
+                            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Bottom),
+                        ) { actions() }
+                    }
+                }
+            }
+        } else {
+            Scaffold(
+                topBar = {
+                    LargeFlexibleTopAppBar(
+                        title = { Text("Seenly") },
+                        subtitle = { Text(stringResource(Res.string.home_subtitle)) },
+                    )
+                },
+                snackbarHost = { SnackbarHost(snackbar) },
+                contentWindowInsets = WindowInsets(0),
+            ) { padding ->
+                // Everything sits at the bottom, nearest the thumb, the main action lowest;
+                // it still scrolls when a small screen cannot hold it all.
+                BoxWithConstraints(Modifier.fillMaxSize().padding(padding)) {
+                    Column(
+                        // No overscroll stretch: when everything fits there is nothing to pull.
+                        Modifier.verticalScroll(rememberScrollState(), overscrollEffect = null).heightIn(min = maxHeight).padding(horizontal = 16.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Bottom),
+                    ) {
+                        hint()
+                        continueCard()
+                        languages()
+                        actions()
+                    }
+                }
+            }
         }
     }
 }

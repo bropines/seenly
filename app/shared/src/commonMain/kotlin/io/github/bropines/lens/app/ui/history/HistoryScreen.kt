@@ -12,8 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.DeleteSweep
@@ -97,7 +98,13 @@ fun HistoryScreen(history: HistoryRepository, onOpen: (HistoryEntry) -> Unit) {
                     )
                 }
             } else {
-                LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                // One column on an upright phone; two or more side by side when there is room.
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(HISTORY_COLUMN),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
                     items(entries, key = { it.id }) { entry ->
                         SwipeToDelete(onDelete = { scope.launch { history.delete(entry) } }) {
                             HistoryRow(entry, onClick = { onOpen(entry) })
@@ -197,3 +204,6 @@ internal fun ago(millis: Long): String {
         else -> (minutes / (60 * 24)).toInt().let { pluralStringResource(Res.plurals.ago_days, it, it) }
     }
 }
+
+/** The narrowest a history column gets: an upright phone has one, a turned one two. */
+private val HISTORY_COLUMN = 380.dp

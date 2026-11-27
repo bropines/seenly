@@ -1,0 +1,18 @@
+{
+  "uniqueId": "org.opencv:wechat_qrcode",
+  "artifactVersion": "4.14.0",
+  "name": "OpenCV and WeChat QR code decoder",
+  "description": "OpenCV's core and imgproc modules with Tencent's WeChat QR code decoder (opencv_contrib wechat_qrcode), built from source into Seenly's QR reader.",
+  "website": "https://github.com/opencv/opencv_contrib/tree/4.x/modules/wechat_qrcode",
+  "developers": [
+    {
+      "name": "OpenCV team"
+    },
+    {
+      "name": "Tencent (WeChatCV)"
+    }
+  ],
+  "licenses": [
+    "Apache-2.0"
+  ]
+}
