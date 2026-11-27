@@ -500,4 +500,6 @@
     <string name="links_tab_desc">Search results and links open in your browser as a full-screen tab over Seenly; back returns.</string>
     <string name="links_browser_desc">Search results and links open in the browser app itself, apart from Seenly.</string>
     <string name="viewer_search_this">Search this</string>
+    <string name="search_google_app">Search in the Google app</string>
+    <string name="search_google_app_desc">Visual search opens Google Lens in the Google app with the picture, or the part you circled or tapped, instead of Seenly\'s own search. A picture Lens may not take is converted first. Ask AI stays in Seenly.</string>
 </resources>

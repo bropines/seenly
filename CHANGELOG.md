@@ -6,6 +6,16 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-27
+
+### Added
+
+- Settings → Translation: “Search in the Google app”. Visual search hands the picture, or the part you circled or tapped, to Google Lens in the Google app instead of Seenly's own search; a picture Lens may not take is converted to JPEG first, and without the app Seenly searches itself. Off by default; Ask AI stays in Seenly.
+
+### Changed
+
+- Releases come as one APK per processor type (arm64-v8a, armeabi-v7a, x86, x86_64) plus a universal one, for both flavors. The google APK for a typical phone is 22 MB instead of 35, the foss one 5 MB instead of 9; the in-app updater downloads the APK for the phone's own processor.
+
 ### Fixed
 
 - 0.5.2 could crash when coming back to Seenly: the stale connections were let go on the main thread.

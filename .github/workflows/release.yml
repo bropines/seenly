@@ -69,8 +69,17 @@ jobs:
       - name: Collect and check the APKs
         run: |
           mkdir -p out
-          cp app/android/build/outputs/apk/google/release/android-google-release.apk "out/Seenly-v$VERSION-google-release.apk"
-          cp app/android/build/outputs/apk/foss/release/android-foss-release.apk "out/Seenly-v$VERSION-foss-release.apk"
+          # One APK per flavor and ABI, plus a universal one each: android-google-arm64-v8a-release.apk
+          # becomes Seenly-v1.2.3-google-arm64-v8a-release.apk.
+          for flavor in google foss; do
+            for apk in app/android/build/outputs/apk/$flavor/release/android-$flavor-*-release.apk; do
+              part=$(basename "$apk"); part=${part#android-}
+              cp "$apk" "out/Seenly-v$VERSION-$part"
+            done
+          done
+          ls -l out
+          count=$(ls out/*.apk | wc -l)
+          if [ "$count" -ne 10 ]; then echo "::error::Expected 10 APKs, got $count"; exit 1; fi
           signer=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
           for apk in out/*.apk; do
             certs=$("$signer" verify --print-certs "$apk")
@@ -78,7 +87,7 @@ jobs:
             if echo "$certs" | grep -q "CN=lens-kmp development"; then echo "::error::$apk is signed with the dev key"; exit 1; fi
           done
           # The foss APK promises nothing proprietary; the google one is where ML Kit lives.
-          bash scripts/check-foss-apk.sh "out/Seenly-v$VERSION-foss-release.apk"
+          for apk in out/Seenly-v$VERSION-foss-*.apk; do bash scripts/check-foss-apk.sh "$apk"; done
           # The in-app updater picks its APK by these names and verifies it against SHA256SUMS.
           (cd out && sha256sum *.apk > SHA256SUMS)
           rm -f "$RUNNER_TEMP/release.jks"

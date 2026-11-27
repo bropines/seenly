@@ -228,6 +228,12 @@ fun ViewerScreen(
     }
     // Opened to search (shared to "Search", or the camera's mode): the search itself opens, not just the dots.
     var autoSearched by rememberSaveable { mutableStateOf(false) }
+    // Visual search through Google's own Lens app, when chosen and installed. False: search here.
+    suspend fun handedToGoogle(index: Int, region: FloatArray? = null): Boolean {
+        if (!settings.searchInGoogleApp || !services.googleLensAvailable) return false
+        val bytes = runCatching { vm.pageBytes(index) }.getOrNull() ?: return false
+        return services.searchInGoogleLens(bytes, region)
+    }
     val window = LocalWindowInfo.current
     LaunchedEffect(Unit) {
         if (startMode != ViewMode.Search || autoSearched) return@LaunchedEffect
@@ -235,6 +241,10 @@ fun ViewerScreen(
         // that is still coming up opens as a tab of its own, or not at all.
         snapshotFlow { window.isWindowFocused }.first { it }
         delay(AUTO_SEARCH_SETTLE_MS)
+        if (handedToGoogle(pager.currentPage)) {
+            autoSearched = true
+            return@LaunchedEffect
+        }
         // Marked done once the link is opened: cut short by a rotation, it runs again.
         vm.visualSearch(pager.currentPage, { url -> autoSearched = true; services.openUrl(url) }) { it.searchImageUrl() }
     }
@@ -632,9 +642,19 @@ fun ViewerScreen(
                         onRegion = { rect ->
                             val region = Region(rect.left, rect.top, rect.width, rect.height)
                             lastRegion = region
-                            vm.visualSearch(index, services::openUrl) { it.searchRegionUrl(region) }
+                            scope.launch {
+                                if (!handedToGoogle(index, floatArrayOf(rect.left, rect.top, rect.right, rect.bottom))) {
+                                    vm.visualSearch(index, services::openUrl) { it.searchRegionUrl(region) }
+                                }
+                            }
                         },
-                        onObject = { obj -> vm.visualSearch(index, services::openUrl) { it.searchObjectUrl(obj.id) } },
+                        onObject = { obj ->
+                            scope.launch {
+                                if (!handedToGoogle(index, floatArrayOf(obj.box.left, obj.box.top, obj.box.right, obj.box.bottom))) {
+                                    vm.visualSearch(index, services::openUrl) { it.searchObjectUrl(obj.id) }
+                                }
+                            }
+                        },
                     )
                 }
             }
@@ -804,7 +824,10 @@ fun ViewerScreen(
                             selection.clear()
                             vm.rememberCameraMode(ViewMode.Search)
                         },
-                        onSearchWhole = { vm.visualSearch(pager.currentPage, services::openUrl) { it.searchImageUrl() } },
+                        onSearchWhole = {
+                            val page = pager.currentPage
+                            scope.launch { if (!handedToGoogle(page)) vm.visualSearch(page, services::openUrl) { it.searchImageUrl() } }
+                        },
                         onAskAi = { askAi = true },
                         result = result,
                         canExportImage = canExportImage,

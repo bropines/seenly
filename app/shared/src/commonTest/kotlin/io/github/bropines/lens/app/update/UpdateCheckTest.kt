@@ -85,6 +85,22 @@ class UpdateCheckTest {
         assertEquals("SHA256SUMS", UpdateCheck.checksumsOf(files)?.name)
     }
 
+    private val split = Release(
+        "v0.6.0",
+        assets = listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64", "universal").flatMap { abi ->
+            listOf("google", "foss").map { flavor -> ReleaseAsset("Seenly-v0.6.0-$flavor-$abi-release.apk", "https://example.test/$flavor-$abi.apk") }
+        },
+    )
+
+    @Test
+    fun aSplitReleaseGivesTheApkForTheDevicesAbi() {
+        assertEquals("https://example.test/google-arm64-v8a.apk", UpdateCheck.apkFor(split, "google", listOf("arm64-v8a", "armeabi-v7a"))?.url)
+        assertEquals("https://example.test/foss-x86_64.apk", UpdateCheck.apkFor(split, "foss", listOf("x86_64", "x86"))?.url)
+        // An ABI the release has no APK for, or none known: the universal APK.
+        assertEquals("https://example.test/google-universal.apk", UpdateCheck.apkFor(split, "google", listOf("riscv64"))?.url)
+        assertEquals("https://example.test/foss-universal.apk", UpdateCheck.apkFor(split, "foss")?.url)
+    }
+
     @Test
     fun aReleaseWithoutThisFlavorsApkOffersNoFile() {
         // Never the other flavor's APK: it is a different app.

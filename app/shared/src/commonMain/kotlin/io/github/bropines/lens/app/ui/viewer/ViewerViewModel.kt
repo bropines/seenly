@@ -207,6 +207,9 @@ class ViewerViewModel(
 
     private fun rotationOf(index: Int): Int = _rotations.value[gallery.items[index].key] ?: 0
 
+    /** Page [index]'s picture as shown (turned like the view), for handing to another app. */
+    suspend fun pageBytes(index: Int): ByteArray = scans.pageBytes(gallery.items[index], rotationOf(index))
+
     /**
      * Turns page [index] a quarter clockwise and reads it again: Lens gets the
      * turned pixels, and the old result (boxes for the old turn) is dropped

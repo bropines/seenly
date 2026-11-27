@@ -151,6 +151,14 @@ class AndroidPlatformServices(private val context: Context) : PlatformServices {
 
     override val canChooseLinkOpening: Boolean get() = true
 
+    private val googleLens by lazy { GoogleLensHandoff(context) }
+
+    // Asked each time: the Google app can be installed or removed while Seenly runs.
+    override val googleLensAvailable: Boolean get() = googleLens.available()
+
+    override suspend fun searchInGoogleLens(image: ByteArray, region: FloatArray?): Boolean =
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { googleLens.search(image, region, activity?.get()) }
+
     /** Where links open; kept in step with the setting by LensApplication. */
     @Volatile
     var linkOpening: LinkOpening = LinkOpening.Sheet

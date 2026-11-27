@@ -1,7 +1,22 @@
+import com.android.build.api.variant.FilterConfiguration
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
+
+// Every release is built for all four ABIs, one APK each, plus a universal APK with all of them
+// (as TailSocks does): the APK for a phone's own ABI is a third of the universal one, mostly because
+// ML Kit's translator is a 12-17 MB native library per ABI. -Plens.abi=arm64-v8a builds just one,
+// for a quick local install.
+val allAbis = listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+val onlyAbi: String? = providers.gradleProperty("lens.abi").orNull?.also {
+    require(it in allAbis) { "-Plens.abi must be one of $allAbis, not $it" }
+}
+// Each ABI's APK has its own versionCode, so an APK for one ABI can replace the universal one and
+// back: lens.versionCode × 10, plus 1-4 for the ABI; the universal APK ends in 0.
+val abiVersionOffset = mapOf("armeabi-v7a" to 1, "arm64-v8a" to 2, "x86" to 3, "x86_64" to 4)
+val baseVersionCode = providers.gradleProperty("lens.versionCode").map { it.toInt() }.getOrElse(1)
 
 android {
     namespace = "io.github.bropines.lens"
@@ -15,7 +30,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         // CI passes the tag's version (-Plens.versionName=0.2.0) and a growing code (-Plens.versionCode=…).
-        versionCode = providers.gradleProperty("lens.versionCode").map { it.toInt() }.getOrElse(1)
+        versionCode = baseVersionCode * 10
         versionName = providers.gradleProperty("lens.versionName").getOrElse("0.1.0")
     }
 
@@ -67,11 +82,6 @@ android {
         // It is closed-source and needs Google Play services.
         create("google") {
             dimension = "distribution"
-            // ML Kit's translator is a 12-17 MB native library per ABI. x86 is emulators and a few
-            // Chromebooks, and all four ABIs make a 70 MB APK; -Plens.allAbis builds one for an emulator.
-            if (!providers.gradleProperty("lens.allAbis").isPresent) {
-                ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
-            }
         }
         // Open-source code only: no ML Kit, no Play services (src/foss has the empty stand-in, and
         // the release workflow checks the APK for strays). Installs side by side with google.
@@ -89,6 +99,25 @@ android {
     // The README render of the screen translator's menu (src/test) reads resources through Robolectric.
     testOptions { unitTests.isIncludeAndroidResources = true }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include(*(onlyAbi?.let { listOf(it) } ?: allAbis).toTypedArray())
+            // AGP refuses a universal APK beside a single-ABI split.
+            isUniversalApk = onlyAbi == null
+        }
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            val abi = output.filters.firstOrNull { it.filterType == FilterConfiguration.FilterType.ABI }?.identifier
+            output.versionCode.set(baseVersionCode * 10 + (abi?.let { abiVersionOffset.getValue(it) } ?: 0))
+        }
+    }
 }
 
 kotlin {

@@ -191,7 +191,7 @@ class UpdateController(
         downloading = scope.launch {
             _download.value = DownloadState.Running(null)
             try {
-                val path = downloader.fetch(release, installer.flavor, installer.downloadDir) { _download.value = DownloadState.Running(it) }
+                val path = downloader.fetch(release, installer.flavor, installer.abis, installer.downloadDir) { _download.value = DownloadState.Running(it) }
                 install(path, askPermission = true)
             } catch (e: CancellationException) {
                 throw e
@@ -200,7 +200,7 @@ class UpdateController(
                 _download.value = DownloadState.Failed(
                     when {
                         e is UpdateException && "checksum" in e.message.orEmpty() -> uiText(Res.string.update_error_checksum)
-                        e is UpdateException && UpdateCheck.apkFor(release, installer.flavor) == null -> uiText(Res.string.update_error_no_file)
+                        e is UpdateException && UpdateCheck.apkFor(release, installer.flavor, installer.abis) == null -> uiText(Res.string.update_error_no_file)
                         else -> uiText(Res.string.update_error, e.message.orEmpty())
                     },
                 )

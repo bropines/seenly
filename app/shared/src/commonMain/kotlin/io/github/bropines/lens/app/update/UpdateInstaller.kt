@@ -29,6 +29,9 @@ interface UpdateInstaller {
     /** `google` or `foss`: which APK of a release is this build's. */
     val flavor: String
 
+    /** The ABIs this device runs, best first, for the APK built for it. */
+    val abis: List<String> get() = emptyList()
+
     /** A private directory the system's installer can be handed files from. */
     val downloadDir: String
 
@@ -54,8 +57,8 @@ class UpdateDownloader(private val http: HttpClient) {
      * Fails closed: a release without checksums, or a file that does not match
      * them, is never returned.
      */
-    suspend fun fetch(release: Release, flavor: String, dir: String, onProgress: (Float?) -> Unit): String = withContext(Dispatchers.IO) {
-        val apk = UpdateCheck.apkFor(release, flavor) ?: throw UpdateException("the release has no $flavor APK")
+    suspend fun fetch(release: Release, flavor: String, abis: List<String>, dir: String, onProgress: (Float?) -> Unit): String = withContext(Dispatchers.IO) {
+        val apk = UpdateCheck.apkFor(release, flavor, abis) ?: throw UpdateException("the release has no $flavor APK")
         val sums = UpdateCheck.checksumsOf(release) ?: throw UpdateException("the release has no ${UpdateCheck.CHECKSUMS}")
         val expected = UpdateCheck.parseChecksums(http.get(sums.url).also { it.requireSuccess() }.bodyAsText())[apk.name]
             ?: throw UpdateException("${UpdateCheck.CHECKSUMS} does not list ${apk.name}")

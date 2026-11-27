@@ -174,6 +174,14 @@ private fun TranslationPage(graph: AppGraph, settings: AppSettings, update: Upda
                 ) { v -> update { it.copy(linkOpening = v) } }
             }
         }
+        if (graph.services.googleLensAvailable) {
+            SettingsCard {
+                Toggle(
+                    Icons.Rounded.ImageSearch, stringResource(Res.string.search_google_app),
+                    stringResource(Res.string.search_google_app_desc), settings.searchInGoogleApp,
+                ) { on -> update { it.copy(searchInGoogleApp = on) } }
+            }
+        }
         if (graph.services.hasShareTargets) {
             // Seenly's quick entries in the system share sheet; a picture shared to one opens in that mode.
             SettingsCard(stringResource(Res.string.share_targets_title)) {

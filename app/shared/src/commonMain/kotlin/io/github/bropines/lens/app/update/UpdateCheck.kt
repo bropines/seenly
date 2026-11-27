@@ -64,12 +64,19 @@ object UpdateCheck {
         newest(releases, betas)?.takeIf { isVersionNewer(installed, it.tag) }
 
     /**
-     * The APK of [release] for a build of [flavor] (`google` or `foss`):
-     * `Seenly-v0.2.0-google-release.apk`. Never the other flavor's: that is a
-     * different app id and would install beside this copy, not over it.
+     * The APK of [release] for a build of [flavor] (`google` or `foss`) on a
+     * device that runs [abis], best first: the one for the first of them
+     * (`Seenly-v0.6.0-google-arm64-v8a-release.apk`), else the universal one,
+     * else a release from before the APKs were split (`Seenly-v0.5.2-google-release.apk`).
+     * Never the other flavor's: that is a different app id and would install
+     * beside this copy, not over it.
      */
-    fun apkFor(release: Release, flavor: String): ReleaseAsset? =
-        release.assets.firstOrNull { it.name.endsWith("-$flavor-release.apk", ignoreCase = true) }
+    fun apkFor(release: Release, flavor: String, abis: List<String> = emptyList()): ReleaseAsset? {
+        fun named(suffix: String) = release.assets.firstOrNull { it.name.endsWith(suffix, ignoreCase = true) }
+        return abis.firstNotNullOfOrNull { named("-$flavor-$it-release.apk") }
+            ?: named("-$flavor-universal-release.apk")
+            ?: named("-$flavor-release.apk")
+    }
 
     /** The release's `SHA256SUMS` file, which lists the hash of every APK. */
     fun checksumsOf(release: Release): ReleaseAsset? = release.assets.firstOrNull { it.name == CHECKSUMS }

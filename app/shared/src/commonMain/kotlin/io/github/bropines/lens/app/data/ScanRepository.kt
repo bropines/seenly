@@ -55,6 +55,9 @@ interface PageScanner {
     suspend fun searchSession(item: GalleryItem, settings: AppSettings, rotation: Int = 0): SearchTarget
 
     fun searchTextUrl(text: String): String
+
+    /** [item]'s picture turned [rotation] quarter turns, encoded, as a search would send it. */
+    suspend fun pageBytes(item: GalleryItem, rotation: Int = 0): ByteArray = item.file.readBytes()
 }
 
 /**
@@ -97,6 +100,8 @@ class ScanRepository(private val lens: LensClient, private val history: HistoryR
 
     /** [item]'s bytes as uploaded: turned by [rotation] quarter turns clockwise. */
     private suspend fun uploadBytes(item: GalleryItem, rotation: Int): ByteArray = turned(item.file.readBytes(), rotation)
+
+    override suspend fun pageBytes(item: GalleryItem, rotation: Int): ByteArray = uploadBytes(item, rotation)
 
     private suspend fun turned(bytes: ByteArray, rotation: Int): ByteArray =
         if (quarterTurns(rotation) == 0) bytes else withContext(Dispatchers.Default) { rotateEncodedImage(bytes, rotation) }

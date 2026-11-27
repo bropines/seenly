@@ -18,6 +18,9 @@
         <intent>
             <action android:name="android.support.customtabs.action.CustomTabsService" />
         </intent>
+        <!-- Visual search may go to Google's own Lens (GoogleLensHandoff). -->
+        <package android:name="com.google.android.googlequicksearchbox" />
+        <package android:name="com.google.ar.lens" />
     </queries>
 
     <application

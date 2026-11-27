@@ -33,12 +33,14 @@ Seenly is an Android app (with a desktop build) written with Kotlin Multiplatfor
 
 ## Which APK
 
-Each [release](https://github.com/bropines/seenly/releases) has two APKs. They are different apps to Android and can be installed side by side.
+Each [release](https://github.com/bropines/seenly/releases) has two flavors, `google` and `foss`. They are different apps to Android and can be installed side by side.
 
-- `Seenly-v…-google-release.apk`: everything, including on-device recognition and translation through Google ML Kit. ML Kit is closed-source and needs Google Play services on the phone. Pick this one unless you have a reason not to. It is the larger file (ML Kit's translator) and is built for ARM phones only.
-- `Seenly-v…-foss-release.apk`: open-source code only, with no ML Kit and no Play services; it works on a phone without Google's apps. Everything goes through Lens and the online translators, so there is no offline mode.
+Each flavor comes as one APK per processor type and a universal one. Almost every phone wants `arm64-v8a`; old 32-bit phones want `armeabi-v7a`, emulators and Chromebooks `x86_64` or `x86`. `universal` runs anywhere and is the largest file. The name says which: `Seenly-v…-google-arm64-v8a-release.apk`.
 
-Both update themselves from GitHub releases, each with its own file, checked against the release's `SHA256SUMS`.
+- `google`: everything, including on-device recognition and translation through Google ML Kit. ML Kit is closed-source and needs Google Play services on the phone. Pick this one unless you have a reason not to. It is the larger file, because of ML Kit's translator.
+- `foss`: open-source code only, with no ML Kit and no Play services; it works on a phone without Google's apps. Everything goes through Lens and the online translators, so there is no offline mode.
+
+Both update themselves from GitHub releases, downloading the APK for the phone's own processor and checking it against the release's `SHA256SUMS`.
 
 ## Screenshots
 

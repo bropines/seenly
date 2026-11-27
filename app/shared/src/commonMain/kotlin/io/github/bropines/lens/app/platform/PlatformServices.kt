@@ -41,6 +41,15 @@ interface PlatformServices {
     /** Whether the system has a share sheet that can list Seenly's quick entries (Android). */
     val hasShareTargets: Boolean get() = false
 
+    /** Whether visual search can go to Google's own Lens, in the Google app (Android with the app installed). */
+    val googleLensAvailable: Boolean get() = false
+
+    /**
+     * Hands [image] to Google's Lens app, cut to [region] (left, top, right, bottom as
+     * fractions) when given. False when there is no such app or it did not take it.
+     */
+    suspend fun searchInGoogleLens(image: ByteArray, region: FloatArray? = null): Boolean = false
+
     /** Sends Seenly behind the app that handed it a picture, once that picture is closed. */
     fun returnToCaller() {}
 

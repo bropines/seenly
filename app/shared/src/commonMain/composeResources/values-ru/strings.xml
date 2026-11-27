@@ -505,4 +505,6 @@
     <string name="links_tab_desc">Результаты поиска и ссылки открываются в вашем браузере вкладкой на весь экран поверх Seenly; «назад» возвращает.</string>
     <string name="links_browser_desc">Результаты поиска и ссылки открываются в самом браузере, отдельно от Seenly.</string>
     <string name="viewer_search_this">Найти это</string>
+    <string name="search_google_app">Искать в приложении Google</string>
+    <string name="search_google_app_desc">Визуальный поиск открывает Google Lens в приложении Google с картинкой или обведённой либо выбранной частью вместо собственного поиска Seenly. Картинку, которую Lens может не принять, Seenly сначала конвертирует. «Спросить ИИ» остаётся в Seenly.</string>
 </resources>

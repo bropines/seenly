@@ -18,6 +18,8 @@ import java.io.File
 class AndroidUpdateInstaller private constructor(private val context: Context) : UpdateInstaller {
     override val flavor: String = BuildConfig.FLAVOR
 
+    override val abis: List<String> = Build.SUPPORTED_ABIS.toList()
+
     override val downloadDir: String = File(context.cacheDir, "updates").absolutePath
 
     override fun canInstall(): Boolean = context.packageManager.canRequestPackageInstalls()
