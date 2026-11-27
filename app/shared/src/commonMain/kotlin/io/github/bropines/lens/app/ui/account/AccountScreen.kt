@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Login
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.AlternateEmail
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material.icons.rounded.DocumentScanner
 import androidx.compose.material.icons.rounded.FileOpen
@@ -69,6 +70,7 @@ fun AccountScreen(
     val snackbar = remember { SnackbarHostState() }
     val state by account.state.collectAsState()
     var pasting by remember { mutableStateOf(false) }
+    var editingEmail by remember { mutableStateOf(false) }
 
     fun connect(text: String) = scope.launch {
         snackbar.showSnackbar(getString(if (account.connect(text)) Res.string.account_connected else Res.string.account_no_session))
@@ -124,6 +126,11 @@ fun AccountScreen(
                     Icons.Rounded.DocumentScanner, stringResource(Res.string.account_use_for_lens), stringResource(Res.string.account_use_for_lens_desc),
                     settings.account.useForLens,
                 ) { on -> scope.launch { repository.update { it.copy(account = it.account.copy(useForLens = on)) } } }
+                // Identity delegation signs with the address; found by itself after connecting, or typed.
+                Setting(
+                    Icons.Rounded.AlternateEmail, stringResource(Res.string.account_email),
+                    state.email ?: stringResource(Res.string.account_email_none),
+                ) { editingEmail = true }
                 if (state.rejected) {
                     Setting(Icons.Rounded.Refresh, stringResource(Res.string.account_retry), stringResource(Res.string.account_retry_desc), account::retry)
                 }
@@ -141,6 +148,40 @@ fun AccountScreen(
             Setting(Icons.Rounded.ContentPaste, stringResource(Res.string.account_paste), stringResource(Res.string.account_paste_desc)) { pasting = true }
             Setting(Icons.Rounded.FileOpen, stringResource(Res.string.account_file), stringResource(Res.string.account_file_desc)) { picker.launch() }
         }
+    }
+
+    if (editingEmail) {
+        var text by remember { mutableStateOf(state.email.orEmpty()) }
+        AlertDialog(
+            onDismissRequest = { editingEmail = false },
+            title = { Text(stringResource(Res.string.account_email)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(Res.string.account_email_hint), style = MaterialTheme.typography.bodySmall)
+                    OutlinedTextField(
+                        value = text,
+                        onValueChange = { text = it },
+                        singleLine = true,
+                        placeholder = { Text("name@gmail.com") },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    TextButton(onClick = {
+                        scope.launch {
+                            val found = account.detectEmail()
+                            if (found != null) text = found
+                            else snackbar.showSnackbar(getString(Res.string.account_email_not_found))
+                        }
+                    }) { Text(stringResource(Res.string.account_email_detect)) }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    editingEmail = false
+                    account.setEmail(text)
+                }) { Text(stringResource(Res.string.account_email_save)) }
+            },
+            dismissButton = { TextButton(onClick = { editingEmail = false }) { Text(stringResource(Res.string.cancel)) } },
+        )
     }
 
     if (pasting) {

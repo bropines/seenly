@@ -12,6 +12,10 @@ public object LensDefaults {
     /** Opens a search session: the ids that tie an upload to a results page. */
     public const val CLUSTER_INFO_ENDPOINT: String = "https://lensfrontend-pa.googleapis.com/v1/gsessionid"
 
+    /** The API host, and the one identity delegation's signed requests go to instead (Chromium's `kLensComposeboxIdentityDelegation`). */
+    public const val API_HOST: String = "lensfrontend-pa.googleapis.com"
+    public const val IDENTITY_DELEGATION_HOST: String = "lensfrontend-pa.clients6.google.com"
+
     /** The results page. Everything a user calls "search" is HTML there, not in any response. */
     public const val RESULTS_URL: String = "https://www.google.com/search"
 

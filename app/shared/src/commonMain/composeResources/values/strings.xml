@@ -377,7 +377,7 @@
     <string name="account_summary_connected">Google account connected</string>
     <string name="account_summary_rejected">Google refused the session; requests are anonymous</string>
     <string name="account_summary_unused">Connected, not used for Lens</string>
-    <string name="account_intro">Experimental. Lens currently refuses signed-in requests from apps other than Chrome (it wants Chrome’s own sign-in), so with an account connected the first request is refused and the rest go out anonymously, as they do without one. Kept for if that changes. The cookies are sent only to Google, only from this device. Anyone holding them is signed in as you, so connect only an account you’d use in a browser here.</string>
+    <string name="account_intro">Experimental. Requests are signed the way Chrome’s “identity delegation” signs them: your cookies plus a hash made with the account’s address. If Lens refuses the session, requests go out anonymously, as they do without an account. The cookies are sent only to Google, only from this device. Anyone holding them is signed in as you, so connect only an account you’d use in a browser here.</string>
     <string name="account_storage_encrypted">They are stored encrypted with a key that never leaves this device.</string>
     <string name="account_storage_plain">They are stored in a file in the app’s data folder, readable by your user account.</string>
     <string name="account_never_used">Not used yet</string>
@@ -502,4 +502,10 @@
     <string name="viewer_search_this">Search this</string>
     <string name="search_google_app">Search in the Google app</string>
     <string name="search_google_app_desc">Visual search opens Google Lens in the Google app with the picture, or the part you circled or tapped, instead of Seenly\'s own search. A picture Lens may not take is converted first. Ask AI stays in Seenly.</string>
+    <string name="account_email">Account address</string>
+    <string name="account_email_none">Not found yet: needed to sign Lens requests</string>
+    <string name="account_email_hint">Lens signs requests with the account’s address, as Chrome does. Seenly asks Google for it after you connect; type it here if that did not work.</string>
+    <string name="account_email_detect">Find it</string>
+    <string name="account_email_not_found">Google didn’t say which account this is</string>
+    <string name="account_email_save">Save</string>
 </resources>

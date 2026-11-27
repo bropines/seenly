@@ -97,7 +97,7 @@ class DemoGraph(override val services: DemoServices) : AppGraph {
     override val gallery = GalleryRepository(services, history)
     override val scans = ScanRepository(lens, history, services)
     override val updates = io.github.bropines.lens.app.update.UpdateController(offline, settings, services)
-    override val account = io.github.bropines.lens.app.data.GoogleAccount(services, settings)
+    override val account by lazy { io.github.bropines.lens.app.data.GoogleAccount(services, settings, network) }
 
     /** Built like the app's, and never asked for a connection: everything above is handed [offline]. */
     override val network = io.github.bropines.lens.app.net.AppNetwork(services, settings)

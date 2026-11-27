@@ -382,7 +382,7 @@
     <string name="account_summary_connected">Аккаунт Google подключён</string>
     <string name="account_summary_rejected">Google отклонил сессию; запросы идут анонимно</string>
     <string name="account_summary_unused">Подключён, для Lens не используется</string>
-    <string name="account_intro">Экспериментально. Сейчас Lens отклоняет запросы с аккаунтом от всех приложений, кроме Chrome (ему нужен вход самого Chrome), поэтому с подключённым аккаунтом первый запрос отклоняется, а остальные уходят анонимно, как и без него. Оставлено на случай, если это изменится. Cookies отправляются только в Google и только с этого устройства. Тот, у кого они есть, входит как вы, поэтому подключайте только аккаунт, которым пользовались бы здесь в браузере.</string>
+    <string name="account_intro">Экспериментально. Запросы подписываются так же, как в Chrome в режиме «identity delegation»: ваши cookies и хэш, в который входит адрес аккаунта. Если Lens отклонит сессию, запросы уйдут анонимно, как и без аккаунта. Cookies отправляются только в Google и только с этого устройства. Тот, у кого они есть, входит как вы, поэтому подключайте только аккаунт, которым пользовались бы здесь в браузере.</string>
     <string name="account_storage_encrypted">Они хранятся зашифрованными ключом, который не покидает это устройство.</string>
     <string name="account_storage_plain">Они хранятся в файле в папке данных приложения, доступном вашей учётной записи.</string>
     <string name="account_never_used">Ещё не использовался</string>
@@ -507,4 +507,10 @@
     <string name="viewer_search_this">Найти это</string>
     <string name="search_google_app">Искать в приложении Google</string>
     <string name="search_google_app_desc">Визуальный поиск открывает Google Lens в приложении Google с картинкой или обведённой либо выбранной частью вместо собственного поиска Seenly. Картинку, которую Lens может не принять, Seenly сначала конвертирует. «Спросить ИИ» остаётся в Seenly.</string>
+    <string name="account_email">Адрес аккаунта</string>
+    <string name="account_email_none">Пока не найден: нужен для подписи запросов к Lens</string>
+    <string name="account_email_hint">Lens подписывает запросы адресом аккаунта, как Chrome. Seenly спрашивает его у Google после подключения; если не вышло, впишите его сюда.</string>
+    <string name="account_email_detect">Найти</string>
+    <string name="account_email_not_found">Google не сказал, что это за аккаунт</string>
+    <string name="account_email_save">Сохранить</string>
 </resources>

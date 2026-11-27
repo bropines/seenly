@@ -92,7 +92,10 @@ public class LensClient(
         val path = url.substringBefore('?')
         log.d { "POST $path, ${body.size} bytes" }
         val account = credentials?.current()
-        var response = sendPatiently(url, body, account, path)
+        // Signed the way Chrome's identity delegation signs, a request goes to the clients6 host;
+        // anonymous, or repeated without the account, to the usual one.
+        val signedUrl = if (account?.delegates == true) url.replace(LensDefaults.API_HOST, LensDefaults.IDENTITY_DELEGATION_HOST) else url
+        var response = sendPatiently(signedUrl, body, account, path)
         if (account != null && (response.status.value == 401 || response.status.value == 403)) {
             // Google's error body says why (wrong credential type, origin not allowed, expired…):
             // the one clue there is to how a signed request should look.

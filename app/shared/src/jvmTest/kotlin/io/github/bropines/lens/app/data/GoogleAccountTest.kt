@@ -39,7 +39,7 @@ class GoogleAccountTest {
     fun connectsOnlyASignedInSessionAndKeepsItAcrossRestarts() {
         val services = Services()
         val settings = SettingsRepository(services)
-        val account = GoogleAccount(services, settings)
+        val account = GoogleAccount(services, settings, io.github.bropines.lens.app.net.AppNetwork(services, settings))
         assertFalse(account.state.value.connected)
         assertNull(account.current())
 
@@ -55,7 +55,7 @@ class GoogleAccountTest {
         assertEquals(cookies, account.exportCookies())
 
         // A new process reads the same session back.
-        val again = GoogleAccount(services, settings)
+        val again = GoogleAccount(services, settings, io.github.bropines.lens.app.net.AppNetwork(services, settings))
         assertTrue(again.state.value.connected)
         assertEquals(cookies, again.current()?.cookieHeader)
 
@@ -68,7 +68,7 @@ class GoogleAccountTest {
     @Test
     fun aRefusedSessionIsSetAsideAndSaidOnce() {
         val services = Services()
-        val account = GoogleAccount(services, SettingsRepository(services))
+        val account = SettingsRepository(services).let { s -> GoogleAccount(services, s, io.github.bropines.lens.app.net.AppNetwork(services, s)) }
         account.connect(cookies)
 
         account.rejected(401)
@@ -80,7 +80,7 @@ class GoogleAccountTest {
         account.rejected(403)
         assertFalse(account.refused.value)
         // Set aside, not deleted: the user may try it again, and a restart remembers the refusal.
-        assertTrue(GoogleAccount(services, SettingsRepository(Services())).state.value.rejected)
+        assertTrue(SettingsRepository(Services()).let { s -> GoogleAccount(services, s, io.github.bropines.lens.app.net.AppNetwork(services, s)) }.state.value.rejected)
 
         account.retry()
         assertFalse(account.state.value.rejected)
@@ -91,7 +91,7 @@ class GoogleAccountTest {
     fun theSettingTurnsTheAccountOffWithoutForgettingIt() = runBlocking {
         val services = Services()
         val settings = SettingsRepository(services)
-        val account = GoogleAccount(services, settings)
+        val account = GoogleAccount(services, settings, io.github.bropines.lens.app.net.AppNetwork(services, settings))
         account.connect(cookies)
         settings.update { it.copy(account = AccountPrefs(useForLens = false)) }
         settings.current.first { !it.account.useForLens }

@@ -26,6 +26,30 @@ class GoogleCredentialsTest {
     }
 
     @Test
+    fun withAnAddressItSignsTheWayIdentityDelegationDoes() {
+        // sha1("<email> <time> <SAPISID> <origin>"), one part, "_e" at the end; computed apart, in Python.
+        val delegated = GoogleCredentials(mapOf("SID" to "s", "SAPISID" to "AbCdEf/123", "__Secure-1PAPISID" to "x"), email = " user@example.com ")
+        delegated.delegates shouldBe true
+        delegated.authorization("https://www.google.com", 1_700_000_000) shouldBe
+            "SAPISIDHASH 1700000000_63f76c6071122477af7276366dbbfc60e05b8200_e"
+        // Without the address, or without a SAPISID, it cannot.
+        session.delegates shouldBe false
+        GoogleCredentials(mapOf("SID" to "s", "__Secure-3PAPISID" to "y"), email = "user@example.com").delegates shouldBe false
+    }
+
+    @Test
+    fun aDelegatedRequestGoesToClients6AndItsAnonymousRepeatToTheApiHost() = runTest {
+        val hosts = mutableListOf<String>()
+        val engine = MockEngine { request ->
+            hosts += request.url.host
+            if (request.headers["Cookie"] != null) respond("", HttpStatusCode.Unauthorized) else respond(emptyReply, HttpStatusCode.OK)
+        }
+        val delegated = GoogleCredentials(mapOf("SID" to "s", "SAPISID" to "p"), email = "user@example.com")
+        LensClient(HttpClient(engine), credentials = Source(delegated)).scan(image)
+        hosts shouldBe listOf(LensDefaults.IDENTITY_DELEGATION_HOST, LensDefaults.API_HOST)
+    }
+
+    @Test
     fun aSessionNeedsBothASessionCookieAndASapisid() {
         session.isSignedIn shouldBe true
         GoogleCredentials(mapOf("SID" to "x")).isSignedIn shouldBe false

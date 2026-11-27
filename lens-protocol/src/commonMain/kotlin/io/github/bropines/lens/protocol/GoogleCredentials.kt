@@ -20,11 +20,24 @@ import okio.ByteString.Companion.encodeUtf8
  * `X-Goog-AuthUser`, and an `Authorization` header derived from the `SAPISID`
  * cookie and that origin. This class builds the second.
  *
- * The hash itself is the scheme Google's web pages use; Chromium's own
- * `GenerateSapisidHash` was not available to compare byte for byte.
+ * With the account's [email] the hash is identity delegation's own:
+ * `SAPISIDHASH <time>_<sha1("<email> <time> <SAPISID> <origin>")>_e`, and the
+ * requests go to `lensfrontend-pa.clients6.google.com` ([delegates]). Without
+ * it, the scheme Google's web pages use, which Lens refuses (HTTP 401).
  */
-public class GoogleCredentials(cookies: Map<String, String>) {
+public class GoogleCredentials(
+    cookies: Map<String, String>,
+    /** The account's address; identity delegation signs with it. */
+    email: String? = null,
+    /** Which account of the session ("0" the first), as `X-Goog-AuthUser`. */
+    public val authUser: String = "0",
+) {
     public val cookies: Map<String, String> = cookies.filter { (name, value) -> name.isNotBlank() && value.isNotEmpty() }
+
+    public val email: String? = email?.trim()?.takeIf { it.isNotEmpty() }
+
+    /** Requests can be signed the way Chrome's identity delegation signs them: an address and a `SAPISID`. */
+    public val delegates: Boolean get() = email != null && !cookies["SAPISID"].isNullOrEmpty()
 
     /** True when the session can sign a request: it has a session cookie and a `SAPISID`. */
     public val isSignedIn: Boolean
@@ -39,11 +52,16 @@ public class GoogleCredentials(cookies: Map<String, String>) {
      * for each of `SAPISID` and its first- and third-party twins that is
      * present, or null when there is none.
      */
-    public fun authorization(origin: String, nowSeconds: Long): String? =
-        HASH_COOKIES.mapNotNull { (scheme, cookie) ->
+    public fun authorization(origin: String, nowSeconds: Long): String? {
+        if (delegates) {
+            val digest = "$email $nowSeconds ${cookies.getValue("SAPISID")} $origin".encodeUtf8().sha1().hex()
+            return "SAPISIDHASH ${nowSeconds}_${digest}_e"
+        }
+        return HASH_COOKIES.mapNotNull { (scheme, cookie) ->
             val secret = cookies[cookie] ?: return@mapNotNull null
             "$scheme ${nowSeconds}_${"$nowSeconds $secret $origin".encodeUtf8().sha1().hex()}"
         }.takeIf { it.isNotEmpty() }?.joinToString(" ")
+    }
 
     /** The headers that make a request to a Google API a signed-in one, on top of the anonymous ones. */
     public fun headers(nowSeconds: Long, origin: String = ORIGIN): List<Pair<String, String>> = buildList {
@@ -51,8 +69,8 @@ public class GoogleCredentials(cookies: Map<String, String>) {
         authorization(origin, nowSeconds)?.let {
             add("Authorization" to it)
             add("Origin" to origin)
-            // The first account of the session; Chromium passes the same index.
-            add("X-Goog-AuthUser" to "0")
+            // Chromium passes the first account of the session, index 0.
+            add("X-Goog-AuthUser" to authUser)
         }
     }
 

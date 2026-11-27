@@ -4,7 +4,16 @@ import co.touchlab.kermit.Logger
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import io.github.bropines.lens.app.net.AppNetwork
 import io.github.bropines.lens.app.platform.PlatformServices
+import io.ktor.client.request.get
+import io.ktor.client.request.headers
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import io.github.bropines.lens.protocol.GoogleCookies
 import io.github.bropines.lens.protocol.GoogleCredentials
 import io.github.bropines.lens.protocol.LensCredentialsSource
@@ -68,7 +77,11 @@ class FileSecretStore(private val dir: String) : SecretStore {
 @OptIn(ExperimentalTime::class)
 @SingleIn(AppScope::class)
 @Inject
-class GoogleAccount(services: PlatformServices, private val settings: SettingsRepository) : LensCredentialsSource {
+class GoogleAccount(
+    services: PlatformServices,
+    private val settings: SettingsRepository,
+    private val network: AppNetwork,
+) : LensCredentialsSource {
     /** What Settings shows of the account. */
     data class State(
         val connected: Boolean = false,
@@ -78,17 +91,21 @@ class GoogleAccount(services: PlatformServices, private val settings: SettingsRe
         val rejected: Boolean = false,
         /** What Google answered when it refused, e.g. `HTTP 401: …`; empty when it has not. */
         val refusal: String = "",
+        /** The account's address, which identity delegation signs with; null until found or typed. */
+        val email: String? = null,
     )
 
     @Serializable
     private data class Stored(
         val cookies: Map<String, String>,
+        val email: String? = null,
         val lastUsed: Long? = null,
         val rejected: Boolean = false,
         val refusal: String = "",
     )
 
     private val log = Logger.withTag("GoogleAccount")
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val store = services.secrets
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -120,7 +137,33 @@ class GoogleAccount(services: PlatformServices, private val settings: SettingsRe
         val parsed = GoogleCredentials(GoogleCookies.parse(text))
         if (!parsed.isSignedIn) return false
         save(Stored(parsed.cookies))
+        // The address is not in the cookies: Google says it to the session itself.
+        scope.launch { detectEmail() }
         return true
+    }
+
+    /** Sets the account's address by hand; blank forgets it. */
+    fun setEmail(value: String?) {
+        stored.value?.let { save(it.copy(email = value?.trim()?.takeIf(String::isNotEmpty), rejected = false, refusal = "")) }
+    }
+
+    /**
+     * Asks Google which account the stored session is, the way Chrome does
+     * (`ListAccounts`), and keeps its address. Null when that failed.
+     */
+    suspend fun detectEmail(): String? {
+        val s = stored.value ?: return null
+        val found = runCatching {
+            val reply = network.http.get(LIST_ACCOUNTS) {
+                headers {
+                    append("Cookie", GoogleCredentials(s.cookies).cookieHeader)
+                    append("Origin", GoogleCredentials.ORIGIN)
+                }
+            }
+            if (!reply.status.isSuccess()) null else EMAIL.find(reply.bodyAsText())?.value
+        }.onFailure { log.w(it) { "account address not found" } }.getOrNull()
+        if (found != null) stored.value?.takeIf { it.cookies == s.cookies }?.let { save(it.copy(email = found, rejected = false, refusal = "")) }
+        return found
     }
 
     /** Forgets the cookies. The session itself stays valid at Google until signed out there. */
@@ -140,7 +183,7 @@ class GoogleAccount(services: PlatformServices, private val settings: SettingsRe
         val s = stored.value?.takeUnless { it.rejected } ?: return null
         // "Last used" is for a person to glance at: once an hour is plenty, and spares a write per scan.
         if (now - (s.lastUsed ?: 0) > 1.hours.inWholeMilliseconds) save(s.copy(lastUsed = now))
-        return GoogleCredentials(s.cookies)
+        return GoogleCredentials(s.cookies, s.email)
     }
 
     override fun rejected(status: Int, detail: String) {
@@ -159,7 +202,7 @@ class GoogleAccount(services: PlatformServices, private val settings: SettingsRe
     }
 
     private fun stateOf(s: Stored?) =
-        State(connected = s != null, lastUsed = s?.lastUsed, rejected = s?.rejected == true, refusal = s?.refusal.orEmpty())
+        State(connected = s != null, lastUsed = s?.lastUsed, rejected = s?.rejected == true, refusal = s?.refusal.orEmpty(), email = s?.email)
 
     /**
      * Google's error body, shortened to what a person can read: the `message`
@@ -177,5 +220,8 @@ class GoogleAccount(services: PlatformServices, private val settings: SettingsRe
 
     private companion object {
         const val SECRET = "google-account"
+        /** Chrome's own question: which accounts this cookie session is signed in to. */
+        const val LIST_ACCOUNTS = "https://accounts.google.com/ListAccounts?gpsia=1&source=ChromiumBrowser&json=standard"
+        val EMAIL = Regex("""[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}""")
     }
 }
