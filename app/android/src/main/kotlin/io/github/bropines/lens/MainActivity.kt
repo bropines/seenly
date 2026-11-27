@@ -36,6 +36,14 @@ class MainActivity : ComponentActivity() {
         setContent { LensApp((application as LensApplication).graph, incoming) }
     }
 
+    // Turning the phone does not recreate the activity (android:configChanges): Compose lays the
+    // screens out again and the camera keeps running. Before 13 the change resets the default
+    // locale, which is the UI language there.
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        AppLocale.applyDefault(this)
+    }
+
     // Started, not resumed: a browser sheet over the viewer only pauses it, and taps on the
     // picture behind the sheet must still open their links over this activity.
     override fun onStart() {

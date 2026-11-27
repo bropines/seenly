@@ -24,6 +24,9 @@ import kotlin.math.max
 import kotlin.math.min
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import android.content.res.Configuration
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.runtime.DisposableEffect
+import android.hardware.display.DisplayManager
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -200,19 +203,47 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
     var focus by remember { mutableStateOf<FocusMark?>(null) }
     val exposure = camera?.cameraInfo?.exposureState?.takeIf { it.isExposureCompensationSupported }
 
-    LaunchedEffect(lifecycleOwner) {
-        val preview = Preview.Builder().setResolutionSelector(fourByThree).build().apply { setSurfaceProvider { surfaceRequest = it } }
+    val preview = remember {
+        Preview.Builder().setResolutionSelector(fourByThree).build().apply { setSurfaceProvider { surfaceRequest = it } }
+    }
+    val analysis = remember {
         // 4:3 like the preview, so a code's place in the frame is its place in the
         // viewfinder; and larger than the 640×480 default, or small codes are a few pixels.
         val analysisSize = ResolutionSelector.Builder()
             .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
             .setResolutionStrategy(ResolutionStrategy(Size(1280, 960), ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER))
             .build()
-        val analysis = ImageAnalysis.Builder()
+        ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .setResolutionSelector(analysisSize)
             .build()
-            .apply {
+    }
+    // The activity is not recreated when the phone turns (it handles the change itself), so the
+    // camera keeps running through the system's rotation animation; it is only told which way is
+    // up now, for the viewfinder, the photo's orientation and where codes are in the frame.
+    // A display listener, not the configuration: a half turn (landscape to the other landscape)
+    // changes no configuration.
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val displays = context.getSystemService(DisplayManager::class.java)
+        fun follow() {
+            val rotation = view.display?.rotation ?: return
+            preview.targetRotation = rotation
+            capture.targetRotation = rotation
+            analysis.targetRotation = rotation
+        }
+        val listener = object : DisplayManager.DisplayListener {
+            override fun onDisplayChanged(displayId: Int) { if (displayId == view.display?.displayId) follow() }
+            override fun onDisplayAdded(displayId: Int) = Unit
+            override fun onDisplayRemoved(displayId: Int) = Unit
+        }
+        follow()
+        displays.registerDisplayListener(listener, android.os.Handler(android.os.Looper.getMainLooper()))
+        onDispose { displays.unregisterDisplayListener(listener) }
+    }
+
+    LaunchedEffect(lifecycleOwner) {
+        analysis.apply {
                 setAnalyzer(executor, CodeAnalyzer { found, corners ->
                     // Called on the analysis thread; state is read by the UI.
                     ContextCompat.getMainExecutor(context).execute {
@@ -234,6 +265,7 @@ private fun LiveCamera(services: PlatformServices, onCaptured: (PlatformFile) ->
             // Only this screen's own use cases: when the phone turns, the activity is recreated and
             // this runs after the new screen has bound its camera, which unbindAll() would turn off.
             provider.unbind(preview, capture, analysis)
+            analysis.clearAnalyzer()
             executor.shutdown()
         }
     }
