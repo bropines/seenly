@@ -22,7 +22,7 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ### Fixed
 
-- QR codes in pictures, such as one photographed off a monitor, are found again and framed where they are: Seenly reads them with WeChat's open QR decoder, built from source with the part of OpenCV it needs (about 1 MB per APK), in both flavors.
+- QR codes in pictures, such as one photographed off a monitor, are found again and framed where they are: Seenly reads them with WeChat's open QR decoder, built from source with the part of OpenCV it needs (about 3 MB per APK, 2 MB on 32-bit ARM), in both flavors.
 - The camera no longer goes dark when the phone is turned.
 - A QR code's frame stays on the picture after its card is closed; tapping the code brings the card back.
 - The status bar's icons follow the app's theme (and the camera's background while it is open), also right after starting and after a language or theme change, instead of vanishing on a dark screen.
