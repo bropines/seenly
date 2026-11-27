@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import io.github.bropines.lens.protocol.GoogleCookies
+import io.github.bropines.lens.protocol.LensDefaults
 import io.github.bropines.lens.protocol.GoogleCredentials
 import io.github.bropines.lens.protocol.LensCredentialsSource
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -155,15 +156,24 @@ class GoogleAccount(
      */
     suspend fun detectEmail(): String? {
         val s = stored.value ?: return null
-        val found = runCatching {
-            val reply = network.http.get(LIST_ACCOUNTS) {
-                headers {
-                    append("Cookie", GoogleCredentials(s.cookies).cookieHeader)
-                    append("Origin", GoogleCredentials.ORIGIN)
+        val cookie = GoogleCredentials(s.cookies).cookieHeader
+        // ListAccounts wants accounts.google.com's own cookies, which a session copied from
+        // google.com lacks; Google's account menu and pages name the account with google.com's.
+        val found = ADDRESS_SOURCES.firstNotNullOfOrNull { source ->
+            runCatching {
+                val reply = network.http.get(source) {
+                    headers {
+                        append("Cookie", cookie)
+                        append("Origin", GoogleCredentials.ORIGIN)
+                        append("User-Agent", LensDefaults.USER_AGENT)
+                    }
                 }
-            }
-            if (!reply.status.isSuccess()) null else EMAIL.find(reply.bodyAsText())?.value
-        }.onFailure { log.w(it) { "account address not found" } }.getOrNull()
+                val address = if (reply.status.isSuccess()) addressIn(reply.bodyAsText()) else null
+                // Which source answered, never the address itself.
+                log.d { "account address ${if (address != null) "found" else "not found (HTTP ${reply.status.value})"} at ${source.substringBefore('?')}" }
+                address
+            }.onFailure { log.w { "account address: ${source.substringBefore('?')} failed: ${it.message}" } }.getOrNull()
+        }
         if (found != null) stored.value?.takeIf { it.cookies == s.cookies }?.let { save(it.copy(email = found, rejected = false, refusal = "")) }
         return found
     }
@@ -225,6 +235,20 @@ class GoogleAccount(
         const val SECRET = "google-account"
         /** Chrome's own question: which accounts this cookie session is signed in to. */
         const val LIST_ACCOUNTS = "https://accounts.google.com/ListAccounts?gpsia=1&source=ChromiumBrowser&json=standard"
+
+        /** Where Google names the signed-in account, best first: Chrome's question, the account menu, the account page, the home page. */
+        val ADDRESS_SOURCES = listOf(
+            LIST_ACCOUNTS,
+            "https://ogs.google.com/u/0/widget/account?hl=en",
+            "https://myaccount.google.com/?hl=en",
+            "https://www.google.com/?hl=en",
+        )
+
+        /** The first address on a Google page that is not one of Google's own. */
+        fun addressIn(text: String): String? = EMAIL.findAll(text).map { it.value }.firstOrNull { address ->
+            val domain = address.substringAfter('@').lowercase()
+            domain != "google.com" && !domain.endsWith(".google.com") && domain != "example.com"
+        }
         val EMAIL = Regex("""[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}""")
     }
 }
