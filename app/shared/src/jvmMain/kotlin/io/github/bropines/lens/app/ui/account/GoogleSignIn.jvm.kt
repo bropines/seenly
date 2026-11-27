@@ -7,7 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 actual val googleSignInSupported: Boolean = false
 
 @Composable
-actual fun GoogleSignInScreen(onCookies: (String) -> Boolean, onBack: () -> Unit) {
+actual fun GoogleSignInScreen(onCookies: (String) -> Boolean, onEmail: (String?) -> Unit, onBack: () -> Unit) {
     // Never reached: the entry that opens it is hidden without googleSignInSupported.
     LaunchedEffect(Unit) { onBack() }
 }

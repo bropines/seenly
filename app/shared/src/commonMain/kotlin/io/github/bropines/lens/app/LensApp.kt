@@ -178,7 +178,12 @@ fun LensApp(graph: AppGraph, incoming: Flow<Incoming> = emptyFlow()) {
                 entry<Route.GoogleSignIn> {
                     GoogleSignInScreen(
                         // The page's cookies are a signed-in session or nothing: connect() tells which.
-                        onCookies = { cookies -> graph.account.connect(cookies).also { if (it) pop() } },
+                        onCookies = { cookies -> graph.account.connect(cookies) },
+                        // Asked by the page itself once signed in; the screen closes with the answer.
+                        onEmail = { email ->
+                            if (email != null) graph.account.setEmail(email)
+                            pop()
+                        },
                         onBack = ::pop,
                     )
                 }

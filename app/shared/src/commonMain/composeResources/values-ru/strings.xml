@@ -513,4 +513,6 @@
     <string name="account_email_detect">Найти</string>
     <string name="account_email_not_found">Google не сказал, что это за аккаунт</string>
     <string name="account_email_save">Сохранить</string>
+    <string name="account_signing_delegation">запросы подписываются</string>
+    <string name="account_signing_no_sapisid">нет cookie SAPISID: подписать запросы нельзя, войдите заново</string>
 </resources>

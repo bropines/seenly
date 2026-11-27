@@ -73,7 +73,12 @@ fun AccountScreen(
     var editingEmail by remember { mutableStateOf(false) }
 
     fun connect(text: String) = scope.launch {
-        snackbar.showSnackbar(getString(if (account.connect(text)) Res.string.account_connected else Res.string.account_no_session))
+        val connected = account.connect(text)
+        if (connected) {
+            // The address is not in the cookies; when Google does not say it either, ask for it at once.
+            launch { if (account.detectEmail() == null && account.state.value.email == null) editingEmail = true }
+        }
+        snackbar.showSnackbar(getString(if (connected) Res.string.account_connected else Res.string.account_no_session))
     }
     // Any file: cookies.txt and a cookie editor's .json both come as plain text.
     val picker = rememberFilePickerLauncher(type = FileKitType.File()) { file ->
@@ -129,7 +134,11 @@ fun AccountScreen(
                 // Identity delegation signs with the address; found by itself after connecting, or typed.
                 Setting(
                     Icons.Rounded.AlternateEmail, stringResource(Res.string.account_email),
-                    state.email ?: stringResource(Res.string.account_email_none),
+                    when {
+                        state.email == null -> stringResource(Res.string.account_email_none)
+                        state.delegates -> state.email + " · " + stringResource(Res.string.account_signing_delegation)
+                        else -> state.email + " · " + stringResource(Res.string.account_signing_no_sapisid)
+                    },
                 ) { editingEmail = true }
                 if (state.rejected) {
                     Setting(Icons.Rounded.Refresh, stringResource(Res.string.account_retry), stringResource(Res.string.account_retry_desc), account::retry)
@@ -246,8 +255,10 @@ expect val googleSignInSupported: Boolean
 /**
  * Google's own sign-in page, embedded. When the user has signed in, the
  * page's google.com cookies go to [onCookies], which answers whether they
- * were a session. Google refuses some embedded browsers outright; the screen
- * then says so and points at importing cookies instead.
+ * were a session; then the page asks Google which account it is, with all of
+ * its own cookies (accounts.google.com's too), and [onEmail] gets the address,
+ * or null when Google did not say. Google refuses some embedded browsers
+ * outright; the screen then says so and points at importing cookies instead.
  */
 @Composable
-expect fun GoogleSignInScreen(onCookies: (String) -> Boolean, onBack: () -> Unit)
+expect fun GoogleSignInScreen(onCookies: (String) -> Boolean, onEmail: (String?) -> Unit, onBack: () -> Unit)

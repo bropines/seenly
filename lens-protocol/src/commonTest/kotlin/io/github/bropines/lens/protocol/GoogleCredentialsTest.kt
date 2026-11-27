@@ -37,9 +37,12 @@ class GoogleCredentialsTest {
         session.headers(1).none { it.first == GoogleCredentials.ENCODE_RESPONSE_HEADER } shouldBe true
         delegated.authorization("https://www.google.com", 1_700_000_000) shouldBe
             "SAPISIDHASH 1700000000_63f76c6071122477af7276366dbbfc60e05b8200_e"
-        // Without the address, or without a SAPISID, it cannot.
+        // Without the address, or without any SAPISID, it cannot.
         session.delegates shouldBe false
-        GoogleCredentials(mapOf("SID" to "s", "__Secure-3PAPISID" to "y"), email = "user@example.com").delegates shouldBe false
+        GoogleCredentials(mapOf("SID" to "s", "HSID" to "y"), email = "user@example.com").delegates shouldBe false
+        // A session with only the secure twin signs with its value, which is SAPISID's.
+        GoogleCredentials(mapOf("__Secure-3PSID" to "s", "__Secure-3PAPISID" to "AbCdEf/123"), email = "user@example.com")
+            .authorization("https://www.google.com", 1_700_000_000) shouldBe "SAPISIDHASH 1700000000_63f76c6071122477af7276366dbbfc60e05b8200_e"
     }
 
     @Test

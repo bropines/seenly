@@ -36,8 +36,22 @@ public class GoogleCredentials(
 
     public val email: String? = email?.trim()?.takeIf { it.isNotEmpty() }
 
+    /**
+     * The `SAPISID` secret identity delegation hashes. Google gives `SAPISID` and its secure
+     * twins one value; a session copied from an embedded browser sometimes has only a twin.
+     */
+    private val sapisid: String? get() = DELEGATION_COOKIES.firstNotNullOfOrNull { cookies[it]?.takeIf(String::isNotEmpty) }
+
     /** Requests can be signed the way Chrome's identity delegation signs them: an address and a `SAPISID`. */
-    public val delegates: Boolean get() = email != null && !cookies["SAPISID"].isNullOrEmpty()
+    public val delegates: Boolean get() = email != null && sapisid != null
+
+    /** How a request with these credentials is signed, for logs and the account page; no secret in it. */
+    public val signing: String get() = when {
+        delegates -> "identity delegation"
+        email == null && isSignedIn -> "web hash, no account address"
+        isSignedIn -> "web hash"
+        else -> "cookies only"
+    }
 
     /** True when the session can sign a request: it has a session cookie and a `SAPISID`. */
     public val isSignedIn: Boolean
@@ -54,7 +68,7 @@ public class GoogleCredentials(
      */
     public fun authorization(origin: String, nowSeconds: Long): String? {
         if (delegates) {
-            val digest = "$email $nowSeconds ${cookies.getValue("SAPISID")} $origin".encodeUtf8().sha1().hex()
+            val digest = "$email $nowSeconds $sapisid $origin".encodeUtf8().sha1().hex()
             return "SAPISIDHASH ${nowSeconds}_${digest}_e"
         }
         return HASH_COOKIES.mapNotNull { (scheme, cookie) ->
@@ -85,6 +99,7 @@ public class GoogleCredentials(
         public const val ORIGIN: String = "https://www.google.com"
 
         private val SESSION_COOKIES = listOf("SID", "__Secure-1PSID", "__Secure-3PSID")
+        private val DELEGATION_COOKIES = listOf("SAPISID", "__Secure-3PAPISID", "__Secure-1PAPISID")
         private val HASH_COOKIES = listOf(
             "SAPISIDHASH" to "SAPISID",
             "SAPISID1PHASH" to "__Secure-1PAPISID",

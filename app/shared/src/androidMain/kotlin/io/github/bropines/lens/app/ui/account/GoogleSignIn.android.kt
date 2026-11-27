@@ -23,6 +23,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,13 +48,26 @@ private const val SIGN_IN = "https://accounts.google.com/ServiceLogin?continue=h
  * not be secure"). An embedded WebView often gets one; it is not worked
  * around by pretending to be another browser.
  */
+/** Chrome's own question: which accounts this browser is signed in to. */
+private const val LIST_ACCOUNTS = "https://accounts.google.com/ListAccounts?gpsia=1&source=ChromiumBrowser&json=standard"
+private const val LIST_ACCOUNTS_PATH = "/ListAccounts"
+private const val EMAIL_WAIT_MS = 8_000L
+private val EMAIL = Regex("""[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}""")
+
 private fun isRefusal(url: String): Boolean = "/signin/rejected" in url || "disallowed_useragent" in url
 
 @SuppressLint("SetJavaScriptEnabled") // Google's sign-in page does not work without scripts.
 @Composable
-actual fun GoogleSignInScreen(onCookies: (String) -> Boolean, onBack: () -> Unit) {
+actual fun GoogleSignInScreen(onCookies: (String) -> Boolean, onEmail: (String?) -> Unit, onBack: () -> Unit) {
     val context = LocalContext.current
     val deliver by rememberUpdatedState(onCookies)
+    val answer by rememberUpdatedState(onEmail)
+    var answered by remember { mutableStateOf(false) }
+    fun finish(email: String?) {
+        if (answered) return
+        answered = true
+        answer(email)
+    }
     var loading by remember { mutableStateOf(true) }
     var refused by remember { mutableStateOf(false) }
     var done by remember { mutableStateOf(false) }
@@ -70,17 +85,34 @@ actual fun GoogleSignInScreen(onCookies: (String) -> Boolean, onBack: () -> Unit
                 override fun onPageFinished(view: WebView, url: String) {
                     loading = false
                     if (isRefusal(url)) refused = true
-                    if (done) return
+                    if (done) {
+                        // Google's answer to "which account is this", in the page's own words.
+                        if (LIST_ACCOUNTS_PATH in url) {
+                            view.evaluateJavascript("document.body ? document.body.innerText : ''") { text ->
+                                forgetWebCookies()
+                                finish(EMAIL.find(text.orEmpty())?.value)
+                            }
+                        }
+                        return
+                    }
                     // Asked after every page rather than at one final address, which Google is free to
                     // change: google.com has session cookies only once the user has signed in.
                     val cookies = CookieManager.getInstance().getCookie(SIGNED_IN).orEmpty()
                     if (deliver(cookies)) {
                         done = true
-                        forgetWebCookies()
+                        // The address is in no cookie: the page asks Google, with every cookie it has.
+                        view.loadUrl(LIST_ACCOUNTS)
                     }
                 }
             }
         }
+    }
+    // Google may not answer, or answer without an address: the screen does not wait for ever.
+    LaunchedEffect(done) {
+        if (!done) return@LaunchedEffect
+        delay(EMAIL_WAIT_MS)
+        forgetWebCookies()
+        finish(null)
     }
     DisposableEffect(web) {
         // Start clean: a session left by an earlier, abandoned attempt must not be picked up as this one.

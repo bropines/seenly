@@ -508,4 +508,6 @@
     <string name="account_email_detect">Find it</string>
     <string name="account_email_not_found">Google didn’t say which account this is</string>
     <string name="account_email_save">Save</string>
+    <string name="account_signing_delegation">requests are signed</string>
+    <string name="account_signing_no_sapisid">no SAPISID cookie: requests can’t be signed, sign in again</string>
 </resources>

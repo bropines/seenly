@@ -93,13 +93,13 @@ public class LensClient(
         )
 
     private suspend fun post(url: String, body: ByteArray): ByteArray {
-        // The query string is the session id: the path is enough to tell requests apart.
-        val path = url.substringBefore('?')
-        log.d { "POST $path, ${body.size} bytes" }
         val account = credentials?.current()
         // Signed the way Chrome's identity delegation signs, a request goes to the clients6 host;
         // anonymous, or repeated without the account, to the usual one.
         val signedUrl = if (account?.delegates == true) url.replace(LensDefaults.API_HOST, LensDefaults.IDENTITY_DELEGATION_HOST) else url
+        // The query string is the session id: the path is enough to tell requests apart.
+        var path = signedUrl.substringBefore('?')
+        log.d { "POST $path, ${body.size} bytes, ${account?.signing ?: "anonymous"}" }
         var response = sendPatiently(signedUrl, body, account, path)
         if (account != null && (response.status.value == 401 || response.status.value == 403)) {
             // Google's error body says why (wrong credential type, origin not allowed, expired…):
@@ -110,6 +110,8 @@ public class LensClient(
             // A search session opened signed lives on the clients6 host: its id means nothing to the
             // anonymous one. The session starts over anonymously instead (LensSearchSession).
             if (url.contains("gsessionid=")) throw SignedSessionRefused(response.status.value, detail)
+            path = url.substringBefore('?')
+            log.d { "POST $path, ${body.size} bytes, anonymous" }
             response = sendPatiently(url, body, null, path)
         }
         log.d { "HTTP ${response.status.value} from $path" }

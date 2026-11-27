@@ -93,6 +93,8 @@ class GoogleAccount(
         val refusal: String = "",
         /** The account's address, which identity delegation signs with; null until found or typed. */
         val email: String? = null,
+        /** Whether requests can be signed the way Chrome's identity delegation signs them. */
+        val delegates: Boolean = false,
     )
 
     @Serializable
@@ -202,7 +204,8 @@ class GoogleAccount(
     }
 
     private fun stateOf(s: Stored?) =
-        State(connected = s != null, lastUsed = s?.lastUsed, rejected = s?.rejected == true, refusal = s?.refusal.orEmpty(), email = s?.email)
+        State(connected = s != null, lastUsed = s?.lastUsed, rejected = s?.rejected == true, refusal = s?.refusal.orEmpty(), email = s?.email,
+            delegates = s?.let { GoogleCredentials(it.cookies, it.email).delegates } == true)
 
     /**
      * Google's error body, shortened to what a person can read: the `message`
