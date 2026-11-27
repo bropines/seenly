@@ -90,7 +90,10 @@ class AppNetwork(services: PlatformServices, private val settings: SettingsRepos
      * request and nothing comes back for minutes. Idle ones are let go, so the next
      * request opens a fresh one.
      */
-    fun onForeground() = proxied.forgetConnections()
+    fun onForeground() {
+        // Off the main thread: closing a TLS socket writes to it, and Android forbids that there.
+        scope.launch { proxied.forgetConnections() }
+    }
 
     /** The password saved for the server in [prefs], or empty. */
     fun passwordFor(prefs: ProxyPrefs): String = stored.value.passwordFor(prefs)

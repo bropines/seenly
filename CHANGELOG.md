@@ -6,6 +6,10 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ## [Unreleased]
 
+### Fixed
+
+- 0.5.2 could crash when coming back to Seenly: the stale connections were let go on the main thread.
+
 ## [0.5.2] - 2026-11-27
 
 ### Added
