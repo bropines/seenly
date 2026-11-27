@@ -6,15 +6,26 @@ A release's notes on GitHub are its section here, under the highlights in `docs/
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-27
+
 ### Added
 
-- A layout for a turned phone and for tablets: the dock becomes a rail at the left edge with the camera at its head; the home screen and text translation get two columns, history a grid; the viewer's controls move into a panel beside the picture, which keeps the whole height; the camera's shutter, torch and gallery stand at the right edge beside the frame.
+- A layout for a turned phone and for tablets: the dock becomes a rail at the left edge with the camera at its head; the home screen and text translation get two columns, history a grid, the settings pages two columns of cards; the viewer's controls move into a panel beside the picture, which keeps the whole height; the camera's shutter, torch and gallery stand at the right edge beside the frame.
+- Settings → Appearance → Light camera: a light screen around the camera frame with dark buttons, instead of black.
+- The camera sleeps when the phone lies still or sees nothing (face down, in a pocket) and wakes when the phone moves, the screen is touched or the shutter pressed.
+
+### Changed
+
+- Turning the phone no longer restarts anything: the camera keeps running through the rotation and every screen keeps its place.
+- The camera rises over the screen that opened it and sinks back into it, instead of a black-to-light cross-fade; a back swipe shrinks it with the finger and fades it only near the end.
+- Switching the app's language or the system's dark mode happens in place, without the screen going blank; a new theme or colour fades across.
 
 ### Fixed
 
 - QR codes in pictures, such as one photographed off a monitor, are found again and framed where they are: Seenly reads them with WeChat's open QR decoder, built from source with the part of OpenCV it needs (about 1 MB per APK), in both flavors.
 - The camera no longer goes dark when the phone is turned.
 - A QR code's frame stays on the picture after its card is closed; tapping the code brings the card back.
+- The status bar's icons follow the app's theme (and the camera's background while it is open), also right after starting and after a language or theme change, instead of vanishing on a dark screen.
 
 ## [0.6.1] - 2026-11-27
 
