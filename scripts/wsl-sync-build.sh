@@ -22,7 +22,7 @@ if [[ -n "${SRC:-}" ]]; then
   rsync -rlt --delete --no-perms --chmod=D755,F644 \
     --exclude '/.git' --exclude '/.claude/' --exclude '/build/' --exclude '/*/build/' --exclude '/*/*/build/' \
     --exclude '.gradle/' --exclude '.kotlin/' --exclude '.cxx/' --exclude 'local.properties' --exclude '.idea/' \
-    --exclude '/keystore/' \
+    --exclude '/keystore/' --exclude '/WORKING-COPY-NOT-THE-REPO.md' \
     "$SRC/" "$DEST/"
   chmod +x "$DEST/gradlew" "$DEST"/scripts/*.sh
 fi
